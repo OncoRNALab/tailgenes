@@ -8,24 +8,17 @@ data/pancancer_counts.txt
 
 .DS_Store
 */.DS_Store
-*/.Rhistory
-figure_generation/separate_figures
-data/Supplementary_Table_4_all_circRNAs_treated.txt
-data/Supplementary_Table_5_RNase_R_enrichment_seq.txt
 
 # History files
-.Rhistory
-.Rapp.history
+*/.Rhistory
+*/.Rapp.history
 
 # Session Data files
-.RData
-.RDataTmp
+*/.RData
+*/.RDataTmp
 
 # User-specific files
-.Ruserdata
-
-# Example code in package build process
-*-Ex.R
+*/.Ruserdata
 
 # Output files from R CMD build
 /*.tar.gz
@@ -34,11 +27,7 @@ data/Supplementary_Table_5_RNase_R_enrichment_seq.txt
 /*.Rcheck/
 
 # RStudio files
-.Rproj.user/
-
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+*/.Rproj.user/
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
@@ -52,13 +41,4 @@ vignettes/*.pdf
 *.knit.md
 
 # R Environment Variables
-.Renviron
-
-# pkgdown site
-docs/
-
-# translation temp files
-po/*~
-
-# RStudio Connect folder
-rsconnect/
+*/.Renviron
