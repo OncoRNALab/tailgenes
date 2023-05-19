@@ -5,7 +5,7 @@ This repository contains all data and scripts used to generate the numbers and f
 The `input` folder contains annotation and count data, used as input for data analysis:
 - *SupplTable1_sample_annotation.txt*: pan-cancer, three-cancer and lymphoma cohort sample annotation (plasma samples)
 - *bladdercancer_sample_annotation.txt*: bladder cancer cohort sample annotation (urine samples)
-- *\*_counts.txt*: raw HTSeq counts for the respective sample cohort
+- *\*_counts.txt*: raw counts (STAR+HTseq) for the respective sample cohort
 - *\*_normcounts(_all).txt*: DESeq2 library size normalized counts for the respective sample cohort
 
 The `data` folder contains files that are made using the scripts in the `data_analysis` folder:
