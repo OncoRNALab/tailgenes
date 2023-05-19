@@ -1,6 +1,6 @@
 # tail gene analyses
 
-This repository contains all data and scripts used to generate the numbers and figures for the tail gene part of the paper (currently on [BioRxiv](https://www.biorxiv.org/content/10.1101/2022.12.06.519083v1)).
+This repository contains all data and scripts used to generate the numbers and figures for the tail gene part of the paper by Morlion et al.
 
 The `input` folder contains annotation and count data, used as input for data analysis:
 - the `SupplTable1_sample_annotation.txt` file: sample information from the pan-cancer, three-cancer and lymphoma cohort (plasma samples)
