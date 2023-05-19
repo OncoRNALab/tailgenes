@@ -3,8 +3,8 @@
 This repository contains all data and scripts used to generate the numbers and figures for the tail gene part of the paper by Morlion et al.
 
 The `input` folder contains annotation and count data, used as input for data analysis:
-- the *SupplTable1_sample_annotation.txt* file: sample information from the pan-cancer, three-cancer and lymphoma cohort (plasma samples)
-- the *bladdercancer_sample_annotation.txt* file: sample information from the bladder cancer cohort (urine samples)
+- *SupplTable1_sample_annotation.txt* file: sample information from the pan-cancer, three-cancer and lymphoma cohort (plasma samples)
+- *bladdercancer_sample_annotation.txt* file: sample information from the bladder cancer cohort (urine samples)
 - *\*_counts.txt*: raw HTSeq counts (mRNA transcripts summed at gene level) for the respective sample cohorts
 - *\*_normcounts(_all).txt*: DESeq2 library size normalized counts for the respective sample cohorts
 
