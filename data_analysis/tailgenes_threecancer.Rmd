@@ -1,0 +1,1091 @@
+---
+title: "threecancer cohort - tail genes"
+author: "Annelien Morlion"
+date: '2023-05-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+require(ggrepel)
+library(here)
+library(DESeq2)
+
+## Define plot style for paper
+mytheme = theme_classic(base_size = 7) +
+  theme(text = element_text(size=7, colour="black"),
+        title = element_text(size=7, colour="black"),
+        line = element_line(size=0.5),
+        axis.title = element_text(size=7, colour="black"),
+        axis.text = element_text(size=7, colour="black"),
+        axis.ticks = element_line(size=0.5),
+        strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),
+        legend.position = c(0.8,0.8),
+        legend.text = element_text(size=6))
+mytheme_discrete_x = mytheme + theme(axis.text.x = element_text(angle=90, hjust=1,vjust=0.5))
+
+color_panel<-c("#e35d6a","#428bca","#5bb75b","#e87810","#23496b","#ffbf00","#cc2028","#039748","pink","gray","darkgray")
+cb_color_panel <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+#see https://personal.sron.nl/~pault/
+cb_color_panel_highcontrast <- c("#000000","#004488", "#DDAA33", "#BB5566") #+"#FFFFFF" white
+cb_color_panel_mediumcontrastpairs <- c('#6699CC', '#004488', '#EECC66', '#994455', '#997700', '#EE99AA') #+"#FFFFFF" white and "#000000" black
+cb_color_panel_bright <- c('#4477AA', '#EE6677', '#228833', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
+
+full_nr <- scales::format_format(big.mark = ",", decimal.mark = ".", scientific = FALSE)
+
+##sample annotation
+sample_annotation <- data.table::fread("../input/SupplTable1_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort))
+sample_annotation_all <- sample_annotation # keep original table
+sample_annotation <- sample_annotation_all %>% filter(Excluded != "x") #filter out low read samples
+```
+
+
+Normalize data (only needs to be run first time)
+```{r, eval=F}
+threecancer_counts <- data.table::fread("../input/threecancer_counts.txt", data.table = F, header=T) %>%
+  filter(gene_id %in% grep("__",gene_id, invert=T, value=T)) %>%
+  pivot_longer(names_to="RNAID",values_to="counts",-"gene_id") %>%
+  right_join(sample_annotation %>% filter(Cohort=="threecancer") %>% dplyr::select("RNAID", "UniqueID"), by="RNAID") #leave out samples with almost no reads
+
+library(biomaRt)
+library(DESeq2)
+ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
+genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+
+pc_gene_counts <- threecancer_counts %>% left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-c("gene_biotype","RNAID")) %>% #remove gene biotype column, RNAID
+  pivot_wider(names_from=UniqueID, values_from=counts) #back to original format: rows=genes, columns=samples
+
+normal_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation=="CONTROL") %>% pull(UniqueID)
+normal_counttable <- dplyr::select(pc_gene_counts, c("gene_id",(normal_samples)))
+
+tumor_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation!="CONTROL") %>% pull(UniqueID)
+tumor_counttable <- dplyr::select(pc_gene_counts, c("gene_id",(tumor_samples))) 
+counttable <- full_join(normal_counttable, tumor_counttable, by="gene_id") #join tumor and normal samples
+rm(tumor_counttable, normal_counttable)
+  
+  ## FILTER genes
+keep <- (rowSums(dplyr::select(counttable, all_of(normal_samples)) > 9) >= round(length(normal_samples)/2,0)) | #≥50% of normal samples count > 9
+  (rowSums(dplyr::select(counttable, all_of(tumor_samples)) > 9) >= round(length(tumor_samples)/2,0)) # OR ≥50% of tumor samples count > 9
+#table(keep, useNA="ifany")
+#counttable <- counttable[keep, ]
+counttable <- column_to_rownames(counttable, "gene_id")
+
+condition <- factor(ifelse(grepl("^CONTROL", colnames(counttable)), "Normal", "Tumor"))
+coldata <- data.frame(row.names=colnames(counttable), condition)
+dds <- DESeqDataSetFromMatrix(countData=counttable, colData=coldata, design=~condition)
+
+dds <- DESeq(dds)
+  
+counttable_normalized<-as.data.frame(counts(dds, normalized = TRUE)) %>% rownames_to_column("gene_id")
+data.table::fwrite(counttable_normalized, file="../data/threecancer_normcounts_all.txt", quote=F, na="", row.names = F, sep="\t")
+rm(counttable_normalized, dds, coldata,condition, counttable,keep,pc_gene_counts, ensembl, genes_ens, normal_samples, tumor_samples)
+
+```
+
+
+Tail gene analysis: z-score calculation function
+```{r}
+### log transformation + z scores calculation based on mean and stdev of (log transformed) reference distribution
+tail_z_score <- function(samples, Ref_matrix, na.rm=T) {
+  #samples: (normalized, non-log transformed) count matrix of samples of interest (genes as rownames, samples as columns)
+  #N_matrix: (normalized, non-log transformed) count matrix of reference (genes as rownames, samples as columns) 
+  require(tidyverse)
+  #logtransform reference
+  Ref_logmatrix <- log2(Ref_matrix+1)
+  Ref_zscores <- t(Ref_logmatrix) %>% scale(center=T,scale=T) #column scaling and centering (per gene after transformation)
+  ##check: mean per gene = 0, sd = 1
+  #Ref_zscores %>% data.frame() %>% rownames_to_column("sample") %>% pivot_longer(names_to="gene", values_to = "counts", -"sample") %>% group_by(gene) %>% dplyr::summarise(mean_x=mean(counts), sd_x=sd(counts)) %>% View()
+  scaling_factors <- data.frame(mean_Ref = attr(Ref_zscores, "scaled:center"), sd_Ref = attr(Ref_zscores, "scaled:scale")) %>% rownames_to_column("gene_id")
+  #mns <- scaling_factors %>% pull(mean_Ref) #mean
+  #sds <- scaling_factors %>% pull(sd_Ref) #stdev
+  
+  #logtransform samples and subtract mean and stdev of reference matrix
+  x <- log2(samples+1) %>% data.frame()
+  #match returns a vector of the positions of (first) matches of its first argument in its second -> retrieves the corresponding scaling factors for these genes
+  mns <- scaling_factors$mean_Ref[match(rownames(x), scaling_factors$gene_id)] 
+  sds <- scaling_factors$sd_Ref[match(rownames(x), scaling_factors$gene_id)]
+  
+  x <- sweep(x,1,mns,"-", check.margin = T) #subtract corresponding reference gene mean from gene counts
+  x <- sweep(x,1,sds,"/", check.margin = T) #then divide gene counts by corresponding reference gene stdev
+  x
+}
+
+```
+
+calculate z-scores for each sample, each time using all control samples as reference except the control sample of interest
+```{r}
+threecancer_normcounts <- data.table::fread("../data/threecancer_normcounts_all.txt")
+
+# z-score calculation based on leave one out (LOO) reference in case sample of interest is control sample
+z_scores_LOO <- data.frame(gene_id = threecancer_normcounts %>% pull(gene_id))
+for (samp in (colnames(threecancer_normcounts)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(threecancer_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                                                threecancer_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(threecancer_normcounts),value =T))) %>% 
+                                                  dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                                  column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+
+data.table::fwrite(z_scores_LOO, file = "../data/threecancer_zscores_tail.txt", sep="\t",na="",quote=F, row.names = F)
+
+### save table with tail genes per sample (|z|>3 and ncounts ≥40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                  threecancer_normcounts %>% #add normalized counts
+                   pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                  by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+#summary(tmp)
+data.table::fwrite(tail_genes, file="../data/threecancer_tailgenes.txt",sep="\t", row.names = F, quote=F, na="")
+rm(tail_genes,z_scores_LOO_sample, samp, z_scores_LOO)
+
+```
+
+Number of tail genes (ncounts≥40, |z|>3) and comparison of normalized counts
+```{r}
+z_scores_LOO <- data.table::fread("../data/threecancer_zscores_tail.txt",data.table = F)
+tail_genes <- data.table::fread("../data/threecancer_tailgenes.txt",data.table=F)
+length(unique(tail_genes$gene_id)) 
+
+mean_Ref <- threecancer_normcounts %>% filter(gene_id %in% unique(tail_genes$gene_id)) %>% 
+  pivot_longer(names_to="sample",values_to="ncounts",-"gene_id") %>% 
+  mutate(Abbreviation=gsub("_.*","",sample)) %>% filter(Abbreviation=="CONTROL") %>% 
+  dplyr::group_by(gene_id) %>% dplyr::summarise(mean_Ref_ncounts=mean(ncounts,na.rm=T)) %>% 
+  mutate(mean_Ref_ncounts=ifelse(mean_Ref_ncounts<1,1,mean_Ref_ncounts))
+
+RefvsSamplecounts <- threecancer_normcounts %>% filter(gene_id %in% unique(tail_genes$gene_id)) %>% 
+  pivot_longer(names_to="sample",values_to="ncounts",-"gene_id") %>% 
+  mutate(Abbreviation=gsub("_.*","",sample)) %>%
+  left_join(mean_Ref) %>% #add average normalized counts in reference
+  left_join(z_scores_LOO %>% pivot_longer(names_to="sample",values_to="zscore",-"gene_id")) %>%
+  mutate(zscore_stat=ifelse(((zscore>3) & (ncounts>=40)),"z+",ifelse(((zscore<(-3)) & (ncounts>=40)),"z-","no"))) %>% mutate(Abbreviation=ifelse(Abbreviation=="CONTROL","CONTROL",Abbreviation))
+  
+#all samples vs Reference in one plot
+ggplot() + 
+  geom_point(data = RefvsSamplecounts %>% filter(zscore_stat=="no"),mapping = aes(x=mean_Ref_ncounts,y=ncounts,col=zscore_stat),size=0.3, alpha=0.8) + #add all points with |z|<3 in grey (and smaller)
+  geom_point(data = RefvsSamplecounts %>% filter(zscore_stat!="no"),mapping = aes(x=mean_Ref_ncounts, y=ncounts,col=zscore_stat),size=0.1, alpha=0.6) + 
+  scale_y_log10(labels=full_nr,limits=c(40,NA)) + #normalized counts in sample of interest at least 40
+  scale_x_log10(labels=full_nr, breaks=c(10,1000,100000)) + coord_fixed() +
+  geom_abline(slope=1,intercept=0, color="darkgrey",linetype="dashed") +
+  mytheme + theme(legend.position="bottom") +
+  scale_color_manual(values=c(no="grey88",`z+`="#CC3311",`z-`="#0077BB",`NA`="black")) +
+  labs(x="average normalized counts in reference", y="normalized counts in individual samples")
+
+#split per type
+ggplot() + 
+  geom_point(data = RefvsSamplecounts %>% filter(zscore_stat=="no"),mapping = aes(x=mean_Ref_ncounts,y=ncounts,col=zscore_stat),size=0.3, alpha=0.8) + #add all points with |z|<3 in grey (and smaller)
+  geom_point(data = RefvsSamplecounts %>% filter(zscore_stat!="no"),mapping = aes(x=mean_Ref_ncounts, y=ncounts,col=zscore_stat),size=0.1, alpha=0.6) + 
+  facet_wrap(~Abbreviation) +
+  scale_y_log10(labels=full_nr,limits=c(40,NA)) + 
+  scale_x_log10(labels=full_nr, breaks=c(10,1000,100000)) + 
+  geom_abline(slope=1,intercept=0, color="darkgrey",linetype="dashed") +
+  mytheme + theme(legend.position="bottom") +
+  scale_color_manual(values=c(no="grey88",`z+`="#CC3311",`z-`="#0077BB",`NA`="black")) +
+  labs(x="average normalized counts in reference", y="normalized counts in individual samples")
+ggsave("../figures/threecancer_tail_countdistribution.pdf", height=8.8, width=8.8, units="cm",  dpi = 300, useDingbats=F)
+
+rm(mean_Ref,RefvsSamplecounts)
+
+```
+
+Heatmap of tail genes
+```{r}
+require(pheatmap)
+require(RColorBrewer)
+
+#show all genes that are tail gene in at least one sample
+tmp2 <- z_scores_LOO %>% filter(gene_id %in% (tail_genes %>% pull(gene_id) %>% unique()))
+table(is.na(tmp2))
+tmp2[is.na(tmp2)] <- 0 #0/0 = NA
+
+#top off z-scores (max -5 to 5)
+tmp2 <- tmp2 %>% column_to_rownames("gene_id")
+tmp2[tmp2>5] <- 5
+tmp2[tmp2<(-5)] <- -5
+tmp2 <- tmp2 %>% rownames_to_column("gene_id")
+#table(tmp2==Inf)
+
+paletteLength=40
+myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
+# length(breaks) == length(paletteLength) + 1
+# use floor and ceiling to deal with even/odd palette lengths
+myBreaks <- c(seq(min(tmp2%>% column_to_rownames("gene_id")), 0, length.out=ceiling(paletteLength/2) + 1), 
+              seq(max(tmp2%>% column_to_rownames("gene_id"))/paletteLength, max(tmp2%>% column_to_rownames("gene_id")), length.out=floor(paletteLength/2)))
+
+# no clustering of columns, only rows
+colnames(tmp2) <- sub("CONTROL","CONTROL",sub("_([0-9])$","_0\\1",gsub("_threecancer","",colnames(tmp2)))) #add trailing 0 for values below 10
+tmp2 <- dplyr::select(tmp2, c("gene_id", colnames(tmp2)[-1] %>% sort()))
+annot_cols= data.frame(type = gsub("_.*","",colnames(tmp2)), 
+        row.names = colnames(tmp2))
+annot_cols$type <- factor(annot_cols$type, levels=c("CONTROL","OV","PRAD","UCEC"))
+
+#differential abundance annotation
+DAA_genes <- data.table::fread("../data/differentialabundance_threecancer.txt", data.table = F) %>% mutate(DA=ifelse((padj<0.05) & (log2FoldChange>1), "higher", ifelse((padj<0.05) & (log2FoldChange<(-1)), "lower", "no")))  #higher/lower: differentially abundant genes (DA)
+annot_rows = data.frame(namesrow=tmp2$gene_id) %>% 
+  mutate(differential=ifelse(namesrow %in% (DAA_genes %>% filter(DA=="lower") %>% pull(gene_id)),"lower",
+                             ifelse(namesrow %in% (DAA_genes %>% filter(DA=="higher") %>% pull(gene_id)),"higher","no"))) %>% column_to_rownames("namesrow")
+
+annoCol<-list(type=c(CONTROL="#DDAA33",OV="#BB5566",PRAD="#004488",UCEC="#009988"), differential=c(lower="#CCBB44",higher="#AA3377",no="#FFFFFF"))
+
+pheatmap(as.matrix(tmp2 %>% column_to_rownames("gene_id")), 
+         color=myColor, breaks=myBreaks, annotation_col = annot_cols,
+         annotation_row=annot_rows,border_color=NA,cluster_cols = F,
+         annotation_colors = annoCol, annotation_names_col=F, annotation_names_row = F,
+         cluster_rows=T,fontsize = 6,fontsize_row = 7, fontsize_col=7,
+         show_colnames = F, scale="none", show_rownames = F, clustering_distance_rows = "euclidean",
+         treeheight_row = 0, gaps_col = head(as.numeric(cumsum(table(annot_cols$type))),-1), angle_col = 90,
+         legend_breaks = c(-4, -2, 0, 2, 4, max(tmp2 %>% column_to_rownames("gene_id"))), 
+         legend_labels = c("-4","-2","0","2","4", "z  \n"),#add legend title
+         filename = "../figures/threecancer_tail_heatmap.pdf", 
+         width=4.76, height=2.40) #inches (width 121mm=4.76in, height 61mm=2.40in)
+
+png(filename="../figures/threecancer_tail_heatmap.png",res = 300, width=12.1, height=6.1, units = "cm")
+pheatmap(as.matrix(tmp2 %>% column_to_rownames("gene_id")), 
+         color=myColor, breaks=myBreaks, annotation_col = annot_cols,
+         annotation_row=annot_rows,border_color=NA,cluster_cols = F,
+         annotation_colors = annoCol, annotation_names_col=F, annotation_names_row = F,
+         cluster_rows=T,fontsize = 6,fontsize_row = 7, fontsize_col=7,
+         show_colnames = F, scale="none", show_rownames = F, clustering_distance_rows = "euclidean",
+         treeheight_row = 0, gaps_col = head(as.numeric(cumsum(table(annot_cols$type))),-1), angle_col = 90,
+         legend_breaks = c(-4, -2, 0, 2, 4, max(tmp2 %>% column_to_rownames("gene_id"))), 
+         legend_labels = c("-4","-2","0","2","4", "z  \n"))#add legend title
+dev.off()
+
+rm(tmp2,annoCol,annot_rows,annot_cols,DAA_genes, myBreaks,paletteLength)
+# #make a summary table of tail genes (in which types, higher or lower abundant, full name) for enrichment analysis
+# library(biomaRt)
+# ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
+# genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','description'), mart =ensembl)
+# 
+# summary_Tail <- tail_genes %>% mutate(uplower=ifelse(zscores>0,"+","-")) %>%
+#   mutate(disease=gsub("_.*","",sample), disease_dir=paste0(disease,"_",updown)) %>%
+#   dplyr::select(-c("sample","disease")) %>% 
+#   group_by(gene_id,disease_dir) %>% dplyr::summarise(nr_samples=n()) %>% arrange(disease_dir) %>% ungroup() %>%
+#   pivot_wider(names_from=disease_dir, values_from = nr_samples) %>% 
+#   left_join(genes_ens_full, by=c("gene_id"="ensembl_gene_id")) #add annotation
+# 
+# data.table::fwrite(summary_Tail,"../data/threecancer_tail_all_summary.txt", sep="\t", quote=F,row.names = F, na=0)
+# 
+# #summary table of tail genes that are either up or down in at least one cancer type
+# data.table::fwrite(summary_Tail %>% filter((`OV_+` >0) | (`PRAD_+`>0) | (`UCEC_+`>0) ), file="../data/threecancer_tail_upinanycancer.txt", sep="\t", quote=F,row.names = F, na=0)
+# data.table::fwrite(summary_Tail %>% filter((`OV_-` >0) | (`PRAD_-`>0) | (`UCEC_-`>0) ), file="../data/threecancer_tail_downinanycancer.txt", sep="\t", quote=F,row.names = F, na=0)
+
+```
+
+Recurrence of tail genes within a group
+```{r}
+nr_samples_total <- sample_annotation %>% filter(Cohort=="threecancer") %>% group_by(Abbreviation) %>% dplyr::summarise(nr_samples_total=n())
+#number (and %) of samples per group for which gene is tail gene
+tmp2 <- tail_genes %>% mutate(Abbreviation=gsub("_.*","",sample)) %>% group_by(gene_id,Abbreviation) %>% dplyr::summarise(nr_dev_samples=n()) %>% ungroup() %>% left_join(nr_samples_total, by="Abbreviation") %>% mutate(perc_dev_samples=nr_dev_samples/nr_samples_total)
+#number of tail genes with same number of samples for which they are tail genes
+#make sure all rows are represented (0 if absent)
+tmp3 <- tmp2 %>% ungroup() %>% group_by(Abbreviation,nr_dev_samples) %>% dplyr::summarise(nr_genes=n()) %>% full_join(data.frame(Abbreviation=c(rep("CONTROL",max(tmp2$nr_dev_samples)+1), rep("OV",max(tmp2$nr_dev_samples)+1), rep("PRAD",max(tmp2$nr_dev_samples)+1), rep("UCEC",max(tmp2$nr_dev_samples)+1)), nr_dev_samples=rep(seq(0:max(tmp2$nr_dev_samples)),4))) %>%
+  mutate(Abbreviation=ifelse(Abbreviation=="CONTROL","CONTROL",Abbreviation))
+
+tmp3[is.na(tmp3)] <- 0
+
+ggplot(tmp3, aes(x=nr_dev_samples, y=nr_genes+0.05,fill=Abbreviation)) +
+  geom_bar(stat="identity",position="dodge", width=0.8) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988")) +
+  scale_y_log10(expand=c(0,NA),limits=c(0.9,NA)) +
+  mytheme + theme(legend.title = element_blank()) +
+  labs(x="shared among x samples", y="number of tail genes")
+ggsave("../figures/threecancer_tail_recurrence.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+
+#make sure 100% is represented (0 if absent)
+tmp3 <- tmp2 %>% ungroup() %>% group_by(Abbreviation,perc_dev_samples) %>% dplyr::summarise(nr_genes=n())
+tmp3 <- tmp3 %>% 
+  full_join(tmp3 %>% group_by(Abbreviation) %>% dplyr::summarise(perc_dev_samples=max(perc_dev_samples)+0.05)) %>% #add a row with the max perc + 5%
+  full_join(data.frame(Abbreviation=c("CONTROL","OV","PRAD","UCEC"), perc_dev_samples=c(1,1,1,1))) #add rows for 100%
+tmp3$nr_genes[is.na(tmp3$nr_genes)] <- 0 #fill in 0 deviating genes for missing values
+
+ggplot(tmp3, aes(x=perc_dev_samples*100, y=nr_genes,color=Abbreviation)) +
+  geom_line() + geom_point(size=0.5) + 
+  scale_color_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988")) +
+  scale_y_log10() +
+  scale_x_continuous() +
+  mytheme + theme(legend.title = element_blank()) +
+  labs(x="shared among % of samples", y="number of tail genes")
+ggsave("../figures/threecancer_tail_recurrence_perc.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+
+
+tmp4 <- tmp2 %>% ungroup() %>% mutate(CN=ifelse(Abbreviation=="CONTROL","control","cancer")) %>% 
+  group_by(gene_id,CN) %>% dplyr::summarise(nr_dev_samples_allcancer=sum(nr_dev_samples)) %>% #sum nr dev cancer samples
+  ungroup() %>% group_by(CN,nr_dev_samples_allcancer) %>% dplyr::summarise(nr_genes=n())
+#nr of tail genes not unique for 1 sample
+(tmp4 %>% filter(CN=="cancer") %>% filter(nr_dev_samples_allcancer!=1) %>% pull(nr_genes) %>% sum())/(tmp4 %>% filter(CN=="cancer") %>% pull(nr_genes) %>% sum())
+
+### overlap between subtypes
+tmp3 <- tail_genes %>% mutate(Abbreviation=gsub("_.*","",sample)) %>% group_by(gene_id,Abbreviation) %>% dplyr::summarise(nr_dev_samples=n()) %>% ungroup() %>% left_join(nr_samples_total, by="Abbreviation") %>% mutate(perc_dev_samples=nr_dev_samples/nr_samples_total)
+
+rm(tmp2,tmp3,tmp4,nr_samples_total,tail_genes)
+
+```
+
+Overlap of tail gene sets
+```{r}
+tail_genes <- data.table::fread("../data/threecancer_tailgenes.txt",data.table=F) %>%
+   mutate(disease=gsub("_.*","",sample)) #deviating genes (Tail)
+
+### overlap plot of tail genes
+library(eulerr)
+fit <- eulerr::euler(list("OV"=tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), "PRAD"=tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(), "UCEC"= tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique()), 
+                       shape="ellipse")
+p1<- plot(fit, quantities = TRUE,shape="ellipse", alpha=0.7,edges="white", legend=F,fills=c(OV="#BB5566",PRAD="#004488",UCEC="#009988"), main="overlap tail genes")
+print(fit) #no residual errors 
+print(p1)
+
+ggsave("../figures/threecancer_tail_overlap.pdf", plot=p1, useDingbats=F,
+       width=5.8, height=6.1, units="cm")
+
+#include control group tail genes
+fit <- eulerr::euler(list("OV"=tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), "PRAD"=tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(), "UCEC"= tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique(), "CONTROL"=tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique()), 
+                       shape="ellipse")
+p1<- plot(fit, quantities = TRUE,shape="ellipse", alpha=0.7, #make it a bit more light
+          legend=F,fill=c(OV="#BB5566",PRAD="#004488",UCEC="#009988",CONTROL="#DDAA33"), main="overlap tail genes")
+print(p1)
+print(fit) #residual errors with 4 groups!
+
+#significance of overlap
+jaccard <- function(a, b) { #calculate jaccard index
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+require(GeneOverlap)
+#universe?
+#how many unique genes have at least 40 normalized counts in 1 sample
+universe_threecancer <- length(threecancer_normcounts %>% pivot_longer(names_to="sample",values_to="ncounts",-"gene_id") %>% filter(ncounts>=40) %>% pull(gene_id) %>% unique()) #12249 genes with at least 1 sample with ≥40 normalized counts
+
+#test overlap via GeneOverlap object
+#The GeneOverlap class formulates the problem as testing whether two variables are independent, which can be represented as a contingency table, and then uses Fisher’s exact test to find the statistical significance. Here the P-value is zero, which means the overlap is highly significant. The Fisher’s exact test also gives an odds ratio which represents the strength of association. If an odds ratio is equal to or less than 1, there is no association between the two lists. If the odds ratio is much larger than 1, then the association is strong. The class also calculates the Jaccard index which measures the similarity between two lists. The Jaccard index varies between 0 and 1, with 0 meaning there is no similarity between the two and 1 meaning the two are identical. To show some more details, use the print function
+### PRAD vs OV set
+go.obj.OVPRAD <- newGeneOverlap(tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer) 
+go.obj.OVPRAD <- testGeneOverlap(go.obj.OVPRAD)
+print(go.obj.OVPRAD)
+jaccard(tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique())
+
+### OV vs UCEC set
+go.obj.OVUCEC <- newGeneOverlap(tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer) 
+go.obj.OVUCEC <- testGeneOverlap(go.obj.OVUCEC)
+print(go.obj.OVUCEC)
+jaccard(tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique())
+
+### PRAD vs UCEC set
+go.obj.PRADUCEC <- newGeneOverlap(tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer) 
+go.obj.PRADUCEC <- testGeneOverlap(go.obj.PRADUCEC)
+print(go.obj.PRADUCEC)
+jaccard(tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique())
+
+
+#overlap with control tail genes?
+go.obj.CTRLOV <- newGeneOverlap(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer) 
+go.obj.CTRLOV <- testGeneOverlap(go.obj.CTRLOV)
+print(go.obj.CTRLOV)
+jaccard(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="OV") %>% pull(gene_id) %>% unique())
+
+go.obj.CTRLPRAD <- newGeneOverlap(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer)
+go.obj.CTRLPRAD <- testGeneOverlap(go.obj.CTRLPRAD)
+print(go.obj.CTRLPRAD)
+jaccard(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="PRAD") %>% pull(gene_id) %>% unique())
+
+go.obj.CTRLUCEC <- newGeneOverlap(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique(),
+                         genome.size=universe_threecancer) 
+go.obj.CTRLUCEC <- testGeneOverlap(go.obj.CTRLUCEC)
+print(go.obj.CTRLUCEC)
+jaccard(tail_genes %>% filter(disease=="CONTROL") %>% pull(gene_id) %>% unique(), tail_genes %>% filter(disease=="UCEC") %>% pull(gene_id) %>% unique())
+
+#overlap of unique tail genes across types and differentially abundant mRNAs across types
+DAA_threecancer <- data.table::fread("../data/differentialabundance_threecancer.txt", data.table = F) %>% mutate(DA=ifelse((padj<0.05) & (log2FoldChange>1), "higher", ifelse((padj<0.05) & (log2FoldChange<(-1)), "lower", "no"))) #differentially abudant genes (DE)
+
+#nr of tail genes not differentially abundant
+table((tail_genes %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(DA!="no") %>% pull(gene_id) %>% unique()))
+#862/(862+2449)
+
+#nr of tail genes in opposite direction of differential abundance
+table((tail_genes %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(DA!="no") %>% pull(gene_id) %>% unique())) #862 genes in total
+##Per cancer type
+table((tail_genes %>% filter((zscores<-3) &(disease=="OV")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="OV") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())) #246 neg. OV tail genes up in OV vs control
+table((tail_genes %>% filter((zscores>3) &(disease=="OV")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="OV") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())) #2 pos. OV tail genes up in OV vs control
+
+table((tail_genes %>% filter((zscores<-3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="PRAD") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())) #129 neg. PRAD tail genes up in PRAD vs control
+table((tail_genes %>% filter((zscores>3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="PRAD") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())) #0 pos. PRAD tail genes up in PRAD vs control
+
+table((tail_genes %>% filter((zscores<-3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="UCEC") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())) #108 neg. UCEC tail genes up in UCEC vs control
+table((tail_genes %>% filter((zscores>3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="UCEC") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())) #0 pos. UCEC tail genes up in UCEC vs control
+
+table((tail_genes %>% filter((zscores<-3) &( (disease=="OV") | (disease=="PRAD"))) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter((cancertype=="OV") | cancertype=="PRAD") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())) #304 neg. OV/PRAD tail genes up in OV/PRAD vs control
+
+# get tail gene names for subsets
+PRAD_inv <- unique(c((tail_genes %>% filter((zscores<-3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores<-3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="PRAD") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())], (tail_genes %>% filter((zscores>3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores>3) &(disease=="PRAD")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="PRAD") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())]))
+
+OV_inv <- unique(c((tail_genes %>% filter((zscores<-3) &(disease=="OV")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores<-3) &(disease=="OV")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="OV") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())], (tail_genes %>% filter((zscores>3) &(disease=="OV")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores>3) &(disease=="OV")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="OV") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())]))
+UCEC_inv <- unique(c((tail_genes %>% filter((zscores<-3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores<-3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="UCEC") %>% filter(DA=="higher") %>% pull(gene_id) %>% unique())], (tail_genes %>% filter((zscores>3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores>3) &(disease=="UCEC")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(cancertype=="UCEC") %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())]))
+
+#CONTROL_inv <- (tail_genes %>% filter((zscores<-3) &(disease=="CONTROL")) %>% pull(gene_id) %>% unique())[(tail_genes %>% filter((zscores<-3) &(disease=="CONTROL")) %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(DA=="lower") %>% pull(gene_id) %>% unique())]
+
+length(unique(c(PRAD_inv,OV_inv,UCEC_inv)))/table((tail_genes %>% pull(gene_id) %>% unique()) %in% (DAA_threecancer %>% filter(DA!="no") %>% pull(gene_id) %>% unique()))[2] #345/863 -> 40.0% of cancer sample tail genes that are differential in the respective cancer type have an opposite direction (neg/pos z) than the direction of the differential abundance at group level
+```
+
+
+test whether there are significantly less tail genes in certain groups
+```{r}
+tail_genes <- data.table::fread("../data/threecancer_tailgenes.txt",data.table=F) %>%
+   mutate(disease=gsub("_.*","",sample)) #deviating genes (Tail) 
+
+tmp2 <- tail_genes %>% group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
+#make sure no sample is missing
+tmp2 <- tmp2 %>% full_join(sample_annotation %>% filter(Cohort=="threecancer") %>% dplyr::select(c("sample"=UniqueID,"disease"=Abbreviation)), by=c("sample","disease")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
+
+library(ggpubr)
+#my_comparisons <- list( c("CONTROL", "OV"), c("CONTROL", "PRAD"), c("CONTROL", "UCEC") )
+ggplot(tmp2, aes(x=disease,y=n_dev)) +
+  geom_boxplot(outlier.size = 0.75,aes(fill=disease)) +
+  geom_jitter(height=0, width=0.1,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988"))+
+  scale_y_log10(labels=full_nr) +
+  labs(y="tail genes",x="") +
+  ggpubr::stat_compare_means(method="kruskal",label.y=4, size = 2)   # Add global p-value
+  #ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) # Pairwise comparison against reference
+#ggpubr::compare_means(n_dev ~ disease, data = tmp2,method = "wilcox.test",p.adjust.method = "BH")
+
+rstatix::kruskal_test(data=tmp2, n_dev ~ disease)
+rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=tmp2, n_dev ~ disease, p.adjust.method = "BH")
+rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease, ci = T)
+
+ggsave("../figures/threecancer_tail_boxplot_logscale.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+kruskal.test(n_dev ~ disease, data = tmp2) # significant difference between Abbreviation types
+#pairwise.wilcox.test(tmp2$n_dev, tmp2$disease,p.adjust.method = "BH")
+#pairwise.wilcox.test(tmp2$n_dev, tmp2$disease,p.adjust.method = "holm")
+
+ggplot(tmp2, aes(x=disease,y=n_dev)) +
+  geom_boxplot(outlier.size = 0.75,aes(fill=disease)) +
+  geom_jitter(height=0, width=0.1,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988"))+
+  #scale_y_log10(labels=full_nr) +
+  labs(y="tail genes",x="") +
+  ggpubr::stat_compare_means(method="kruskal",label.y=1000, size = 2)   # Add global p-value
+  #ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) # Pairwise comparison against reference
+
+rstatix::kruskal_test(data=tmp2, n_dev ~ disease)
+rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=tmp2, n_dev ~ disease, p.adjust.method = "BH")
+rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease, ci = T)
+
+ggsave("../figures/threecancer_tail_boxplot.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+kruskal.test(n_dev ~ disease, data = tmp2) # significant difference between Abbreviation types
+
+```
+
+Fisher exact test (all samples except one) to make selection of tail genes specifically associated to cancer/control state, then build model on consensus genes only (also at this level LOO with cross-validation: test model on remaining sample)
+```{r}
+predictions <- c()
+original_type <- c()
+
+z_scores_LOO <- data.table::fread("../data/threecancer_zscores_tail.txt",data.table=F) 
+colnames(z_scores_LOO) <- gsub("_threecancer","",colnames(z_scores_LOO))
+tail_genes <- data.table::fread("../data/threecancer_tailgenes.txt",data.table=F) %>%
+   mutate(disease=gsub("_.*","",sample)) #Tail genes
+
+#subset z scores table to genes that are Tail genes in at least 1 sample
+z_scores_LOO_Tail <- z_scores_LOO %>% filter(gene_id %in% unique(tail_genes$gene_id)) 
+
+consensus_genes_100 <- list()
+gene_list <- vector(mode="list", length=length(colnames(z_scores_LOO_Tail)[-1]))
+### Find biomarker tail genes for (all) cancer vs control
+for (samplename in colnames(z_scores_LOO_Tail)[-1]){
+  print(samplename)
+  reduced_z_table <- z_scores_LOO_Tail %>% dplyr::select(-paste(samplename))
+  
+  #Fisher exact test on all samples except sample of interest
+  test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% #filter(!is.na(zscores)) %>% 
+                   #filter(abs(zscores)>3) %>%
+  mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", "N", "T"))  %>% #get tumor/normal annotation
+  #mutate(abszabove3=ifelse(abs(zscores)>3, "above3","below3"))
+  ungroup() %>% group_by(gene_id,cancer) %>% dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+  test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+  df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+#df_fisher$p.adj = p.adjust(df_fisher$p.val, method = "BH")
+  df_fisher %>% filter(p.val<0.05) %>% nrow()
+  gene_list[[samplename]] <- df_fisher %>% filter(p.val<0.05) %>% rownames()
+}
+
+#count how many times a gene is significant in fisher test of all samples except 1 (62 repeats in total so max is 62)
+tmp <-data.frame("gene_id"=c(unlist(gene_list))) %>% group_by(gene_id) %>% 
+  dplyr::summarise(nr_occ=n())
+
+#Keep only genes that are significant in ALL sets to build model (+LOO crossval)
+nr_sets = length(colnames(z_scores_LOO_Tail)[-1])
+consensus_genes_100[["all"]] <- tmp %>% filter(nr_occ==nr_sets) %>% pull(gene_id) #108 consensus genes
+
+### check if consensus genes are more abundant in cancer or control samples
+tmp_consensus <- z_scores_LOO %>% filter(gene_id %in% consensus_genes_100[["all"]]) %>% 
+  pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% 
+  mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", "N", "T"))  %>% #get tumor/normal annotation
+  #mutate(abszabove3=ifelse(abs(zscores)>3, "above3","below3"))
+  ungroup() %>% group_by(gene_id,cancer) %>% dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T)) %>% dplyr::select(-absznot3) %>% pivot_wider(names_from = cancer, values_from = absz3)
+
+### Find biomarker tail genes for every (individual) cancer-control comparison
+for (cancertype in c("OV","PRAD","UCEC")){
+  #make a reduced z_table with only z_score gene
+  Tail_GOI <- tail_genes %>% filter(disease %in% c("CONTROL",cancertype)) %>% pull(gene_id) %>% unique()#tail genes of interest (Tail gene in at least one of the cancer or control samples)
+  #make a reduced z score table
+  cancer_z_table <- z_scores_LOO %>% filter(gene_id %in% Tail_GOI) %>% #filter for Tail GOI 
+    dplyr::select(c("gene_id",grep(paste0(cancertype,"|CONTROL"),colnames(z_scores_LOO),value = T)))
+  
+  
+  #Fisher's Exact test on all samples except one within cancer-control comparison
+  gene_list <- vector(mode="list", length=length(colnames(cancer_z_table)[-1]))
+  names(gene_list) <- colnames(cancer_z_table)[-1]
+  for (samplename in colnames(cancer_z_table)[-1]){
+    print(samplename)
+    reduced_z_table <- cancer_z_table %>% dplyr::select(-paste(samplename))
+    #Fisher exact test on all samples except sample of interest
+    test <- reduced_z_table %>% 
+      pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>%
+      mutate(disease=gsub("_.*","",sample)) %>% 
+      mutate(cancer=ifelse(disease=="CONTROL", "N", "T"))  %>% #get tumor/normal annotation
+      ungroup() %>% group_by(gene_id,cancer) %>% 
+      dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+  
+    test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+    df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+#df_fisher$p.adj = p.adjust(df_fisher$p.val, method = "BH")
+    df_fisher %>% filter(p.val<0.05) %>% nrow()
+    gene_list[[samplename]] <- df_fisher %>% filter(p.val<0.05) %>% rownames()
+  }
+  head(unlist(gene_list))
+  #count how many times a gene is significant in fisher test of all samples except 1 (62 repeats in total so max is 62)
+  tmp <-data.frame("gene_id"=c(unlist(gene_list))) %>% group_by(gene_id) %>% 
+  dplyr::summarise(nr_occ=n())
+  #ggplot(tmp, aes(x=nr_occ)) + geom_bar() + theme_point
+  
+  #Keep only genes that are significant in ALL sets to build model (+LOO crossval)
+  nr_sets = length(colnames(cancer_z_table)[-1])
+  consensus_genes_100[[cancertype]] <- tmp %>% filter(nr_occ==nr_sets) %>% pull(gene_id) #148 recurrent genes OV, 46 PRAD, 13 UCEC
+}
+
+#data.table::fwrite(left_join(data.frame(consensus_gene_id=consensus_genes_100), tail_genes, by=c("consensus_gene_id"="gene_id")),file = "../data/threecancer_tail_consensusLOO.txt",sep="\t",quote=F,na = "")
+
+```
+
+
+```{r}
+### Now calculate nr of tail genes per sample belonging to each type-specific biomarker tail set
+tail_genes_FT_ndev <- data.frame()
+for (cancer in c("OV","PRAD","UCEC")){
+tail_genes_FT_ndev_tmp <- tail_genes %>% filter(disease %in% c("CONTROL",cancer)) %>%
+  filter(gene_id %in% (consensus_genes_100[[cancer]])) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% 
+  mutate(disease=gsub("_.*","",sample))
+#make sure all control and cancer samples of comparison are still present
+tail_genes_FT_ndev_tmp <- right_join(tail_genes_FT_ndev_tmp, 
+                               data.frame(sample=unique(sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation %in% c("CONTROL",cancer)) %>% pull(UniqueID))), by="sample") %>%
+  mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+  mutate(comparison=paste0(cancer,"vsCtrl")) %>% #add comparison to distinguish control outcomes
+  mutate(disease=ifelse(disease=="CONTROL","CONTROL",disease))
+
+tail_genes_FT_ndev <- rbind(tail_genes_FT_ndev, tail_genes_FT_ndev_tmp)
+}
+
+### add the across-cancer (all cancer) biomarker set
+tail_genes_FT_ndev_tmp <- tail_genes %>% #filter(disease %in% c("CONTROL",cancer)) %>% #no need to filter samples
+  filter(gene_id %in% (consensus_genes_100[["all"]])) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% 
+  mutate(disease=gsub("_.*","",sample))
+#make sure all control and cancer samples of comparison are still present
+tail_genes_FT_ndev_tmp <- right_join(tail_genes_FT_ndev_tmp, 
+                               data.frame(sample=unique(sample_annotation %>% filter(Cohort=="threecancer") %>% pull(UniqueID))), by="sample") %>%
+  mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+  mutate(comparison=paste0("allvsCtrl")) %>% #add comparison to distinguish control outcomes
+  mutate(disease=ifelse(disease=="CONTROL","CONTROL","all"))
+
+tail_genes_FT_ndev <- rbind(tail_genes_FT_ndev, tail_genes_FT_ndev_tmp)
+
+data <- tail_genes_FT_ndev %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+  mutate(disease=factor(disease)) %>% 
+  mutate(disease=relevel(disease,ref="CONTROL"))
+
+ggplot(data, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10() +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988", "all"="black")) +
+  facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/threecancer_biomarkertail_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(data, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988","all"="black")) +
+  facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/threecancer_biomarkertail_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+
+### add significance
+#kruskal.test(n_dev ~ disease, data = data) # significant difference between Abbreviation types
+#wilcox.test(n_dev ~ disease, data=data %>% filter(comparison=="allvsCtrl"))
+#wilcox.test(n_dev ~ disease, data=data %>% filter(comparison=="OVvsCtrl"))
+#wilcox.test(n_dev ~ disease, data=data %>% filter(comparison=="PRADvsCtrl"))
+#wilcox.test(n_dev ~ disease, data=data %>% filter(comparison=="UCECvsCtrl"))
+
+rstatix::kruskal_test(data=data, n_dev ~ disease)
+rstatix::kruskal_effsize(data=data, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=data, n_dev ~ disease,ci=T)
+data_tmp <- data %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="allvsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="allvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="allvsCtrl"), n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="OVvsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="OVvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="OVvsCtrl"), n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="UCECvsCtrl"), n_dev ~ disease) 
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="UCECvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="UCECvsCtrl"), n_dev ~ disease,ci=T)
+
+rstatix::wilcox_effsize(data=data, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data, n_dev ~ disease, ci = T)
+
+my_comparisons=list(c("Co","Ca"), c("Co","OV"), c("Co","PRAD"),c("Co","UCEC"))
+#ggpubr::compare_means(n_dev ~ disease, data = tmp2,method = "wilcox.test",p.adjust.method = "holm")
+#ggpubr::compare_means(n_dev ~ disease, data = tmp2, method = "wilcox.test",p.adjust.method = "BH")
+
+require(pROC)
+list_roc <- list()
+for (cancertype in c("OV","PRAD","UCEC")){
+  data <- tail_genes_FT_ndev %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% filter(comparison==paste0(cancertype,"vsCtrl"))
+  k <- dim(data)[1]
+  predictions <- c()
+  for (i in 1:k) {
+    model <- arm::bayesglm(cancer~n_dev, family="binomial", data=data[-i,])
+    model <- glm(cancer~n_dev, family="binomial", data=data[-i,])
+    predictions <- c(predictions, stats::predict(model, newdata=data[i,], type="response"))
+  }
+  list_roc[[cancertype]] <- roc(response=data$cancer,predictor= predictions) #add predictions for this comparison as a new list
+  #data.frame(resp=data$cancer, pred=predictions, types=data$disease)
+}
+
+#### AUC calculation on across-cancer biomarker tail genes
+tail_genes_FT_ndev <- tail_genes %>% filter(gene_id %in% (consensus_genes_100[["all"]])) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
+#make sure all samples are still present:
+tail_genes_FT_ndev <- right_join(tail_genes_FT_ndev, 
+                               data.frame(sample=unique(sample_annotation %>% filter(Cohort=="threecancer") %>% pull(UniqueID))), by="sample") %>% mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
+
+data <- tail_genes_FT_ndev %>% mutate(cancer=ifelse(disease=="CONTROL", F, T))
+
+k <- dim(data)[1]
+predictions <- c()
+for (i in 1:k) {
+  model <- glm(cancer~n_dev, family="binomial", data=data[-i,])
+  predictions <- c(predictions, stats::predict(model, newdata=data[i,], type="response"))
+}
+#library(pROC)
+roc_modAll <- roc(response=data$cancer,predictor= predictions)
+
+ggroc(list(OV=list_roc[["OV"]],PRAD=list_roc[["PRAD"]],UCEC=list_roc[["UCEC"]],all=roc_modAll), legacy.axes = TRUE) +
+    mytheme + coord_fixed(ratio=1) +
+    labs(x = 'False positive rate', y = 'True positive rate',
+         title = "ROC curve LOO-CV\n(cancer-specific gene sets)\ncancer ~ n_dev") +
+    theme(legend.position="bottom", legend.title = element_blank()) +
+    scale_color_manual(values=c("OV"="#BB5566","PRAD"="#004488","UCEC"="#009988","all"="black")) +
+    labs(x = 'False positive rate', y = 'True positive rate')
+
+ggsave(filename = "../figures/threecancer_biomarkertail_ROC_LOO.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+auc(list_roc[["OV"]])
+ci(list_roc[["OV"]])
+auc(list_roc[["PRAD"]])
+ci(list_roc[["PRAD"]])
+auc(list_roc[["UCEC"]])
+ci(list_roc[["UCEC"]])
+auc(roc_modAll)
+ci(roc_modAll)
+
+str(consensus_genes_100)
+
+#plot precision recall
+# plot(precision ~ recall,
+#          coords(list_roc[["OV"]], "all", ret = c("recall", "precision"), transpose = FALSE),
+#          type="l", ylim = c(0, 1))
+# plot(precision ~ recall,
+#          coords(list_roc[["PRAD"]], "all", ret = c("recall", "precision"), transpose = FALSE),
+#          type="l", ylim = c(0, 1))
+# plot(precision ~ recall,
+#          coords(list_roc[["UCEC"]], "all", ret = c("recall", "precision"), transpose = FALSE),
+#          type="l", ylim = c(0, 1))
+
+```
+
+```{r, eval=F}
+require(biomaRt)
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl",version=92)
+genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','description'), mart =ensembl)
+
+#biomarker_overview = data.frame(ensembl_gene_id=c(consensus_genes_100[["all"]], consensus_genes_100[["DLBCL"]], consensus_genes_100[["PMBCL"]]), biomarkerset=c(rep("AllvsCtrl",length(consensus_genes_100[["all"]])), rep("DLBCLvsCtrl",length(consensus_genes_100[["DLBCL"]])), rep("PMBCLvsCtrl",length(consensus_genes_100[["PMBCL"]])))) %>% left_join(genes_ens_full)
+
+biomarker_overview = data.frame(ensembl_gene_id=c(consensus_genes_100[["all"]], consensus_genes_100[["OV"]], consensus_genes_100[["PRAD"]], consensus_genes_100[["UCEC"]]), biomarkerset=c(rep("AllvsCtrl",length(consensus_genes_100[["all"]])), rep("OVvsCtrl",length(consensus_genes_100[["OV"]])), rep("PRADvsCtrl",length(consensus_genes_100[["PRAD"]])),rep("UCECvsCtrl",length(consensus_genes_100[["UCEC"]])))) %>% left_join(genes_ens_full)
+data.table::fwrite(biomarker_overview,file = "../data/threecancer_biomarkertail_list.txt", sep="\t",quote=F,row.names=F)
+```
+
+Make a density plot of biomarker tail genes
+```{r}
+## make a plot of the specific Tail genes with corresponding z 
+#for (gene_ofint in unique(tail_genes$gene_id)[1:20]) {
+#get biomarker tail gene that is present in all comparisons
+Tailgene_ofint <- (consensus_genes_100[["OV"]][consensus_genes_100[["OV"]] %in% consensus_genes_100[["PRAD"]]])[(consensus_genes_100[["OV"]][consensus_genes_100[["OV"]] %in% consensus_genes_100[["PRAD"]]]) %in% consensus_genes_100[["UCEC"]]] #biomarker gene in all biomarker sets
+
+z_all_Tail <- z_scores_LOO %>% filter(gene_id %in% Tailgene_ofint) %>% pivot_longer(names_to="sample",values_to="zscore",-"gene_id") %>% mutate(Abbreviation=gsub("_.*","",sample)) %>% mutate(Abbreviation=ifelse(Abbreviation=="CONTROL","CONTROL",Abbreviation)) %>% left_join(threecancer_normcounts %>% pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"))
+print(ggplot(z_all_Tail, aes(x=zscore)) +
+          stat_density(fill="grey88") +facet_wrap(~Abbreviation,ncol=1) +
+          geom_point(size=0.5, aes(x=zscore,y=0.05,color=Abbreviation))+
+          scale_color_manual(values=c(CONTROL="#DDAA33",OV="#BB5566",PRAD="#004488",UCEC="#009988")) +
+          mytheme + theme(legend.position = "bottom",legend.title = element_blank()) +
+          scale_x_continuous(limits=c(-max(abs(z_all_Tail$zscore)),max(abs(z_all_Tail$zscore)))) +
+          geom_vline(xintercept = 0, color="darkgrey") +
+          geom_vline(xintercept = 3, color="darkgrey") + geom_vline(xintercept = -3, color="darkgrey") +
+          labs(title=Tailgene_ofint))
+
+ggsave(filename = "../figures/threecancer_tail_gene1_distribution.pdf", plot=last_plot(), width=5.8, height=7.2, units="cm")
+
+Tailgene_ofint <- tail_genes %>% filter(zscores<(-3)) %>% pull(gene_id) 
+
+z_all_Tail <- z_scores_LOO %>% filter(gene_id %in% Tailgene_ofint[9]) %>% pivot_longer(names_to="sample",values_to="zscore",-"gene_id") %>% mutate(Abbreviation=gsub("_.*","",sample)) %>% mutate(Abbreviation=ifelse(Abbreviation=="CONTROL","CONTROL",Abbreviation)) %>% left_join(threecancer_normcounts %>% pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"))
+print(ggplot(z_all_Tail, aes(x=zscore)) +
+          stat_density(fill="grey88") +facet_wrap(~Abbreviation,ncol=1) +
+          geom_point(size=0.5, aes(x=zscore,y=0.05,color=Abbreviation))+
+          scale_color_manual(values=c(CONTROL="#DDAA33",OV="#BB5566",PRAD="#004488",UCEC="#009988")) +
+          mytheme + theme(legend.position = "bottom",legend.title = element_blank()) +
+          scale_x_continuous(limits=c(-max(abs(z_all_Tail$zscore)),max(abs(z_all_Tail$zscore)))) +
+          geom_vline(xintercept = 0, color="darkgrey") +
+          geom_vline(xintercept = 3, color="darkgrey") + geom_vline(xintercept = -3, color="darkgrey") +
+          labs(title=Tailgene_ofint))
+
+ggsave(filename = "../figures/threecancer_tail_gene2_distribution.pdf", plot=last_plot(), width=5.8, height=7.2, units="cm")
+
+```
+
+
+Overlap of biomarker tail genes
+```{r}
+### overlap plot of biomarker tail genes
+library(eulerr)
+fit <- eulerr::euler(list("OV"=consensus_genes_100[["OV"]], "PRAD"=consensus_genes_100[["PRAD"]], "UCEC"= consensus_genes_100[["UCEC"]]), 
+                       shape="ellipse")
+p1<- plot(fit, quantities = TRUE,shape="ellipse", alpha=0.7, edges="white", #make it a bit more light
+          legend=F,fill=c(OV="#BB5566",PRAD="#004488",UCEC="#009988"), main="overlap recurrent tail genes")
+print(fit) #no residual errors 
+print(p1)
+ggsave("../figures/threecancer_biomarkertail_overlap.pdf", plot=p1, useDingbats=F, width=5.8, height=6.1, units="cm")
+
+jaccard <- function(a, b) { #calculate jaccard index
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+
+require(GeneOverlap)
+#test overlap via GeneOverlap object
+go.obj.OVPRAD <- newGeneOverlap(consensus_genes_100[["OV"]],
+                         consensus_genes_100[["PRAD"]],
+                         genome.size=length(unique(tail_genes$gene_id))) #all (3312) tail genes
+go.obj.OVPRAD <- testGeneOverlap(go.obj.OVPRAD)
+print(go.obj.OVPRAD)
+jaccard(consensus_genes_100[["OV"]], consensus_genes_100[["PRAD"]])
+
+go.obj.OVUCEC <- newGeneOverlap(consensus_genes_100[["OV"]],
+                         consensus_genes_100[["UCEC"]],
+                         genome.size=length(unique(tail_genes$gene_id))) #all (3312) tail genes
+go.obj.OVUCEC <- testGeneOverlap(go.obj.OVUCEC)
+print(go.obj.OVUCEC)
+jaccard(consensus_genes_100[["OV"]], consensus_genes_100[["UCEC"]])
+
+go.obj.PRADUCEC <- newGeneOverlap(consensus_genes_100[["PRAD"]],
+                         consensus_genes_100[["UCEC"]],
+                         genome.size=length(unique(tail_genes$gene_id))) #all (3312) tail genes
+go.obj.PRADUCEC <- testGeneOverlap(go.obj.PRADUCEC)
+print(go.obj.PRADUCEC)
+jaccard(consensus_genes_100[["PRAD"]], consensus_genes_100[["UCEC"]])
+
+
+#overlap of unique biomarker tail genes in different types and differentially abundant mRNAs across types
+table((c(consensus_genes_100[["OV"]],consensus_genes_100[["PRAD"]],consensus_genes_100[["UCEC"]]) %>% unique()) %in% (DAA_threecancer %>% filter(DA!="no") %>% pull(gene_id) %>% unique()))
+
+#overlap of unique biomarker tail genes across types (all cancer) and differentially abundant mRNAs across types
+table((c(consensus_genes_100[["all"]]) %>% unique()) %in% (DAA_threecancer %>% filter(DA!="no") %>% pull(gene_id) %>% unique())) #46% of 108 are also differentially abundant in a certain type vs control
+
+```
+
+```{r,eval=F}
+require(biomaRt)
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
+genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','description'), mart =ensembl)
+
+tail_genes_consensus <- data.frame()
+for (cancer in c("OV","PRAD","UCEC")){
+  tmp <- tail_genes %>% filter(gene_id %in% consensus_genes_100[[cancer]]) %>% #select GOI
+    filter(disease %in% c("CONTROL",cancer)) %>% #only keep control and cancer of interest
+    mutate(direction=ifelse(zscores>3,"+",ifelse(zscores<(-3),"-",NA))) %>%
+    mutate(disease_dir=paste0(disease,"_",direction)) %>%
+    group_by(gene_id,disease_dir) %>% dplyr::summarise(nr_samples=n()) %>% #get nr of samples with positive and negative z score for respective tail gene
+    mutate(comparison=paste0(cancer,"vsCtrl")) #add comparison that was made
+  tail_genes_consensus <- rbind(tail_genes_consensus, tmp)
+}
+rm(tmp)
+# remove duplicated entries (control samples) & convert to wide format
+tail_genes_consensus <- tail_genes_consensus %>%
+  dplyr::select("gene_id","disease_dir","nr_samples") %>% unique() %>%
+  pivot_wider(names_from = disease_dir, values_from = nr_samples) %>%
+  left_join(genes_ens_full, by=c("gene_id"="ensembl_gene_id"))
+
+#data.table::fwrite(tail_genes_consensus, "../data/threecancer_biomarkertail_pertype_summary.txt", sep="\t", quote=F,row.names = F, na=0)
+
+#make a summary table of consensus genes (in which types, up or down, full name)
+tmp_z <- data.frame(gene_id=consensus_genes_100[["all"]]) %>% left_join(genes_ens_full, by=c("gene_id"="ensembl_gene_id"))
+
+summary_consensus <- tail_genes %>% mutate(updown=ifelse(zscores>0,"+","-")) %>% mutate(disease_dir=paste0(disease,"_",updown)) %>%
+  group_by(gene_id,disease_dir) %>% dplyr::summarise(nr_samples=n()) %>% arrange(disease_dir) %>% 
+  pivot_wider(names_from=disease_dir, values_from = nr_samples) %>% right_join(tmp_z, by="gene_id")
+
+#data.table::fwrite(summary_consensus, file="../data/threecancer_biomarkertail_allcancer_summary.txt", sep="\t", quote=F,row.names = F, na=0)
+
+# data.table::fwrite(summary_consensus %>% filter((`OV_+` >0) | (`PRAD_+`>0) | (`UCEC_+`>0) ), file="../data/threecancer_biomarkertail_upinanycancer.txt", sep="\t", quote=F,row.names = F, na=0)
+# data.table::fwrite(summary_consensus %>% filter((`OV_-` >0) | (`PRAD_-`>0) | (`UCEC_-`>0) ), file=h"../data/threecancer_biomarkertail_downinanycancer.txt", sep="\t", quote=F,row.names = F, na=0)
+
+```
+
+Heatmap of the 108 LOO consensus genes Fisher's exact test
+```{r}
+#get the z scores of all samples (for T, based on all N as reference; for N, based on all N except N itself)
+
+#filter out z values where abs z<=3 & counts < 40
+tail_genes <- data.table::fread("../data/threecancer_tailgenes.txt", data.table=F)
+z_scores_LOO <- data.table::fread("../data/threecancer_zscores_tail.txt", data.table=F)
+
+tmp2 <- z_scores_LOO %>% filter(gene_id %in% consensus_genes_100[["all"]])
+table(is.na(tmp2))
+tmp2[is.na(tmp2)] <- 0 #0/0 = NA
+
+#top off z scores (max -5 to 5)
+tmp2 <- tmp2 %>% column_to_rownames("gene_id")
+tmp2[tmp2>5] <- 5
+tmp2[tmp2<(-5)] <- -5
+tmp2 <- tmp2 %>% rownames_to_column("gene_id")
+#table(tmp2==Inf)
+
+require(pheatmap)
+require(RColorBrewer)
+
+paletteLength=40
+myColor <- colorRampPalette(c("blue", "white", "red"))(paletteLength)
+# length(breaks) == length(paletteLength) + 1
+# use floor and ceiling to deal with even/odd length pallettelengths
+myBreaks <- c(seq(min(tmp2%>% column_to_rownames("gene_id")), 0, length.out=ceiling(paletteLength/2) + 1), 
+              seq(max(tmp2%>% column_to_rownames("gene_id"))/paletteLength, max(tmp2%>% column_to_rownames("gene_id")), length.out=floor(paletteLength/2)))
+
+# no clustering of columns, only rows
+colnames(tmp2) <- sub("_([0-9])$","_0\\1",gsub("_threecancer","",colnames(tmp2))) #add trailing 0 for values below 10
+tmp2 <- dplyr::select(tmp2, c("gene_id", colnames(tmp2)[-1] %>% sort()))
+annot_cols= data.frame(type = gsub("_.*","",colnames(tmp2)), 
+        row.names = colnames(tmp2))
+annot_cols$type <- factor(annot_cols$type, levels=c("CONTROL","OV","PRAD","UCEC"))
+
+#differential or not: 
+DAA_genes <- data.table::fread("../data/differentialabundance_threecancer.txt", data.table = F) %>% mutate(DA=ifelse((padj<0.05) & (log2FoldChange>1), "higher", ifelse((padj<0.05) & (log2FoldChange<(-1)), "lower", "no")))  #differentially abudant genes (DE)
+annot_rows = data.frame(namesrow=tmp2$gene_id) %>% 
+  mutate(differential=ifelse(namesrow %in% (DAA_genes %>% filter(DA=="lower") %>% pull(gene_id)),"lower",
+                             ifelse(namesrow %in% (DAA_genes %>% filter(DA=="higher") %>% pull(gene_id)),"higher","no"))) %>% column_to_rownames("namesrow")
+
+#% of Tail genes that is differential? 
+(annot_rows %>% filter(differential!="no") %>% nrow())/(annot_rows %>% nrow())
+
+annoCol<-list(type=c(CONTROL="#DDAA33",OV="#BB5566",PRAD="#004488",UCEC="#009988"), differential=c(lower="#CCBB44",higher="#AA3377",no="#FFFFFF"))
+pdf(file="../figures/threecancer_biomarkertail_allcancer_heatmap.pdf", width=9.3,height=5.9, useDingbats = F)
+pheatmap(as.matrix(tmp2 %>% column_to_rownames("gene_id")), 
+         color=myColor, breaks=myBreaks, annotation_col = annot_cols,
+         annotation_row=annot_rows,border_color=NA,cluster_cols = F,
+         annotation_colors = annoCol, annotation_names_col=F, 
+         cluster_rows=T,fontsize = 7,fontsize_row = 9, fontsize_col=7, 
+         show_colnames = T, scale="none", show_rownames = F, clustering_distance_rows = "euclidean",
+         treeheight_row = 0, gaps_col = head(as.numeric(cumsum(table(annot_cols$type))),-1), angle_col = 90,
+         legend_breaks = c(-4, -2, 0, 2, 4, max(tmp2 %>% column_to_rownames("gene_id"))), legend_labels = c("-4","-2","0","2","4", "z  \n")) #add legend title
+dev.off()
+
+rm(annoCol, annot_cols, annot_rows, cancer_z_table, DAA_genes, tmp2)
+```
+
+
+Internal validation: what if we randomly shuffle sample names (reassign samples to control or cancer group)? + determine consensus biomarker tail genes (leave-one-out Fisher's exact test) of (all) cancer vs control
+```{r, warning=F}
+#cohort PRAD, UCEC, OV, CONTROL
+rm(tail_genes, z_scores_logscale_threecancer,z_scores_logscale_threecancer_normal_notinref,z_scores_LOO)
+
+require(pROC)
+require(ggpubr)
+
+set.seed(124)
+for (i in 1:20){
+#for (i in 1:2){
+  print(paste0("Iteration: ",i))
+  threecancer_normcounts <- data.table::fread("../data/threecancer_normcounts_all.txt", data.table=F)
+  
+  ## reorder sample names (and thus cancer/normal type) randomly
+  ordersamples_random <- sample(threecancer_normcounts %>% dplyr::select(-gene_id) %>% colnames(.), replace=F)
+  #print(grep("CONTROL",ordersamples_random[1:27],value=T))
+  print(paste0(length(grep("CONTROL",ordersamples_random[1:27],value=T)), " original control samples in reference"))
+  colnames(threecancer_normcounts) <- c("gene_id",ordersamples_random)
+  
+  #calculate z scores for all genes in every sample based on new reference
+  z_scores_LOO_random <- data.frame(gene_id = threecancer_normcounts %>% pull(gene_id))
+  for (samp in (colnames(threecancer_normcounts)[-1])) {
+    #print(samp)
+    z_scores_LOO_random_tmp <- tail_z_score(threecancer_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id") , 
+                                                                    threecancer_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(threecancer_normcounts),value =T))) %>% 
+                                                                      dplyr::select(-any_of(samp)) %>% #remove sample itself from ref
+                                                                      column_to_rownames("gene_id"))
+    
+    z_scores_LOO_random <- left_join(z_scores_LOO_random, z_scores_LOO_random_tmp %>% rownames_to_column("gene_id"), by="gene_id")
+  }
+
+  rm(z_scores_LOO_random_tmp,samp)
+  
+  tail_genes <- left_join(z_scores_LOO_random %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% 
+                          filter(abs(zscores)>3), 
+                        threecancer_normcounts %>% #add normalized counts (with same random reshuffled names)
+                          pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                        by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+  
+  #significant difference between new control group and cancer types?
+  tmp2 <- tail_genes %>% group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
+  #make sure no sample is missing
+  tmp2 <- tmp2 %>% full_join(sample_annotation %>% filter(Cohort=="threecancer") %>% dplyr::select(c("sample"=UniqueID,"disease"=Abbreviation)), by=c("sample","disease")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
+  
+  library(ggpubr)
+  my_comparisons <- list( c("CONTROL", "OV"), c("CONTROL", "PRAD"), c("CONTROL", "UCEC") )
+  print(ggplot(tmp2, aes(x=disease,y=n_dev)) +
+    geom_boxplot(outlier.size = 0.75,aes(fill=disease)) +
+    geom_jitter(height=0, width=0.1,size=0.5,color="grey")+
+    mytheme + theme(legend.position="none") +
+    scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="white","OV"="white","UCEC"="white"))+
+    scale_y_log10(labels=full_nr) +
+    labs(y="tail genes",x="") +
+    ggpubr::stat_compare_means(method="kruskal",label.y=4, size = 3) +  # Add global p-value
+    ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 3)) # Pairwise comparison against reference
+    #ggpubr::stat_compare_means(label = "p.signif", method = "wilcox.test",p.adjust.method="BH",ref.group = "CONTROL")  # Pairwise comparison against reference
+  print(ggpubr::compare_means(n_dev ~ disease, data = tmp2,
+                method = "wilcox.test",p.adjust.method = "BH")) #plot contains unadjusted p-values only
+  
+  print(kruskal.test(n_dev ~ disease, data = tmp2)) # significant difference between any types?
+  
+  #Fisher exact test for preselection of genes with LOO
+  #subset z scores table to genes that are Tail genes in at least 1 sample
+  z_scores_LOO_Tail <- z_scores_LOO_random %>% filter(gene_id %in% unique(tail_genes$gene_id)) 
+  
+  gene_list <- vector(mode="list", length=length(colnames(z_scores_LOO_random)[-1]))
+  names(gene_list) <- colnames(z_scores_LOO_random)[-1]
+
+  for (samplename in colnames(z_scores_LOO_Tail)[-1]){
+    #print(samplename)
+    reduced_z_table <- z_scores_LOO_Tail %>% dplyr::select(-paste(samplename))
+    #Fisher exact test on all samples except sample of interest
+    test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% #filter(!is.na(zscores)) %>% 
+      #filter(abs(zscores)>3) %>%
+      mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", "N", "T"))  %>% #get tumor/normal annotation
+      #mutate(abszabove3=ifelse(abs(zscores)>3, "above3","below3"))
+      ungroup() %>% group_by(gene_id,cancer) %>% dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+    test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+    df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+    #df_fisher$p.adj = p.adjust(df_fisher$p.val, method = "BH")
+    df_fisher %>% filter(p.val<0.05) %>% nrow()
+    gene_list[[samplename]] <- df_fisher %>% filter(p.val<0.05) %>% rownames()
+  }
+  
+  #head(unlist(gene_list))
+  
+  #count how many times a gene is significant in fisher test of all samples except 1 (62 repeats in total so max is 62)
+  tmp <-data.frame("gene_id"=c(unlist(gene_list))) %>% group_by(gene_id) %>% 
+    dplyr::summarise(nr_occ=n())
+  #ggplot(tmp, aes(x=nr_occ)) + geom_bar() + theme_point
+  
+  #Keep only genes that are significant in ALL sets to build model (+LOO crossval)
+  nr_sets = length(colnames(z_scores_LOO_Tail)[-1])
+  consensus_genes_100 <- tmp %>% filter(nr_occ==nr_sets) %>% pull(gene_id) #108 consensus genes
+  
+  print(paste("biomarker tail genes:", length(consensus_genes_100)))
+  
+  
+  # #### AUC calculation cf https://www.statology.org/auc-in-r/
+  # tail_genes_FT_ndev <- tail_genes %>% filter(gene_id %in% (consensus_genes_100)) %>%
+  #   group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
+  # #make sure all samples are still present:
+  # tail_genes_FT_ndev <- right_join(tail_genes_FT_ndev, 
+  #                                data.frame(sample=unique(sample_annotation %>% filter(Cohort=="threecancer") %>% pull(UniqueID))), by="sample") %>% mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
+  # 
+  # data <- tail_genes_FT_ndev %>% mutate(cancer=ifelse(disease=="CONTROL", F, T))
+  # 
+  # k <- dim(data)[1]
+  # predictions <- c()
+  # for (i in 1:k) {
+  #   model <- glm(cancer~n_dev, family="binomial", data=data[-i,])
+  #   predictions <- c(predictions, stats::predict(model, newdata=data[i,], type="response"))
+  # }
+  # #library(pROC)
+  # roc_mod1 <- roc(response=data$cancer,predictor= predictions)
+  # print(ggroc(roc(response=data$cancer,predictor= predictions), legacy.axes = TRUE) +
+  #         labs(x = 'False positive rate', y = 'True positive rate',
+  #              title = "ROC curve LOO-CV\n(random group assignment)\ncancer ~ n_dev") +
+  #         annotate('text', x = .5, y = .5, label = paste0('AUC: ', round(auc(roc_mod1), digits = 4))))
+  # 
+  # print(plot(precision ~ recall,
+  #        coords(roc_mod1, "all", ret = c("recall", "precision"), transpose = FALSE),
+  #        type="l", ylim = c(0, 1)))
+  # 
+  # #View(tail_genes_FT_ndev) #note that only 6 normals have deviating genes after fisher exact test!
+  # tail_genes_FT_ndev %>% filter(n_dev>0)
+  # 
+  # pred_test <- data.frame(cbind(tail_genes_FT_ndev, cancer=data$cancer, predictions))
+  # ggplot(pred_test,aes(x=reorder(sample,predictions),y=predictions, color=cancer)) + geom_point() + mytheme + scale_color_manual(values=c("grey","black")) + scale_y_continuous(limits=c(0,NA))
+  
+}
+
+##results of 20 iterations with filtering for Tail genes before Fisher test: 
+# seed 124
+#c(0,1,4,2,1,4,1,5,0,1,7,0,1,2,2,3,4,4,0,2)
+#median(c(0,1,4,2,1,4,1,5,0,1,7,0,1,2,2,3,4,4,0,2))
+
+
+## get original normalized counts (with correct sample order)
+threecancer_normcounts <- data.table::fread("../data/threecancer_normcounts_all.txt", data.table = F)
+
+rm(tail_genes_random,z_scores_LOO_random, tail_genes, tail_genes_FT_ndev)
+
+### Same but using each time leaving out a control and a tumor sample does not result in different numbers
+```
