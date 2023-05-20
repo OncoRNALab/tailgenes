@@ -1,5 +1,3 @@
-# Biofluid differential abundance and tail genes analyses
-
 This repository contains data and scripts used to generate numbers and figures for the paper by Morlion et al.: *"Patient-specific alterations in blood plasma cfRNA profiles enable accurate classification of cancer patients and controls"*
 
 The `input` folder contains annotation and count data, used as input for data analysis:
