@@ -1,0 +1,1051 @@
+---
+title: "Differential abundance"
+author: "Annelien Morlion"
+date: "2023-05-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+require(ggrepel)
+library(here)
+library(DESeq2)
+
+## Define plot style for paper
+mytheme = theme_classic(base_size = 7) +
+  theme(text = element_text(size=7, colour="black"),
+        title = element_text(size=7, colour="black"),
+        line = element_line(size=0.5),
+        axis.title = element_text(size=7, colour="black"),
+        axis.text = element_text(size=7, colour="black"),
+        axis.ticks = element_line(size=0.5),
+        strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),
+        legend.position = c(0.8,0.8),
+        legend.text = element_text(size=6))
+mytheme_discrete_x = mytheme + theme(axis.text.x = element_text(angle=90, hjust=1,vjust=0.5))
+
+color_panel<-c("#e35d6a","#428bca","#5bb75b","#e87810","#23496b","#ffbf00","#cc2028","#039748","pink","gray","darkgray")
+cb_color_panel <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+#see https://personal.sron.nl/~pault/
+cb_color_panel_highcontrast <- c("#000000","#004488", "#DDAA33", "#BB5566") #+"#FFFFFF" white
+cb_color_panel_mediumcontrastpairs <- c('#6699CC', '#004488', '#EECC66', '#994455', '#997700', '#EE99AA') #+"#FFFFFF" white and "#000000" black
+cb_color_panel_bright <- c('#4477AA', '#EE6677', '#228833', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
+
+full_nr <- scales::format_format(big.mark = ",", decimal.mark = ".", scientific = FALSE)
+
+##sample annotation
+sample_annotation <- data.table::fread("../input/SupplTable1_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort))
+sample_annotation_all <- sample_annotation # keep original table
+sample_annotation <- sample_annotation_all %>% filter(Excluded != "x") #filter out low read samples
+```
+
+
+raw counts, combine and remove samples with less than 2M reads (suffix: "included")
+```{r}
+data_pancancer <- data.table::fread("../input/pancancer_counts.txt", data.table = F, header=T) %>%
+  filter(gene_id %in% grep("__",gene_id, invert=T, value=T)) %>%
+  pivot_longer(names_to="RNAID",values_to="counts",-"gene_id")
+
+data_threecancer <- data.table::fread("../input/threecancer_counts.txt", data.table = F, header=T) %>%
+  filter(gene_id %in% grep("__",gene_id, invert=T, value=T)) %>%
+  pivot_longer(names_to="RNAID",values_to="counts",-"gene_id") 
+
+data_all <- rbind(data_pancancer, data_threecancer) 
+
+#only keep samples > 2M reads and add sample annotation
+data_allincluded <- data_all %>% right_join(sample_annotation %>% dplyr::select("RNAID", "Abbreviation","Cohort","UniqueID"), by="RNAID") %>% mutate(SampleName = gsub("_.*cancer","",UniqueID)) #only keep samples > 2M reads
+#length(unique(data_allincluded$RNAID)) #266
+
+#change to format with gene_counts in rows and samples in columns
+data_allincluded_wide <- data_allincluded %>% dplyr::select(c("gene_id","UniqueID","counts")) %>% pivot_wider(names_from = UniqueID, values_from=counts)
+data_pancancerincluded_wide <- data_allincluded_wide %>% dplyr::select(c("gene_id",grep("_pancancer$",colnames(.), value=T)))
+data_threecancerincluded_wide <- data_allincluded_wide %>% dplyr::select(c("gene_id",grep("_threecancer$",colnames(.), value=T)))
+
+```
+
+95% single positives cutoff = 9 -> require at least 10 counts
+
+```{r}
+library(biomaRt)
+ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=92)
+genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+ensembl_annotation <- getBM(attributes=c('ensembl_gene_id','external_gene_name'),mart=ensembl)
+
+pc_gene_counts_pancancer <- data_pancancerincluded_wide %>% pivot_longer(names_to = "SampleName", values_to="counts", -gene_id) %>% #long format
+  left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-"gene_biotype") %>% #remove gene biotype column
+  pivot_wider(names_from=SampleName, values_from=counts) #back to original format: rows=genes, columns=samples
+```
+
+
+#DESeq normalization & PCA (pan-cancer) cohort
+
+```{r, eval=F}
+#Make separate volcano plots, heatmaps and PCA plots of 1 cancer vs control
+DA_table_all <- data.frame()
+
+normal_samples <- sample_annotation %>% filter(Cohort=="pancancer") %>% filter(Abbreviation=="CONTROL") %>% pull(UniqueID)
+normal_counttable <- dplyr::select(pc_gene_counts_pancancer, c("gene_id",all_of(normal_samples)))
+
+for (cancer in (sample_annotation %>% filter(Cohort=="pancancer") %>% 
+                filter(Abbreviation!="CONTROL") %>% pull(Abbreviation) %>% unique()) ) {
+  print(cancer)
+  tumor_samples <- sample_annotation %>% filter(Cohort=="pancancer") %>% filter(Abbreviation==cancer) %>% pull(UniqueID)
+  tumor_counttable <- dplyr::select(pc_gene_counts_pancancer, c("gene_id",all_of(tumor_samples))) 
+  counttable <- full_join(normal_counttable, tumor_counttable, by="gene_id") #join tumor and normal samples
+  rm(tumor_counttable)
+  
+  ## FILTER genes
+  keep <- (rowSums(dplyr::select(counttable, all_of(normal_samples)) > 9) >= 
+           round(length(normal_samples)/2,0)) | #≥50% of normal samples count > 9
+    (rowSums(dplyr::select(counttable, all_of(tumor_samples)) > 9) >= 
+     round(length(tumor_samples)/2,0)) # OR ≥50% of tumor samples count > 9
+  table(keep, useNA="ifany")
+  counttable <- counttable[keep, ]
+  counttable <- column_to_rownames(counttable, "gene_id")
+  
+  ## PREINSPECTION data
+  pseudoCount = log2(counttable + 1)
+  df = reshape2::melt(pseudoCount)
+  ## DESEQ CONTROLIZATION + PREINSPECTION
+  condition <- relevel(factor(ifelse(grepl("^CONTROL", colnames(counttable)), "Control", "Cancer")), "Control") #set normal as reference
+  coldata <- data.frame(row.names=colnames(counttable), condition)
+  dds <- DESeqDataSetFromMatrix(countData=counttable, colData=coldata, design=~condition)
+  dds <- DESeq(dds)
+  
+  counttable_normalized<-as.data.frame(counts(dds, normalized = TRUE))  
+  #pseudoCount = log2(counttable_normalized + 1)
+  #df = reshape2::melt(pseudoCount)
+  # print(ggplot(df, aes(x = variable, y = value, fill=variable)) + geom_boxplot() + xlab("") + theme_boxplot+ ylab(expression(log[2](count + 1))))
+  
+  res <- results(dds, alpha=0.05)
+  #summary(res)
+  #Order results according to p-value
+  resOrdered <- res[order(res$pvalue),]
+  
+  DA_table_all <- rbind(DA_table_all, data.frame(resOrdered) %>% rownames_to_column("gene_id") %>% mutate(cancertype=cancer))
+  
+  #get gene list ranked on fold change for GSEA
+  tmp <- data.frame(resOrdered) %>% rownames_to_column("gene_id") %>%
+    dplyr::arrange(desc(log2FoldChange)) %>%
+    dplyr::left_join(ensembl_annotation, by=c("gene_id"="ensembl_gene_id"))
+  #write this to cancer specific rnk file for GSEA
+  data.table::fwrite(tmp %>% dplyr::select(c("external_gene_name","log2FoldChange")) %>% drop_na(), file=(paste0("../data/pancancer_GSEA/GSEA_input_FCranked_",cancer,".rnk")),quote = F, na = "", sep="\t", col.names = F, row.names = F)
+  
+  #write.csv(resOrdered, file=paste0("../data/pancancer_diffabundance_",cancer,".csv")),quote = F, row.names = F, na = "")
+  
+  ## Volcano plots
+  require(EnhancedVolcano)
+  #limit |log2FC| to 10 for visualization
+  res_topped <- data.frame(res) %>% mutate(log2FoldChange=ifelse(log2FoldChange<(-10),-10,ifelse(log2FoldChange>10,10,log2FoldChange))) %>% mutate(padj=ifelse(padj<1e-10,1e-10,padj))
+  # create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change (via nested ifelse statements)
+  keyvals <- ifelse(
+    (res_topped$log2FoldChange < (-1)) & (res_topped$padj<0.05), '#004488',
+      ifelse((res_topped$log2FoldChange >1) & (res_topped$padj<0.05), '#BB5566',
+        '#BBBBBB'))
+  names(keyvals)[keyvals == '#004488'] <- 'lower'
+  names(keyvals)[keyvals == '#BB5566'] <- 'higher'
+  names(keyvals)[keyvals == '#BBBBBB'] <- 'NS'
+  keyvals[is.na(keyvals)] <- 'NA'
+  print(EnhancedVolcano(res_topped, #lab=rownames(res), 
+                lab="",
+                title = paste0(cancer, ' vs CONTROL'), titleLabSize = 11,
+                subtitle=NULL, 
+                x= "log2FoldChange", y="padj", 
+                xlab = bquote(~log[2]~ 'fold change'), 
+                ylab = bquote(~-log[10]~adjusted~italic(P)), 
+                colCustom = keyvals,
+                axisLabSize = 11,labSize=11,
+                pCutoff = 0.05, FCcutoff = 1.0,
+                legendLabels=c('NS','FC>2','p-adj<0.05',
+                         'p-adj<0.05 & FC>2'), 
+                colAlpha = 1,shape=20,pointSize = 0.3,
+                gridlines.major = F, gridlines.minor = F,
+                ylim=c(0,10),xlim=c(-10,10),
+                legendPosition = 'right',legendLabSize = 11,
+                legendIconSize = 1))
+  #ggsave(paste0("../figures/pancancer_diffabundance_volcano_",cancer,".png"), plot=last_plot(), height=7.5, width=10, units="cm",dpi = 300, bg='transparent')
+  
+  ### Heatmap of differential genes
+  require(pheatmap)
+  tmp <- log2(counttable_normalized[data.frame(res) %>% filter(padj<0.05) %>% filter(abs(log2FoldChange)>1) %>% rownames(),] %>% dplyr::select(all_of(c(normal_samples,tumor_samples))) +1)
+  colnames(tmp) <- gsub("_pancancer","",colnames(tmp)) #remove "_pancancer" 
+  #Use a custom palette of red and blue, centered around 0
+  custom_palette = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name =
+  "RdBu")))(100)
+  # #make sure the middle color is positioned around 0
+  myBreaks <- c(seq(-3.5,0,length.out=ceiling(length(custom_palette)/2) + 1), seq(3.5/length(custom_palette),3.5,length.out=floor(length(custom_palette)/2)))
+  #annotate columns
+  ann_col = data.frame(
+                    type = ifelse(gsub("_.*","",colnames(tmp)) == "CONTROL","control","cancer"))
+  rownames(ann_col) = colnames(tmp)
+  ann_colors = list(
+    type = c("control"="#DDAA33", "cancer"="#000000"))
+  
+  pheatmap(t(tmp), 
+           color=custom_palette,scale = "column", show_colnames = F, 
+           treeheight_col=0, cluster_cols = T, cluster_rows = T, 
+           clustering_distance_rows = "correlation",clustering_distance_cols = "correlation",
+           annotation_row = ann_col, annotation_colors = ann_colors, 
+           fontsize = 8.5, annotation_names_row = F,
+           breaks=myBreaks, legend_breaks=c(-3,-2,-1,0,1,2,3), legend_labels = c(-3,-2,-1,0,1,2,3),
+           #filename = paste0("../figures/pancancer_diffabundance_heatmap_",cancer,".png"),
+           width=5.51,height=2.17)
+  rm(tmp)
+  
+  ##PCA
+  vsd <- vst(dds,blind=T) #default, re-estimate dispersions using only an intercept
+  #plotPCA(vsd, intgroup=c("condition")) 
+  #PCA of 500 genes with highest row variance
+  pcaData <- plotPCA(vsd, intgroup=c("condition"), ntop=500, returnData=T) 
+  percentVar <- round(100*attr(pcaData, "percentVar"))
+  
+  print(ggplot(pcaData, aes(PC1, PC2, shape=condition, color=condition, label=(stringi::stri_sub((gsub("_pancancer","",rownames(pcaData))),-1)))) +
+    geom_point() +
+    ggrepel::geom_text_repel(size=2) +
+    scale_shape_manual(values = c("Control"=15, "Cancer"=16)) + 
+    mytheme + #theme_classic() +
+    theme(legend.title = element_blank(), legend.position = "bottom") +
+    labs(title=paste0(cancer," & Control (top 500 genes)")) +
+    xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+    ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+    coord_fixed(ratio=1, xlim=c(min(pcaData$PC1, pcaData$PC2),max(pcaData$PC1, pcaData$PC2)),ylim=c(min(pcaData$PC1, pcaData$PC2),max(pcaData$PC1, pcaData$PC2))) + #fixed scale coord system where default (ratio = 1) ensures that one unit on the x-axis is the same length as one unit on the y-axis
+    scale_color_manual(values=c("Control"="#DDAA33","Cancer"="#004488")))
+  #ggsave(paste0("../figures/pancancer_PCA_",cancer,".pdf"), plot=last_plot(), height=8, width=8, units="cm", dpi = 300)
+}
+
+#keep only differentially abundant mRNAs (|log2FC|>1 and adjusted p<0.05)
+DA_table_filt <- DA_table_all %>% filter(abs(log2FoldChange)>1) %>% filter(padj<0.05) 
+#write to file
+data.table::fwrite(DA_table_filt, file="../data/differentialabundance_pancancer.txt", quote=F, row.names = F)
+
+#clean environment
+rm(DA_table_all,DA_table_filt,
+   cancer,normal_counttable,tumor_samples,normal_samples,
+   counttable, counttable_normalized, pc_gene_counts_pancancer, 
+   pcaData, pseudoCount, res, res_topped, resOrdered, 
+   vsd, df, dds, coldata, ann_col, ann_colors, 
+   condition,keep, keyvals, myBreaks, percentVar)
+```
+
+Summary figures differential abundance
+```{r}
+DA_table_filt <- data.table::fread("../data/differentialabundance_pancancer.txt", data.table=F) %>% mutate(updown= ifelse(log2FoldChange>=0, "higher", "lower"))
+
+DA_table_filt %>% pull(log2FoldChange) %>% abs() %>% summary()
+
+###order based on total nr of differential genes
+tmp <- DA_table_filt %>% group_by(cancertype,updown) %>% 
+  dplyr::summarise(nr_genes=n()) 
+tmp2 <- DA_table_filt %>% group_by(cancertype) %>% 
+  dplyr::summarise(nr_genes_all=n()) 
+tmp <- tmp %>% left_join(tmp2)
+ggplot(tmp, aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown)) +
+  geom_bar(stat="identity",position="dodge", width=0.8) +
+  #facet_wrap(~cancertype) +
+  #theme_point + 
+  coord_flip() + mytheme +
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "bottom") +
+  scale_y_log10(expand=c(0,NA)) +
+  labs(x="", y="differentially abundant mRNAs") +
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+ggsave("../figures/pancancer_diffabundance_bars_logscale.pdf", plot=last_plot(), height=10, width=8, units="cm",  dpi = 300, useDingbats=F)
+
+require(scales) #necessary for combining transformation log and reverse
+p1 <- ggplot(tmp %>% filter(updown=="lower"), aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown,color=updown)) +
+  #geom_bar(stat="identity",position="dodge", width=0.8) +
+  geom_point(size=1) +
+  #facet_wrap(~cancertype) +
+  #theme_point +
+  scale_y_continuous(trans=c("log10", "reverse"), expand=c(0,NA),limits=c(max(tmp$nr_genes)+500,1)) +
+  scale_x_discrete(position="top") +
+  #scale and reverse not in one transformation possible, therefore log10 in aes and reverse here + relabeled
+  #scale_y_continuous(trans = c("reverse"),limits=c(0,NA),expand=c(0,NA),breaks = c(0,1,2,3),labels=c(0,10,100,1000)) + 
+  coord_flip() + mytheme +
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "none") +
+  labs(x=NULL, y="lower abundant mRNAs") +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +#up=red, down=blue 
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+p2 <- ggplot(tmp %>% filter(updown=="higher"), aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown,color=updown)) +
+  #geom_bar(stat="identity",position="dodge", width=0.8) +
+  geom_point(size=1) +
+  #facet_wrap(~cancertype) +
+  #theme_point + 
+  scale_y_continuous(trans=c("log10"), expand=c(0,NA),limits=c(1,max(tmp$nr_genes)+500)) +
+  coord_flip() + mytheme + 
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "none", axis.text.y = element_text(hjust=0.5)) +
+  labs(x=NULL, y="higher abundant mRNAs") +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +#up=red, down=blue 
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+ggsave("../figures/pancancer_diffabundance_points_logscale.pdf", plot=gridExtra::grid.arrange(p1,p2,nrow=1), height=8.5, width=12, units="cm",  dpi = 300, useDingbats=F)
+
+#higher and lower abundant mRNAs (in cancer vs control) per type
+tmp <- DA_table_filt %>% ungroup() %>% group_by(cancertype,updown) %>% dplyr::summarise(nr_genes=n())
+summary(tmp %>% filter(updown=="higher") %>% pull(nr_genes))
+summary(tmp %>% filter(updown=="lower") %>% pull(nr_genes))
+#differentially abundant genes regardless of higher or lower abundance
+tmp2 <- DA_table_filt %>% ungroup() %>% group_by(cancertype) %>% dplyr::summarise(nr_genes=n())
+summary(tmp2 %>% pull(nr_genes))
+
+#unique mRNAs that are differentially abundant in at least 1 type vs controls
+length(DA_table_filt %>% pull(gene_id) %>% unique())
+
+```
+
+Overlap between types
+```{r}
+up_types <- DA_table_filt %>% filter(updown=="higher") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(types_up=n())
+
+down_types <- DA_table_filt %>% filter(updown=="lower") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(types_down=n())
+
+#intersect(up_types$gene_id, down_types$gene_id) #249 genes in both
+nr_types <- full_join(up_types,down_types,by="gene_id")
+nr_types[is.na(nr_types)] <- 0
+nr_types <- nr_types %>% mutate(overlap_updown=ifelse((types_up>0) &(types_down>0), T, F)) 
+table(nr_types$overlap_updown) # 249 genes are significant in both directions (in at least 1 type) but only 1 gene occurs in more than 1 cancer type as significant in one direction AND in more than 1 cancer type in other direction (ENSG00000143546, 3 types up vs 2 down)
+
+nrow(nr_types %>% filter(types_down>12.5))
+nrow(nr_types %>% filter(types_up>12.5))
+
+# total nr of (unique) differential genes
+nrow(nr_types)
+#genes upregulated in 1 type only (not downregulated in any)
+nrow(nr_types %>% filter((types_down==1) & (types_up==0))) #1809
+AML_genes <- DA_table_filt %>% filter(cancertype=="AML")
+nrow(nr_types %>% filter(!(gene_id %in% (AML_genes %>% filter(updown=="lower") %>% pull(gene_id)))) %>% filter((types_down==1) & (types_up==0))) #229 not in AML
+#genes downregulated in 1 type only (not downregulated in any)
+nrow(nr_types %>% filter((types_down==0) & (types_up==1))) #2633
+nrow(nr_types %>% filter(!(gene_id %in% (AML_genes %>% filter(updown=="higher") %>% pull(gene_id)))) %>% filter((types_down==0) & (types_up==1))) #534 not in AML
+
+#unique genes out of all differential genes
+((nrow(nr_types %>% filter((types_down==1) & (types_up==0))))+
+    (nrow(nr_types %>% filter((types_down==0) & (types_up==1)))))/nrow(nr_types) #65.7%
+#unique genes for AML out of all differential genes
+((nrow(nr_types %>% filter((gene_id %in% (AML_genes %>% filter(updown=="lower") %>% pull(gene_id)))) %>% filter((types_down==1) & (types_up==0)))) +
+  (nrow(nr_types %>% filter(!(gene_id %in% (AML_genes %>% filter(updown=="higher") %>% pull(gene_id)))) %>% filter((types_down==0) & (types_up==1))))) / nrow(nr_types) #31.3%
+
+#how many of the unique genes belong to AML
+((nrow(nr_types %>% filter((gene_id %in% (AML_genes %>% filter(updown=="lower") %>% pull(gene_id)))) %>% filter((types_down==1) & (types_up==0)))) +
+  (nrow(nr_types %>% filter((gene_id %in% (AML_genes %>% filter(updown=="higher") %>% pull(gene_id)))) %>% filter((types_down==0) & (types_up==1)))))/
+((nrow(nr_types %>% filter((types_down==1) & (types_up==0))))+
+    (nrow(nr_types %>% filter((types_down==0) & (types_up==1))))) #82.8%
+
+##Visualize overlap
+up_types <- DA_table_filt %>% filter(updown=="higher") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(higher=n())
+
+down_types <- DA_table_filt %>% filter(updown=="lower") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(lower=n())
+
+#intersect(up_types$gene_id, down_types$gene_id) #26 genes in both
+nr_types <- full_join(up_types,down_types,by="gene_id")
+nr_types[is.na(nr_types)] <- 0
+nr_types <- nr_types %>% mutate(overlap_updown=ifelse((higher>0) &(lower>0), T,F)) 
+
+tmp <- nr_types %>% dplyr::select(-"overlap_updown") %>% pivot_longer(names_to="updown", values_to = "types",-"gene_id") %>% ungroup() %>% group_by(types,updown) %>%
+  dplyr::summarise(nr_genes = n()) %>% pivot_wider(names_from = types, values_from=nr_genes) %>% pivot_longer(names_to = "types", values_to="nr_genes",-"updown") %>% filter(types!=0)
+
+tmp[is.na(tmp)] <- 0
+
+ggplot(tmp %>% filter(nr_genes>0), aes(x=as.numeric(types), y=nr_genes, color=updown,shape=updown)) +
+  mytheme +
+  geom_point(size=1) +
+  #geom_bar(stat="identity",position="dodge", width=0.7) +
+  scale_y_log10(expand=c(0.1,NA),limits=c(0.8,max(tmp$nr_genes)+500)) + 
+  scale_x_continuous(limits=c(0,25),expand=c(0,NA)) +
+  mytheme + labs(x="number of cancer types",y="differentially abundant genes") +
+  theme(legend.position = "bottom", legend.title = element_blank(),
+        panel.grid.major.y=element_line(color="grey88"),axis.ticks.y = element_blank()) +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +
+  scale_shape_manual(values=c("higher"=15,"lower"=16)) +
+  coord_flip()
+ggsave("../figures/pancancer_diffabundance_overlap.pdf", plot=last_plot(),height=9, width=6, units="cm",  dpi = 300, useDingbats=F)
+
+tmp$abundance <- ifelse(tmp$updown=="higher","higher","lower")
+ggplot(tmp %>% filter(nr_genes>0), aes(x=as.numeric(types), y=nr_genes, color=abundance,shape=abundance)) +
+  mytheme +
+  geom_point(size=1.2) +
+  stat_smooth(se = F,method = "loess",show.legend = F,linewidth=0.5) + #geom_line() +
+  #geom_bar(stat="identity",position="dodge", width=0.7) +
+  scale_y_log10(expand=c(0.1,NA),limits=c(0.8,max(tmp$nr_genes)+500)) + 
+  scale_x_continuous(limits=c(0,25),expand=c(0,NA)) +
+  mytheme + labs(x="number of cancer types",y="common differentially abundant genes") +
+  theme(legend.position = "bottom", legend.title = element_text(size=10),
+        panel.grid.major.x=element_line(color="grey88"),axis.ticks.x = element_blank(),
+        legend.text = element_text(size=10)) +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +
+  scale_shape_manual(values=c("higher"=15,"lower"=16)) #+  coord_flip()
+
+#which cancer type is missing to have pan-cancer downregulation?
+for (gene in filter(nr_types, down>22) %>% pull(gene_id)) {
+  cancertypes <- sample_annotation %>% pull(Abbreviation) %>% unique()
+  print(paste(gene, cancertypes[(!(cancertypes %in% (DA_table_filt %>% filter(gene_id==gene) %>% pull(cancertype))))]))
+}
+
+#genes_notdiffUCEC <- c("ENSG00000011422","ENSG00000090339","ENSG00000099860","ENSG00000099985","ENSG00000100906","ENSG00000118503","ENSG00000121966","ENSG00000123689","ENSG00000124731","ENSG00000144655","ENSG00000167703","ENSG00000170345","ENSG00000173846","ENSG00000175197","ENSG00000186431","ENSG00000197405")
+
+#genes opposite direction what is p-value and FC?
+#DA_table_filt %>% filter(gene_id %in% (filter(nr_types, ((higher>0) & (lower>0))) %>% pull(gene_id))) %>% View()
+
+#intersect(up_types$gene_id, down_types$gene_id) #26 genes in both
+nr_types <- full_join(up_types,down_types,by="gene_id")
+nr_types[is.na(nr_types)] <- 0
+nr_types <- nr_types %>% mutate(overlap_updown=ifelse((higher>0) &(lower>0), T,F)) 
+#DA_table_filt %>% filter(gene_id %in% (filter(nr_types, ((higher>0) & (lower>0))) %>% pull(gene_id))) %>% View()
+#DA_table_filt %>% filter(gene_id %in% (filter(nr_types, ((higher>0) & (lower>0))) %>% pull(gene_id))) %>% pull(gene_id) %>% unique()
+```
+
+DESeq normalization on entire pan-cancer cohort - make PCA overview plot
+```{r}
+pc_gene_counts_pancancer <- data_pancancerincluded_wide %>% pivot_longer(names_to = "SampleName", values_to="counts", -gene_id) %>% #long format
+  left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-"gene_biotype") %>% #remove gene biotype column
+  pivot_wider(names_from=SampleName, values_from=counts) #back to original format: rows=genes, columns=samples
+
+normal_samples <- sample_annotation %>% filter(Cohort=="pancancer") %>% filter(Abbreviation=="CONTROL") %>% pull(UniqueID)
+normal_counttable <- dplyr::select(pc_gene_counts_pancancer, c("gene_id",all_of(normal_samples)))
+
+tumor_samples <- sample_annotation %>% filter(Cohort=="pancancer") %>%
+  filter(Abbreviation!="CONTROL") %>%
+  pull(UniqueID)
+tumor_counttable <- dplyr::select(pc_gene_counts_pancancer, c("gene_id",all_of(tumor_samples))) 
+counttable <- full_join(normal_counttable, tumor_counttable, by="gene_id") #join tumor and normal samples
+rm(tumor_counttable)
+  
+  ## FILTER genes
+keep <- (rowSums(dplyr::select(counttable, all_of(normal_samples)) > 9) >= round(length(normal_samples)/2,0)) | #≥50% of normal samples count > 9
+  (rowSums(dplyr::select(counttable, all_of(tumor_samples)) > 9) >= round(length(tumor_samples)/2,0)) # OR ≥50% of tumor samples count > 9
+#table(keep, useNA="ifany")
+#counttable <- counttable[keep, ]
+counttable <- column_to_rownames(counttable, "gene_id")
+  
+condition <- factor(ifelse(grepl("^CONTROL", colnames(counttable)), "Normal", "Tumor"))
+coldata <- data.frame(row.names=colnames(counttable), condition)
+dds <- DESeqDataSetFromMatrix(countData=counttable, colData=coldata, design=~condition)
+
+dds <- DESeq(dds)
+  
+counttable_normalized<-as.data.frame(counts(dds, normalized = TRUE)) %>% rownames_to_column("gene_id")
+data.table::fwrite(counttable_normalized,file="../data/pancancer_normcounts.txt", quote=F, na="", row.names = F, sep="\t")
+
+# pca <- as.data.frame(prcomp(t(na.omit(counts(dds,
+# normalized=TRUE))))$x)
+# groups <- colData(dds)$condition
+# ggplot(pca, aes(x=PC1, y=PC2, col=groups, label=rownames(pca))) +
+#   geom_point(size=1, alpha=0.4) +
+#   ggrepel::geom_text_repel(size=1) +
+#   theme_classic() +
+#   labs(title=paste0("Normal & Tumor"," (gene level)")) +
+#   theme(legend.title = element_blank(), legend.position = "bottom") +
+#   scale_color_manual(values=c("dodgerblue1","darkgoldenrod1"))
+
+# PCA acc. to DESeq2 (vst transformation + top 500)
+# extracting transformed values
+vsd <- vst(dds,blind=T) #default, re-estimate dispersions using only an intercept
+#plotPCA(vsd, intgroup=c("condition")) 
+#PCA of 500 genes with highest row variance
+pcaData <- plotPCA(vsd, intgroup=c("condition"), ntop=500, returnData=T) 
+percentVar <- round(100*attr(pcaData, "percentVar"))
+pcaData <- pcaData %>% mutate(colortypes=ifelse(grepl("CONTROL",name), "Normal", 
+                                                ifelse(grepl("AML",name), "AML", "OtherC"))) %>% 
+  mutate(shape_n=as.character(ifelse(grepl("CONTROL",name), 19, 20)))
+print(ggplot(pcaData, aes(PC1, PC2, color=colortypes, shape=colortypes, label=rownames(pcaData))) +
+        geom_point() +
+        scale_shape_manual(values = c("Normal"=15, "OtherC"=16, "AML"=17)) + 
+        #ggrepel::geom_text_repel(size=2.5) +
+        mytheme + 
+        theme(legend.title = element_blank(), legend.position = "bottom") +
+        labs(title=paste0("pan-cancer (top 500 genes)")) +
+        xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+        ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+        coord_fixed() + #fixed scale coord system where default (ratio = 1) ensures that one unit on the x-axis is the same length as one unit on the y-axis
+        scale_color_manual(values=c("Normal"="#DDAA33","OtherC"="#004488","AML"="#BB5566")))
+
+ggsave("../figures/pancancer_PCA.pdf", plot=last_plot(), height=7, width=16, units="cm",  dpi = 300, useDingbats=F)
+
+rm(pcaData, percentVar, vsd, dds, coldata, pc_gene_counts_pancancer, normal_samples, tumor_samples, normal_counttable, counttable, counttable_normalized, condition, keep)
+
+```
+
+
+
+#Three-cancer cohort
+```{r}
+#rm(pc_gene_counts_threecancer)
+#ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
+#genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+#ensembl_annotation <- getBM(attributes=c('ensembl_gene_id','external_gene_name'),mart=ensembl)
+
+pc_gene_counts_threecancer <- data_threecancerincluded_wide %>% pivot_longer(names_to = "SampleName", values_to="counts", -gene_id) %>% #long format
+  left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-"gene_biotype") %>% #remove gene biotype column
+  pivot_wider(names_from=SampleName, values_from=counts) #back to original format: rows=genes, columns=samples
+```
+
+
+#DESeq normalization, differential abundance & PCA three-cancer cohort
+
+```{r, eval=F}
+#Make separate volcano plots, heatmaps and PCA plots of 1 cancer vs control
+DA_table_all <- data.frame()
+
+normal_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation=="CONTROL") %>% 
+  #filter out repeated controls (i.e. CONTROL1-8, technical replicates from CONTROL1-8 in pan-cancer cohort)
+  filter(!(UniqueID %in% c("CONTROL_1_threecancer","CONTROL_2_threecancer","CONTROL_3_threecancer","CONTROL_4_threecancer","CONTROL_5_threecancer","CONTROL_6_threecancer","CONTROL_7_threecancer","CONTROL_8_threecancer"))) %>%
+  pull(UniqueID)
+normal_counttable <- dplyr::select(pc_gene_counts_threecancer, c("gene_id",all_of(normal_samples)))
+
+for (cancer in (sample_annotation %>% filter(Cohort=="threecancer") %>% 
+                filter(Abbreviation!="CONTROL") %>% pull(Abbreviation) %>% unique()) ) {
+  print(cancer)
+  tumor_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation==cancer) %>% pull(UniqueID)
+  tumor_counttable <- dplyr::select(pc_gene_counts_threecancer, c("gene_id",all_of(tumor_samples))) 
+  counttable <- full_join(normal_counttable, tumor_counttable, by="gene_id") #join tumor and normal samples
+  rm(tumor_counttable)
+  
+  ## FILTER genes
+  keep <- (rowSums(dplyr::select(counttable, all_of(normal_samples)) > 9) >= 
+           round(length(normal_samples)/2,0)) | #≥50% of normal samples count > 9
+    (rowSums(dplyr::select(counttable, all_of(tumor_samples)) > 9) >= 
+     round(length(tumor_samples)/2,0)) # OR ≥50% of tumor samples count > 9
+  table(keep, useNA="ifany")
+  counttable <- counttable[keep, ]
+  counttable <- column_to_rownames(counttable, "gene_id")
+  
+  ## PREINSPECTION data
+  pseudoCount = log2(counttable + 1)
+  df = reshape2::melt(pseudoCount)
+  ## DESEQ CONTROLIZATION + PREINSPECTION
+  condition <- relevel(factor(ifelse(grepl("^CONTROL", colnames(counttable)), "Control", "Cancer")), "Control") #set normal as reference
+  coldata <- data.frame(row.names=colnames(counttable), condition)
+  dds <- DESeqDataSetFromMatrix(countData=counttable, colData=coldata, design=~condition)
+  dds <- DESeq(dds)
+  
+  counttable_normalized<-as.data.frame(counts(dds, normalized = TRUE))  
+  #pseudoCount = log2(counttable_normalized + 1)
+  #df = reshape2::melt(pseudoCount)
+  # print(ggplot(df, aes(x = variable, y = value, fill=variable)) + geom_boxplot() + xlab("") + theme_boxplot+ ylab(expression(log[2](count + 1))))
+  
+  res <- results(dds, alpha=0.05)
+  #summary(res)
+  #Order results according to p-value
+  resOrdered <- res[order(res$pvalue),]
+  
+  DA_table_all <- rbind(DA_table_all, data.frame(resOrdered) %>% rownames_to_column("gene_id") %>% mutate(cancertype=cancer))
+  
+  #get gene list ranked on fold change for GSEA
+  tmp <- data.frame(resOrdered) %>% rownames_to_column("gene_id") %>%
+    dplyr::arrange(desc(log2FoldChange)) %>%
+    dplyr::left_join(ensembl_annotation, by=c("gene_id"="ensembl_gene_id"))
+  #write this to cancer specific rnk file for GSEA
+  data.table::fwrite(tmp %>% dplyr::select(c("external_gene_name","log2FoldChange")) %>% drop_na(), file=(paste0("../data/threecancer_GSEA/GSEA_input_FCranked_",cancer,".rnk")),quote = F, na = "", sep="\t", col.names = F, row.names = F)
+  
+  #write.csv(resOrdered, file=paste0("../data/threecancer_diffabundance_",cancer,".csv")),quote = F, row.names = F, na = "")
+  
+  ## Volcano plots
+  require(EnhancedVolcano)
+  #limit |log2FC| to 10 for visualization
+  res_topped <- data.frame(res) %>% mutate(log2FoldChange=ifelse(log2FoldChange<(-10),-10,ifelse(log2FoldChange>10,10,log2FoldChange))) %>% mutate(padj=ifelse(padj<1e-10,1e-10,padj))
+  # create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change (via nested ifelse statements)
+  keyvals <- ifelse(
+    (res_topped$log2FoldChange < (-1)) & (res_topped$padj<0.05), '#004488',
+      ifelse((res_topped$log2FoldChange >1) & (res_topped$padj<0.05), '#BB5566',
+        '#BBBBBB'))
+  names(keyvals)[keyvals == '#004488'] <- 'lower'
+  names(keyvals)[keyvals == '#BB5566'] <- 'higher'
+  names(keyvals)[keyvals == '#BBBBBB'] <- 'NS'
+  keyvals[is.na(keyvals)] <- 'NA'
+  print(EnhancedVolcano(res_topped, #lab=rownames(res), 
+                lab="",
+                title = paste0(cancer, ' vs CONTROL'), titleLabSize = 11,
+                subtitle=NULL, 
+                x= "log2FoldChange", y="padj", 
+                xlab = bquote(~log[2]~ 'fold change'), 
+                ylab = bquote(~-log[10]~adjusted~italic(P)), 
+                colCustom = keyvals,
+                axisLabSize = 11,labSize=11,
+                pCutoff = 0.05, FCcutoff = 1.0,
+                legendLabels=c('NS','FC>2','p-adj<0.05',
+                         'p-adj<0.05 & FC>2'), 
+                colAlpha = 1,shape=20,pointSize = 0.3,
+                gridlines.major = F, gridlines.minor = F,
+                ylim=c(0,10),xlim=c(-10,10),
+                legendPosition = 'right',legendLabSize = 11,
+                legendIconSize = 1))
+  #ggsave(paste0("../figures/threecancer_diffabundance_volcano_",cancer,".png"), plot=last_plot(), height=7.5, width=10, units="cm",dpi = 300, bg='transparent')
+  
+  ### Heatmap of differential genes
+  require(pheatmap)
+  tmp <- log2(counttable_normalized[data.frame(res) %>% filter(padj<0.05) %>% filter(abs(log2FoldChange)>1) %>% rownames(),] %>% dplyr::select(all_of(c(normal_samples,tumor_samples))) +1)
+  colnames(tmp) <- gsub("_threecancer","",colnames(tmp)) #remove "_threecancer" 
+  #Use a custom palette of red and blue, centered around 0
+  custom_palette = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name =
+  "RdBu")))(100)
+  # #make sure the middle color is positioned around 0
+  myBreaks <- c(seq(-3.5,0,length.out=ceiling(length(custom_palette)/2) + 1), seq(3.5/length(custom_palette),3.5,length.out=floor(length(custom_palette)/2)))
+  #annotate columns
+  ann_col = data.frame(
+                    type = ifelse(gsub("_.*","",colnames(tmp)) == "CONTROL","control","cancer"))
+  rownames(ann_col) = colnames(tmp)
+  ann_colors = list(
+    type = c("control"="#DDAA33", "cancer"="#000000"))
+  
+  pheatmap(t(tmp), 
+           color=custom_palette,scale = "column", show_colnames = F, 
+           treeheight_col=0, cluster_cols = T, cluster_rows = T, 
+           clustering_distance_rows = "correlation",clustering_distance_cols = "correlation",
+           annotation_row = ann_col, annotation_colors = ann_colors, 
+           fontsize = 8.5, annotation_names_row = F,
+           breaks=myBreaks, legend_breaks=c(-3,-2,-1,0,1,2,3), legend_labels = c(-3,-2,-1,0,1,2,3),
+           #filename = paste0("../figures/threecancer_diffabundance_heatmap_",cancer,".png"),
+           width=5.51,height=2.17)
+  rm(tmp)
+  
+  ##PCA
+  vsd <- vst(dds,blind=T) #default, re-estimate dispersions using only an intercept
+  #plotPCA(vsd, intgroup=c("condition")) 
+  #PCA of 500 genes with highest row variance
+  pcaData <- plotPCA(vsd, intgroup=c("condition"), ntop=500, returnData=T) 
+  percentVar <- round(100*attr(pcaData, "percentVar"))
+  
+  print(ggplot(pcaData, aes(PC1, PC2, shape=condition, color=condition, label=(stringi::stri_sub((gsub("_threecancer","",rownames(pcaData))),-1)))) +
+    geom_point() +
+    ggrepel::geom_text_repel(size=2) +
+    scale_shape_manual(values = c("Control"=15, "Cancer"=16)) + 
+    mytheme + #theme_classic() +
+    theme(legend.title = element_blank(), legend.position = "bottom") +
+    labs(title=paste0(cancer," & Control (top 500 genes)")) +
+    xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+    ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+    coord_fixed(ratio=1, xlim=c(min(pcaData$PC1, pcaData$PC2),max(pcaData$PC1, pcaData$PC2)),ylim=c(min(pcaData$PC1, pcaData$PC2),max(pcaData$PC1, pcaData$PC2))) + #fixed scale coord system where default (ratio = 1) ensures that one unit on the x-axis is the same length as one unit on the y-axis
+    scale_color_manual(values=c("Control"="#DDAA33","Cancer"="#004488")))
+  #ggsave(paste0("../figures/threecancer_PCA_",cancer,".pdf"), plot=last_plot(), height=8, width=8, units="cm", dpi = 300)
+}
+
+#keep only differentially abundant mRNAs (|log2FC|>1 and adjusted p<0.05)
+DA_table_filt <- DA_table_all %>% filter(abs(log2FoldChange)>1) %>% filter(padj<0.05) 
+#write to file
+data.table::fwrite(DA_table_filt, file="../data/differentialabundance_threecancer.txt", quote=F, row.names = F)
+
+#clean environment
+rm(DA_table_all,DA_table_filt,
+   cancer,normal_counttable,tumor_samples,normal_samples,
+   counttable, counttable_normalized, pc_gene_counts_threecancer, 
+   pcaData, pseudoCount, res, res_topped, resOrdered, 
+   vsd, df, dds, coldata, ann_col, ann_colors, 
+   condition,keep, keyvals, myBreaks, percentVar)
+```
+
+
+
+Summary figures differential abundance
+```{r}
+DA_table_filt <- data.table::fread("../data/differentialabundance_threecancer.txt", data.table=F) %>% mutate(updown= ifelse(log2FoldChange>=0, "higher", "lower"))
+
+DA_table_filt %>% pull(log2FoldChange) %>% abs() %>% summary()
+
+###order based on total nr of differential genes
+tmp <- DA_table_filt %>% group_by(cancertype,updown) %>% 
+  dplyr::summarise(nr_genes=n()) 
+tmp2 <- DA_table_filt %>% group_by(cancertype) %>% 
+  dplyr::summarise(nr_genes_all=n()) 
+tmp <- tmp %>% left_join(tmp2)
+ggplot(tmp, aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown)) +
+  geom_bar(stat="identity",position="dodge", width=0.8) +
+  #facet_wrap(~cancertype) +
+  #theme_point + 
+  coord_flip() + mytheme +
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "bottom") +
+  scale_y_log10(expand=c(0,NA)) +
+  labs(x="", y="differentially abundant mRNAs") +
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+ggsave("../figures/threecancer_diffabundance_bars_logscale.pdf", plot=last_plot(), height=10, width=8, units="cm",  dpi = 300, useDingbats=F)
+
+require(scales) #necessary for combining transformation log and reverse
+p1 <- ggplot(tmp %>% filter(updown=="lower"), aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown,color=updown)) +
+  #geom_bar(stat="identity",position="dodge", width=0.8) +
+  geom_point(size=1) +
+  #facet_wrap(~cancertype) +
+  #theme_point +
+  scale_y_continuous(trans=c("log10", "reverse"), expand=c(0,NA),limits=c(max(tmp$nr_genes)+500,1)) +
+  scale_x_discrete(position="top") +
+  #scale and reverse not in one transformation possible, therefore log10 in aes and reverse here + relabeled
+  #scale_y_continuous(trans = c("reverse"),limits=c(0,NA),expand=c(0,NA),breaks = c(0,1,2,3),labels=c(0,10,100,1000)) + 
+  coord_flip() + mytheme +
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "none") +
+  labs(x=NULL, y="lower abundant mRNAs") +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +#up=red, down=blue 
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+p2 <- ggplot(tmp %>% filter(updown=="higher"), aes(x=reorder(cancertype, -nr_genes_all), y=nr_genes, fill=updown,color=updown)) +
+  #geom_bar(stat="identity",position="dodge", width=0.8) +
+  geom_point(size=1) +
+  #facet_wrap(~cancertype) +
+  #theme_point + 
+  scale_y_continuous(trans=c("log10"), expand=c(0,NA),limits=c(1,max(tmp$nr_genes)+500)) +
+  coord_flip() + mytheme + 
+  theme(axis.ticks.y = element_blank(),axis.line.y = element_blank(), legend.title = element_blank(), legend.position = "none", axis.text.y = element_text(hjust=0.5)) +
+  labs(x=NULL, y="higher abundant mRNAs") +
+  scale_color_manual(values=c("higher"="#BB5566","lower"="#004488")) +#up=red, down=blue 
+  scale_fill_manual(values=c("higher"="#BB5566","lower"="#004488")) #up=red, down=blue 
+
+ggsave("../figures/threecancer_diffabundance_points_logscale.pdf", plot=gridExtra::grid.arrange(p1,p2,nrow=1), height=8.5, width=12, units="cm",  dpi = 300, useDingbats=F)
+
+#higher and lower abundant mRNAs (in cancer vs control) per type
+tmp <- DA_table_filt %>% ungroup() %>% group_by(cancertype,updown) %>% dplyr::summarise(nr_genes=n())
+summary(tmp %>% filter(updown=="higher") %>% pull(nr_genes))
+summary(tmp %>% filter(updown=="lower") %>% pull(nr_genes))
+#differentially abundant genes regardless of higher or lower abundance
+tmp2 <- DA_table_filt %>% ungroup() %>% group_by(cancertype) %>% dplyr::summarise(nr_genes=n())
+summary(tmp2 %>% pull(nr_genes))
+
+#unique mRNAs that are differentially abundant in at least 1 type vs controls
+length(DA_table_filt %>% pull(gene_id) %>% unique())
+
+```
+
+Overlap between types
+```{r}
+up_types <- DA_table_filt %>% filter(updown=="higher") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(types_up=n())
+
+down_types <- DA_table_filt %>% filter(updown=="lower") %>% ungroup() %>% group_by(gene_id) %>% dplyr::summarise(types_down=n())
+
+nr_types <- full_join(up_types,down_types,by="gene_id")
+nr_types[is.na(nr_types)] <- 0
+nr_types <- nr_types %>% mutate(overlap_updown=ifelse((types_up>0) &(types_down>0), T, F)) 
+table(nr_types$overlap_updown) # no mRNAs differential in opposite directions
+
+# total nr of (unique) differential genes
+nrow(nr_types)
+
+
+#Overlap of independently differential genes between the 3 cancer types in three-cancer cohort
+require(GeneOverlap)
+
+up_OV <- DA_table_filt %>% filter(updown=="higher") %>% filter(cancertype=="OV") %>% pull(gene_id)
+down_OV <- DA_table_filt %>% filter(updown=="lower") %>% filter(cancertype=="OV") %>% pull(gene_id)
+
+up_UCEC <- DA_table_filt %>% filter(updown=="higher") %>% filter(cancertype=="UCEC") %>% pull(gene_id)
+down_UCEC <- DA_table_filt %>% filter(updown=="lower") %>% filter(cancertype=="UCEC") %>% pull(gene_id)
+
+up_PRAD <- DA_table_filt %>% filter(updown=="higher") %>% filter(cancertype=="PRAD") %>% pull(gene_id)
+down_PRAD <- DA_table_filt %>% filter(updown=="lower") %>% filter(cancertype=="PRAD") %>% pull(gene_id)
+
+
+s4 <- list(`lower OV`=down_OV, `lower PRAD`=down_PRAD, `lower UCEC` = down_UCEC, `higher OV` = up_OV, `higher PRAD` = up_PRAD, `higher UCEC` = up_UCEC)
+
+#plot(venn(s4))
+p1 <- plot(eulerr::euler(s4, shape = "ellipse"), quantities = TRUE, 
+     #fill=c("#EE99AA","#BB5566","#EECC66","#66CCEE","#4477AA","grey"),
+     fill=c("#99DDFF","#77AADD","#44BB99","#FFAABB","#EE8866","#EEDD88"),
+     edges=F,legend=T, main="T vs N (DE within same run)")
+p1
+
+
+fit <- eulerr::euler(s4, shape = "ellipse")
+fit #check residuals (or difference original and fitted to see if something is missing on plot)
+
+ggsave("../figures/threecancer_diffabundance_overlap.pdf", plot=p1, height=9, width=16, units="cm",  dpi = 300, useDingbats=F)
+
+#get overlapping genes for pathway enrichment
+#intersect(down_UCEC,intersect(down_PRAD,down_OV)) 
+length(intersect(down_UCEC,intersect(down_PRAD,down_OV)))
+#intersect(up_UCEC,intersect(up_PRAD,up_OV))
+length(intersect(up_UCEC,intersect(up_PRAD,up_OV)))
+
+#overlap with commonly less abundant genes in pan-cancer cohort
+DA_pancancer <- data.table::fread("../data/differentialabundance_pancancer.txt",data.table=F) %>% #filter(padj<0.05) %>% filter(abs(log2FoldChange)>1) %>% 
+  mutate(updown=ifelse(log2FoldChange>1,"higher","lower")) %>% group_by(gene_id,updown) %>% dplyr::summarise(nrtypes_DA=n()) 
+#DEA_S2_filt %>% filter(nrtypes_DA>=23) %>% filter(updown=="down") %>% pull(gene_id) #shared downregulated genes across (most) cancer types pancancer cohort
+intersect(down_UCEC,intersect(down_PRAD,down_OV))[intersect(down_UCEC,intersect(down_PRAD,down_OV)) %in% (DA_pancancer %>% filter(nrtypes_DA>=23) %>% filter(updown=="lower") %>% pull(gene_id))]
+
+#unique genes in each cancer type
+length(up_OV[!(up_OV %in% unique(c(up_PRAD, up_UCEC)))])
+length(up_PRAD[!(up_PRAD %in% unique(c(up_OV, up_UCEC)))])
+length(up_UCEC[!(up_UCEC %in% unique(c(up_PRAD, up_OV)))])
+
+rm(DA_pancancer, DA_table_filt, fit, p1, p2, s4, tmp, tmp2, down_types, up_types)
+
+```
+
+
+DESeq normalization on entire three-cancer cohort - make PCA overview plot
+```{r}
+pc_gene_counts_threecancer <- data_threecancerincluded_wide %>% pivot_longer(names_to = "SampleName", values_to="counts", -gene_id) %>% #long format
+  left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-"gene_biotype") %>% #remove gene biotype column
+  pivot_wider(names_from=SampleName, values_from=counts) #back to original format: rows=genes, columns=samples
+
+normal_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>% filter(Abbreviation=="CONTROL") %>%
+  #filter out repeated controls
+  filter(!(UniqueID %in% c("CONTROL_1_threecancer","CONTROL_2_threecancer","CONTROL_3_threecancer","CONTROL_4_threecancer","CONTROL_5_threecancer","CONTROL_6_threecancer","CONTROL_7_threecancer","CONTROL_8_threecancer"))) %>% pull(UniqueID)
+normal_counttable <- dplyr::select(pc_gene_counts_threecancer, c("gene_id",all_of(normal_samples)))
+
+tumor_samples <- sample_annotation %>% filter(Cohort=="threecancer") %>%
+  filter(Abbreviation!="CONTROL") %>%
+  pull(UniqueID)
+tumor_counttable <- dplyr::select(pc_gene_counts_threecancer, c("gene_id",all_of(tumor_samples))) 
+counttable <- full_join(normal_counttable, tumor_counttable, by="gene_id") #join tumor and normal samples
+rm(tumor_counttable)
+  
+  ## FILTER genes
+keep <- (rowSums(dplyr::select(counttable, all_of(normal_samples)) > 9) >= round(length(normal_samples)/2,0)) | #≥50% of normal samples count > 9
+  (rowSums(dplyr::select(counttable, all_of(tumor_samples)) > 9) >= round(length(tumor_samples)/2,0)) # OR ≥50% of tumor samples count > 9
+#table(keep, useNA="ifany")
+#counttable <- counttable[keep, ]
+counttable <- column_to_rownames(counttable, "gene_id")
+  
+condition <- factor(ifelse(grepl("^CONTROL", colnames(counttable)), "Normal", "Tumor"))
+coldata <- data.frame(row.names=colnames(counttable), condition)
+dds <- DESeqDataSetFromMatrix(countData=counttable, colData=coldata, design=~condition)
+
+dds <- DESeq(dds)
+  
+counttable_normalized<-as.data.frame(counts(dds, normalized = TRUE)) %>% rownames_to_column("gene_id")
+data.table::fwrite(counttable_normalized,file="../data/threecancer_normcounts.txt", quote=F, na="", row.names = F, sep="\t")
+
+# pca <- as.data.frame(prcomp(t(na.omit(counts(dds,
+# normalized=TRUE))))$x)
+# groups <- colData(dds)$condition
+# ggplot(pca, aes(x=PC1, y=PC2, col=groups, label=rownames(pca))) +
+#   geom_point(size=1, alpha=0.4) +
+#   ggrepel::geom_text_repel(size=1) +
+#   theme_classic() +
+#   labs(title=paste0("Normal & Tumor"," (gene level)")) +
+#   theme(legend.title = element_blank(), legend.position = "bottom") +
+#   scale_color_manual(values=c("dodgerblue1","darkgoldenrod1"))
+
+# PCA acc. to DESeq2 (vst transformation + top 500)
+# extracting transformed values
+vsd <- vst(dds,blind=T) #default, re-estimate dispersions using only an intercept
+#plotPCA(vsd, intgroup=c("condition")) 
+#PCA of 500 genes with highest row variance
+pcaData <- plotPCA(vsd, intgroup=c("condition"), ntop=500, returnData=T) 
+percentVar <- round(100*attr(pcaData, "percentVar"))
+pcaData <- pcaData %>% mutate(colortypes=gsub("_.*","",name))
+print(ggplot(pcaData, aes(PC1, PC2, color=colortypes, shape=colortypes, label=rownames(pcaData))) + #shape: circle default 16? larger 19? smaller 20?
+        geom_point(size=1.3) + 
+        #ggrepel::geom_text_repel(size=2.5) +
+        scale_shape_manual(values = c("CONTROL"=15, "OV"=16, "PRAD"=16,"UCEC"=16)) + 
+        mytheme + #theme_classic() +
+        theme(legend.title = element_blank(), legend.position = "bottom") +
+        labs(title=paste0("three-cancer (top 500 genes)")) +
+        xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+        ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+        coord_fixed() + #fixed scale coord system where default (ratio = 1) ensures that one unit on the x-axis is the same length as one unit on the y-axis
+        scale_color_manual(values=c("CONTROL"="#DDAA33","OV"="#BB5566","PRAD"="#004488","UCEC"="#009988")))
+
+ggsave("../figures/threecancer_PCA.pdf", plot=last_plot(), height=10, width=10, units="cm",  dpi = 300, useDingbats=F)
+
+rm(pcaData, percentVar, vsd, dds, coldata, pc_gene_counts_threecancer, normal_samples, tumor_samples, normal_counttable, counttable, counttable_normalized, condition, keep)
+
+```
+
+
+
+#Overlap differential genes both cohorts (pan-cancer vs three-cancer)
+```{r}
+require(GeneOverlap)
+
+jaccard <- function(a, b) { #calculate jaccard index
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+DA_threecancer <- data.table::fread("../data/differentialabundance_threecancer.txt", data.table=F) %>% mutate(updown= ifelse(log2FoldChange>=0, "higher", "lower"))
+DA_pancancer <- data.table::fread("../data/differentialabundance_pancancer.txt", data.table=F) %>% mutate(updown= ifelse(log2FoldChange>=0, "higher", "lower"))
+
+threecancer_ncounts <- data.table::fread("../data/threecancer_normcounts.txt", data.table=F)
+pancancer_ncounts <- data.table::fread("../data/pancancer_normcounts.txt", data.table=F)
+#universe of mRNAs (genes)
+universe <- unique(c(threecancer_ncounts %>% pull(gene_id), pancancer_ncounts %>% pull(gene_id)))
+rm(threecancer_ncounts, pancancer_ncounts)
+
+### OV vs CONTROL
+res_OVCONTROL <- rbind(DA_threecancer %>% filter(cancertype=="OV") %>%
+                        mutate(cohort="threecancer"),
+                      DA_pancancer %>% filter(cancertype=="OV") %>%
+                        mutate(cohort="pancancer"))
+up_threecancer <- res_OVCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_OVCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+
+up_pancancer <- res_OVCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_OVCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+
+s4 <- list(up_c1 = up_pancancer, up_c2 = up_threecancer, down_c1=down_pancancer, down_c2=down_threecancer)
+#test overlap "higher" via GeneOverlap object
+go.obj.up <- newGeneOverlap(up_threecancer,
+                         up_pancancer,
+                         genome.size=length(universe))
+go.obj.up <- testGeneOverlap(go.obj.up)
+#go.obj.up #The GeneOverlap class formulates the problem as testing whether two variables are independent, which can be represented as a contingency table, and then uses Fisher’s exact test to find the statistical significance. Here the P-value is zero, which means the overlap is highly significant. The Fisher’s exact test also gives an odds ratio which represents the strength of association. If an odds ratio is equal to or less than 1, there is no association between the two lists. If the odds ratio is much larger than 1, then the association is strong. The class also calculates the Jaccard index which measures the similarity between two lists. The Jaccard index varies between 0 and 1, with 0 meaning there is no similarity between the two and 1 meaning the two are identical. To show some more details, use the print function
+print(go.obj.up)
+jaccard(up_threecancer, up_pancancer)
+
+#test overlap "lower" via GeneOverlap object
+go.obj.down <- newGeneOverlap(down_threecancer,
+                         down_pancancer,
+                         genome.size=length(universe))
+go.obj.down <- testGeneOverlap(go.obj.down)
+#go.obj.down
+print(go.obj.down)
+jaccard(down_threecancer, down_pancancer)
+
+
+#plot(venn(s4))
+p1 <- plot(eulerr::euler(s4, shape = "ellipse"), quantities = TRUE, 
+     fill=c("#EE99AA","#994455","#6699CC","#004488"),
+     edges=F,legend=T, main="OV vs CONTROL")
+p1
+
+table(up_pancancer %in% up_threecancer)
+table(down_pancancer %in% down_threecancer)
+
+rm(go.obj.up, go.obj.down, down_threecancer, down_pancancer, up_threecancer, up_pancancer)
+
+### PRAD vs CONTROL
+res_PRADCONTROL <- rbind(DA_threecancer %>% filter(cancertype=="PRAD") %>%
+                        mutate(cohort="threecancer"),
+                      DA_pancancer %>% filter(cancertype=="PRAD") %>%
+                        mutate(cohort="pancancer"))
+up_threecancer <- res_PRADCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_PRADCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+
+up_pancancer <- res_PRADCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_PRADCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+
+s4 <- list(up_c1 = up_pancancer, up_c2 = up_threecancer, down_c1=down_pancancer, down_c2=down_threecancer)
+#test overlap "higher" via GeneOverlap object
+go.obj.up <- newGeneOverlap(up_threecancer,
+                         up_pancancer,
+                         genome.size=length(universe))
+go.obj.up <- testGeneOverlap(go.obj.up)
+#go.obj.up 
+print(go.obj.up)
+jaccard(up_threecancer, up_pancancer)
+
+#test overlap "lower" via GeneOverlap object
+go.obj.down <- newGeneOverlap(down_threecancer,
+                         down_pancancer,
+                         genome.size=length(universe))
+go.obj.down <- testGeneOverlap(go.obj.down)
+#go.obj.down
+print(go.obj.down)
+jaccard(down_threecancer, down_pancancer)
+
+#plot(venn(s4))
+p2 <- plot(eulerr::euler(s4, shape = "ellipse"), quantities = TRUE, 
+     fill=c("#EE99AA","#994455","#6699CC","#004488"),
+     edges=F,legend=T, main="PRAD vs CONTROL")
+p2
+
+table(up_pancancer %in% up_threecancer)
+table(down_pancancer %in% down_threecancer)
+
+rm(go.obj.up, go.obj.down, down_threecancer, down_pancancer, up_threecancer, up_pancancer)
+
+
+### UCEC vs CONTROL
+res_UCECCONTROL <- rbind(DA_threecancer %>% filter(cancertype=="UCEC") %>%
+                        mutate(cohort="threecancer"),
+                      DA_pancancer %>% filter(cancertype=="UCEC") %>%
+                        mutate(cohort="pancancer"))
+up_threecancer <- res_UCECCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_UCECCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="threecancer") %>% pull(gene_id)
+
+up_pancancer <- res_UCECCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_UCECCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(cohort=="pancancer") %>% pull(gene_id)
+
+
+s4 <- list(up_c1 = up_pancancer, up_c2 = up_threecancer, down_c1=down_pancancer, down_c2=down_threecancer)
+#test overlap "higher" via GeneOverlap object
+go.obj.up <- newGeneOverlap(up_threecancer,
+                         up_pancancer,
+                         genome.size=length(universe))
+go.obj.up <- testGeneOverlap(go.obj.up)
+#go.obj.up 
+print(go.obj.up)
+jaccard(up_threecancer, up_pancancer)
+
+#test overlap "lower" via GeneOverlap object
+go.obj.down <- newGeneOverlap(down_threecancer,
+                         down_pancancer,
+                         genome.size=length(universe))
+go.obj.down <- testGeneOverlap(go.obj.down)
+#go.obj.down
+print(go.obj.down)
+jaccard(down_threecancer, down_pancancer)
+
+#plot(venn(s4))
+p3 <- plot(eulerr::euler(s4, shape = "ellipse"), quantities = TRUE, 
+     fill=c("#EE99AA","#994455","#6699CC","#004488"),
+     edges=F,legend=T, main="UCEC vs CONTROL")
+p3
+
+table(up_pancancer %in% up_threecancer)
+table(down_pancancer %in% down_threecancer)
+
+rm(go.obj.up, go.obj.down, down_threecancer, down_pancancer, up_threecancer, up_pancancer)
+
+#gridExtra::grid.arrange(p1,p2,p3, nrow=1)
+
+ggsave("../figures/diffabundance_OV.pdf", plot=p1, height=7, width=10, units="cm",  dpi = 300, useDingbats=F)
+ggsave("../figures/diffabundance_PRAD.pdf", plot=p2, height=7, width=10, units="cm",  dpi = 300, useDingbats=F)
+ggsave("../figures/diffabundance_UCEC.pdf", plot=p3, height=7, width=10, units="cm",  dpi = 300, useDingbats=F)
+```
+
+
+Overlap of independently differential genes between the 3 cancer types
+```{r}
+require(GeneOverlap)
+
+up_threecancer <- res_OVCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_OVCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+up_pancancer <- res_OVCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_OVCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+up_OV <- up_threecancer[up_threecancer %in% up_pancancer]
+down_OV <- down_threecancer[down_threecancer %in% down_pancancer]
+
+
+up_threecancer <- res_UCECCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_UCECCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+up_pancancer <- res_UCECCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_UCECCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+up_UCEC <- up_threecancer[up_threecancer %in% up_pancancer]
+down_UCEC <- down_threecancer[down_threecancer %in% down_pancancer]
+
+up_threecancer <- res_PRADCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+down_threecancer <- res_PRADCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="threecancer") %>% pull(gene_id)
+up_pancancer <- res_PRADCONTROL %>% filter(log2FoldChange>1) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+down_pancancer <- res_PRADCONTROL %>% filter(log2FoldChange<(-1)) %>% filter(padj<0.05) %>% filter(run=="pancancer") %>% pull(gene_id)
+up_PRAD <- up_threecancer[up_threecancer %in% up_pancancer]
+down_PRAD <- down_threecancer[down_threecancer %in% down_pancancer]
+
+length(intersect(down_PRAD,down_OV))
+length(intersect(down_UCEC,intersect(down_PRAD,down_OV)))
+
+s4 <- list(up_OV = up_OV, up_PRAD = up_PRAD, up_UCEC = up_UCEC, down_OV=down_OV, down_PRAD=down_PRAD, down_UCEC = down_UCEC)
+
+#plot(venn(s4))
+p1 <- plot(eulerr::euler(s4, shape = "ellipse"), quantities = TRUE, 
+     fill=c("#EE99AA","#BB5566","#EECC66","#66CCEE","#4477AA","grey"),
+     edges=F,legend=T, main="Cancer vs control (DA in both cohorts)")
+p1
+
+fit <- eulerr::euler(s4, shape = "ellipse")
+fit #check residuals (or difference original and fitted to see if something is missing on plot)
+
+#ggsave("../figures/diffabundance_overlap_all.pdf", plot=p1, height=7, width=11, units="cm",  dpi = 300, useDingbats=F)
+
+```
