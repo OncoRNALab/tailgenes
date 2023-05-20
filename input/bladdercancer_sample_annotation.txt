@@ -1,0 +1,25 @@
+Cohort	DonorID	RNAID	Cancer	Abbreviation	ReplicateNr	Biofluid	Sex
+bladdercancer	U_61_cancer	RNA006658	bladder cancer	BLCA	1	urine	M
+bladdercancer	U_104_cancer	RNA006659	bladder cancer	BLCA	2	urine	M
+bladdercancer	U_122_cancer	RNA006660	bladder cancer	BLCA	3	urine	M
+bladdercancer	U_150_cancer	RNA006661	bladder cancer	BLCA	4	urine	M
+bladdercancer	U_153_cancer	RNA006662	bladder cancer	BLCA	5	urine	M
+bladdercancer	U_144_cancer	RNA006663	bladder cancer	BLCA	6	urine	M
+bladdercancer	U_105_cancer	RNA006664	bladder cancer	BLCA	7	urine	F
+bladdercancer	U_190_cancer	RNA006665	bladder cancer	BLCA	8	urine	F
+bladdercancer	U_147_cancer	RNA006666	bladder cancer	BLCA	9	urine	F
+bladdercancer	U_242_cancer	RNA006667	bladder cancer	BLCA	10	urine	F
+bladdercancer	U_84_cancer	RNA006668	bladder cancer	BLCA	11	urine	F
+bladdercancer	U_166_cancer	RNA006669	bladder cancer	BLCA	12	urine	F
+bladdercancer	U_HC1_control	RNA006670	control	CONTROL	1	urine	M
+bladdercancer	U_HC2_control	RNA006671	control	CONTROL	2	urine	M
+bladdercancer	U_HC3_control	RNA006672	control	CONTROL	3	urine	M
+bladdercancer	U_HC4_control	RNA006673	control	CONTROL	4	urine	M
+bladdercancer	U_HC5_control	RNA006674	control	CONTROL	5	urine	M
+bladdercancer	U_HC6_control	RNA006675	control	CONTROL	6	urine	M
+bladdercancer	U_HC7_control	RNA006676	control	CONTROL	7	urine	F
+bladdercancer	U_HC8_control	RNA006677	control	CONTROL	8	urine	F
+bladdercancer	U_HC9_control	RNA006678	control	CONTROL	9	urine	F
+bladdercancer	U_HC10_control	RNA006679	control	CONTROL	10	urine	F
+bladdercancer	U_HC11_control	RNA006680	control	CONTROL	11	urine	F
+bladdercancer	U_HC12_control	RNA006681	control	CONTROL	12	urine	F
