@@ -1,0 +1,340 @@
+Cohort	DonorID	RNAID	Cancer	Abbreviation	ReplicateNr	CollectionDate	CollectionTube	Biofluid	Sex	Age	Ethnicity	TumorLocation	HistologicalDiagnosis	Grade	TNM	Stage	Treatment	Excluded
+pancancer	AML314P	RNA006387	acute myeloid leukemia	AML	1	16/12/2014	EDTA	plasma	F	42	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML315P	RNA006388	acute myeloid leukemia	AML	2	19/01/2015	EDTA	plasma	M	54	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML324P	RNA006389	acute myeloid leukemia	AML	3	18/02/2015	EDTA	plasma	M	69	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML326P	RNA006390	acute myeloid leukemia	AML	4	19/02/2015	EDTA	plasma	F	69	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML329P	RNA006391	acute myeloid leukemia	AML	5	27/02/2015	EDTA	plasma	F	49	Caucasian	bone marrow	AML	N/A	N/A	M3	no	
+pancancer	AML333P	RNA006392	acute myeloid leukemia	AML	6	25/03/2015	EDTA	plasma	M	62	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML334P	RNA006393	acute myeloid leukemia	AML	7	02/04/2015	EDTA	plasma	F	61	Caucasian	bone marrow	AML	N/A	N/A	M5a	no	
+pancancer	AML342P	RNA006394	acute myeloid leukemia	AML	8	10/04/2015	EDTA	plasma	F	59	Caucasian	bone marrow	AML	N/A	N/A	M3	no	
+pancancer	101242P	RNA006395	bladder carcinoma	BLCA	1	03/03/2017	EDTA	plasma	M	59	Caucasian	bladder	transitional cell carcinoma	G3	T4aN2M0	IV	no	
+pancancer	101243P	RNA006396	bladder carcinoma	BLCA	2	09/03/2017	EDTA	plasma	M	60	Caucasian	bladder	transitional cell carcinoma	G3	T4bN0M0	IV	no	
+pancancer	101248P	RNA006397	bladder carcinoma	BLCA	3	30/03/2017	EDTA	plasma	M	84	Caucasian	"bladder, bones and lung mets"	transitional cell carcinoma	G3	T4bNxM1	IV	no	
+pancancer	101269P	RNA006398	bladder carcinoma	BLCA	4	23/07/2017	EDTA	plasma	M	36	Caucasian	bladder	transitional cell carcinoma	G3	T3bN2M0	IV	no	x
+pancancer	101281P	RNA006399	bladder carcinoma	BLCA	5	09/06/2017	EDTA	plasma	M	65	Caucasian	"bladder, lung mets"	transitional cell carcinoma	N/A	recurrence	N/A	no	
+pancancer	101295P	RNA006400	bladder carcinoma	BLCA	6	01/08/2017	EDTA	plasma	M	80	Caucasian	bladder	transitional cell carcinoma	G3	T4aN2M0	IV	no	
+pancancer	101362P	RNA006401	bladder carcinoma	BLCA	7	21/03/2018	EDTA	plasma	M	70	Caucasian	"bladder, lymph nodes mets"	squamous cell carcinoma	N/A	recurrence	N/A	no	
+pancancer	101394P	RNA006402	bladder carcinoma	BLCA	8	27/06/2018	EDTA	plasma	M	67	Caucasian	bladder	transitional cell carcinoma	G3	recurrence	N/A	no	
+pancancer	018911P	RNA006403	breast carcinoma	BRCA	1	06/04/2018	EDTA	plasma	F	66	Caucasian	"breast, brain and bones mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018943P	RNA006404	breast carcinoma	BRCA	2	11/07/2018	EDTA	plasma	F	47	Caucasian	"breast, brain mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018974P	RNA006405	breast carcinoma	BRCA	3	15/08/2018	EDTA	plasma	F	53	Caucasian	"breast, brain mets"	Paget carcinoma	N/A	recurrent	N/A	no	
+pancancer	018990P	RNA006406	breast carcinoma	BRCA	4	01/08/2018	EDTA	plasma	F	36	Caucasian	"breast, ovarian mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018993P	RNA006407	breast carcinoma	BRCA	5	06/09/2018	EDTA	plasma	F	67	Caucasian	left breast	infiltrating ductal carcinoma	G3	T4bN0M0	IIIB	no	
+pancancer	019060P	RNA006408	breast carcinoma	BRCA	6	13/11/2018	EDTA	plasma	F	28	Caucasian	left breast	infiltrating ductal carcinoma	G2	T2N2aM0	IIIA	no	
+pancancer	019142P	RNA006409	breast carcinoma	BRCA	7	25/01/2019	EDTA	plasma	F	47	Caucasian	right breast	infiltrating ductal carcinoma	G2	T2N3aM0	IIIC	no	
+pancancer	019146P	RNA006410	breast carcinoma	BRCA	8	29/01/2019	EDTA	plasma	F	67	Caucasian	right breast	infiltrating ductal carcinoma	N/A	T1bN2aM0	IIIA	no	
+pancancer	15530P	RNA006411	cervical squamous cell carcinoma	CESC	1	13/01/2011	EDTA	plasma	F	39	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	N/A	N/A	no	
+pancancer	15584P	RNA006412	cervical squamous cell carcinoma	CESC	2	25/05/2011	EDTA	plasma	F	42	Caucasian	cervix	squamous cell carcinoma	G3	T1_1N1M0	IIIB	no	
+pancancer	15603P	RNA006413	cervical squamous cell carcinoma	CESC	3	09/06/2011	EDTA	plasma	F	25	Caucasian	cervix	squamous cell carcinoma	G2-3	T1b1N1M0	IIIB	no	
+pancancer	15885P	RNA006414	cervical squamous cell carcinoma	CESC	4	04/10/2013	EDTA	plasma	F	48	Caucasian	cervix	squamous cell carcinoma	G2	T1b1N0M1	IVB	no	
+pancancer	15900P	RNA006415	cervical squamous cell carcinoma	CESC	5	29/10/2013	EDTA	plasma	F	54	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	151078P	RNA006416	cervical squamous cell carcinoma	CESC	6	24/08/2015	EDTA	plasma	F	54	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	151146P	RNA006417	cervical squamous cell carcinoma	CESC	7	20/01/2016	EDTA	plasma	F	40	Caucasian	"cervix, lung mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	15926P	RNA006816	cervical squamous cell carcinoma	CESC	8	22/11/2013	EDTA	plasma	F	36	Caucasian	cervix	squamous cell carcinoma	G3	T1b1N0M0	IB1	no	
+pancancer	09912P	RNA006418	cholangiocarcinoma	CHOL	1	16/12/2015	EDTA	plasma	M	44	Caucasian	liver	cholangiocarcinoma	G3	T3N1M0	IIIC	no	
+pancancer	091049P	RNA006419	cholangiocarcinoma	CHOL	2	27/09/2016	EDTA	plasma	M	58	Caucasian	liver	cholangiocarcinoma	G2	T3N1M0	IIIC	no	
+pancancer	091184P	RNA006420	cholangiocarcinoma	CHOL	3	18/05/2017	EDTA	plasma	F	71	Caucasian	liver	cholangiocarcinoma	G2-3	T3N1M0	IIIC	no	
+pancancer	091287P	RNA006421	cholangiocarcinoma	CHOL	4	24/11/2017	EDTA	plasma	M	70	Caucasian	liver	cholangiocarcinoma	G2	T3N1M0	IIIC	no	
+pancancer	091318P	RNA006422	cholangiocarcinoma	CHOL	5	20/02/2018	EDTA	plasma	M	42	Caucasian	liver	cholangiocarcinoma	G2-3	T3N1M0	IIIC	no	
+pancancer	091335P	RNA006423	cholangiocarcinoma	CHOL	6	30/03/2018	EDTA	plasma	F	69	Caucasian	liver	cholangiocarcinoma	G3	T3N1M0	IIIC	no	
+pancancer	091336P	RNA006424	cholangiocarcinoma	CHOL	7	02/04/2018	EDTA	plasma	M	54	Caucasian	liver	cholangiocarcinoma	G3	T3N0M0	IIIA	no	
+pancancer	091344P	RNA006425	cholangiocarcinoma	CHOL	8	18/04/2018	EDTA	plasma	F	76	Caucasian	liver	cholangiocarcinoma	G2	T3N0M0	IIIA	no	
+pancancer	025534P	RNA006426	colon adenocarcinoma	COAD	1	01/08/2018	EDTA	plasma	F	58	Caucasian	"sigmoid, liver mets"	adenocarcinoma	G2	T3N1aM1a	IVA	no	
+pancancer	025545P	RNA006427	colon adenocarcinoma	COAD	2	10/08/2018	EDTA	plasma	M	69	Caucasian	"ascending colon, liver and omental mets"	mucinous adenocarcinoma	G2	T3N1bM1b	IVB	no	
+pancancer	025570P	RNA006428	colon adenocarcinoma	COAD	3	27/08/2018	EDTA	plasma	F	68	Caucasian	"sigmoid, liver mets"	adenocarcinoma	N/A	T3NxM1a	IVA	no	
+pancancer	025573P	RNA006429	colon adenocarcinoma	COAD	4	28/08/2018	EDTA	plasma	F	68	Caucasian	"sigmoid, liver mets"	adenocarcinoma	N/A	T4bN0M1a	IVA	no	
+pancancer	025577P	RNA006430	colon adenocarcinoma	COAD	5	31/08/2018	EDTA	plasma	F	39	Caucasian	"cecum, liver mets"	adenocarcinoma	N/A	T3N1bM1a	IVA	no	
+pancancer	025586P	RNA006431	colon adenocarcinoma	COAD	6	05/09/2018	EDTA	plasma	F	61	Caucasian	"appendix; omental, ovarian mets"	mucinous adenocarcinoma	G1	T3N0M1b	IVB	no	
+pancancer	025588P	RNA006432	colon adenocarcinoma	COAD	7	07/09/2018	EDTA	plasma	F	59	Caucasian	"descending colon, liver mets"	adenocarcinoma	G2	T3N1bM1a	IVA	no	
+pancancer	025614P	RNA006433	colon adenocarcinoma	COAD	8	26/09/2018	EDTA	plasma	M	58	Caucasian	"transverse colon, liver mets"	adenocarcinoma	G2	T4bN0M1a	IVA	no	
+pancancer	D8946P	RNA006585	no	CONTROL	1	19/09/2017	EDTA	plasma	M	46	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9241P	RNA006586	no	CONTROL	2	05/03/2018	EDTA	plasma	M	60	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8742P	RNA006587	no	CONTROL	3	26/05/2017	EDTA	plasma	F	45	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8806P	RNA006588	no	CONTROL	4	04/07/2017	EDTA	plasma	F	48	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9289P	RNA006589	no	CONTROL	5	20/04/2018	EDTA	plasma	F	57	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9326P	RNA006818	no	CONTROL	6	08/06/2018	EDTA	plasma	M	64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9327P	RNA006819	no	CONTROL	7	08/06/2018	EDTA	plasma	M	69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8675P	RNA006820	no	CONTROL	8	11/05/2017	EDTA	plasma	F	52	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	NHLym411P	RNA006434	diffuse large B-cell lymphoma	DLBCL	1	28/05/2018	EDTA	plasma	F	66	Caucasian	bone marrow; pelvis; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym419P	RNA006435	diffuse large B-cell lymphoma	DLBCL	2	28/06/2018	EDTA	plasma	F	60	Caucasian	soft tissues; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym417P	RNA006436	diffuse large B-cell lymphoma	DLBCL	3	23/04/2018	EDTA	plasma	M	41	Caucasian	brain	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym422P	RNA006437	diffuse large B-cell lymphoma	DLBCL	4	16/05/2018	EDTA	plasma	M	67	Caucasian	brain	DLBCL	N/A	N/A	N/A	no	x
+pancancer	NHLym423P	RNA006438	diffuse large B-cell lymphoma	DLBCL	5	04/07/2018	EDTA	plasma	M	82	Caucasian	lymph nodes; nasal cavity; soft tissue of the H&N	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym427P	RNA006439	diffuse large B-cell lymphoma	DLBCL	6	25/07/2018	EDTA	plasma	F	60	Caucasian	nasopharynx; tonsils; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym431P	RNA006440	diffuse large B-cell lymphoma	DLBCL	7	01/08/2018	EDTA	plasma	M	81	Caucasian	testis; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym432P	RNA006441	diffuse large B-cell lymphoma	DLBCL	8	03/08/2018	EDTA	plasma	M	69	Caucasian	tonsil; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	21681P	RNA006450	esophageal carcinoma	ESCA	1	14/10/2016	EDTA	plasma	M	55	Caucasian	esophagus	squamous cell carcinoma	G2	T3N3M0	IIIC	no	
+pancancer	21683P	RNA006451	esophageal carcinoma	ESCA	2	14/10/2016	EDTA	plasma	F	47	Caucasian	esophagus	squamous cell carcinoma	N/A	T3N3M0	IIIC	no	
+pancancer	21708P	RNA006452	esophageal carcinoma	ESCA	3	10/03/2017	EDTA	plasma	F	70	Caucasian	esophagus	adenocarcinoma	G2	T3N3M0	IIIC	no	
+pancancer	21813P	RNA006453	esophageal carcinoma	ESCA	4	12/07/2018	EDTA	plasma	F	56	Caucasian	esophagus	adenocarcinoma	G2-3	T3N3M0	IVA	no	
+pancancer	21818P	RNA006454	esophageal carcinoma	ESCA	5	18/05/2018	EDTA	plasma	F	38	Caucasian	esophagus	squamous cell carcinoma	G3	T4bN2M0	IIIB	no	
+pancancer	21823P	RNA006455	esophageal carcinoma	ESCA	6	25/09/2018	EDTA	plasma	M	54	Caucasian	esophagus	squamous cell carcinoma	G3	T3N3M0	IVA	no	
+pancancer	21824P	RNA006456	esophageal carcinoma	ESCA	7	26/09/2018	EDTA	plasma	F	63	Caucasian	esophagus	squamous cell carcinoma	N/A	T3N2M0	IIIB	no	
+pancancer	21826P	RNA006457	esophageal carcinoma	ESCA	8	10/10/2018	EDTA	plasma	M	60	Caucasian	"esophagus, liver mets"	squamous cell carcinoma	G3	T3N1M1	IVB	no	
+pancancer	531362(II)P	RNA006466	glioblastoma multiforme	GBM	1	29/06/2018	EDTA	plasma	F	64	Caucasian	left frontal lobe	glioblastoma	G5	N/A	N/A	temodal	
+pancancer	531377(ll)P	RNA006467	glioblastoma multiforme	GBM	2	31/08/2018	EDTA	plasma	F	71	Caucasian	right frontal lobe	glioblastoma	G4	N/A	N/A	"Radiation Therapy, temozolomide"	
+pancancer	531781P	RNA006468	glioblastoma multiforme	GBM	3	03/09/2018	EDTA	plasma	F	71	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531788P	RNA006469	glioblastoma multiforme	GBM	4	05/09/2018	EDTA	plasma	F	51	Caucasian	left fronto-parietal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531789P	RNA006470	glioblastoma multiforme	GBM	5	07/09/2018	EDTA	plasma	F	61	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531796P	RNA006471	glioblastoma multiforme	GBM	6	18/09/2018	EDTA	plasma	F	32	Caucasian	left temporal lobe	glioblastoma	G4	N/A	N/A	"avastin, irinotecan, radiation therapy"	
+pancancer	531195(ll)P	RNA006472	glioblastoma multiforme	GBM	7	26/09/2018	EDTA	plasma	M	49	Caucasian	left parietal lobe	glioblastoma	G4	N/A	N/A	temodal	
+pancancer	531822P	RNA006473	glioblastoma multiforme	GBM	8	07/11/2018	EDTA	plasma	M	56	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	651014P	RNA006474	head and neck carcinoma	HNSC	1	05/09/2017	EDTA	plasma	M	48	Caucasian	cheek	squamous cell carcinoma	G2	T4aN1M0	IVA	no	
+pancancer	651125P	RNA006475	head and neck carcinoma	HNSC	2	06/02/2018	EDTA	plasma	F	71	Caucasian	mandibular alveolar process	squamous cell carcinoma	G1	T4aN0M0	IVA	no	x
+pancancer	651128P	RNA006476	head and neck carcinoma	HNSC	3	08/02/2018	EDTA	plasma	F	41	Caucasian	hard palate	adenoid cystic carcinoma	G2	T4aN0M0	IVA	no	
+pancancer	651188P	RNA006477	head and neck carcinoma	HNSC	4	18/04/2018	EDTA	plasma	M	81	Caucasian	hard palate	squamous cell carcinoma	G1	T4aN0M0	IVA	no	
+pancancer	651224P	RNA006478	head and neck carcinoma	HNSC	5	06/06/2018	EDTA	plasma	M	61	Caucasian	mandibular alveolar process	squamous cell carcinoma	G3	T4aN0M0	IVA	no	
+pancancer	651240P	RNA006479	head and neck carcinoma	HNSC	6	22/05/2018	EDTA	plasma	F	38	Caucasian	floor of the mouth	adenoid cystic carcinoma	N/A	T4aN0M0	IVA	no	
+pancancer	651311P	RNA006480	head and neck carcinoma	HNSC	7	11/10/2018	EDTA	plasma	M	48	Caucasian	laryngopharynx	squamous cell carcinoma	G3	T2N2bM0	IVA	no	
+pancancer	651325P	RNA006481	head and neck carcinoma	HNSC	8	26/10/2018	EDTA	plasma	M	61	Caucasian	laryngopharynx	squamous cell carcinoma	G3	T4aN2cM0	IVA	no	
+pancancer	052187P	RNA006490	clear cell carcinoma of kidney	KIRC	1	17/01/2018	EDTA	plasma	M	63	Caucasian	"right kidney, lung and brain mets"	"renal cell carcinoma, clear cell type"	G2	T1aN0M1	IV	no	
+pancancer	052222P	RNA006491	clear cell carcinoma of kidney	KIRC	2	28/02/2018	EDTA	plasma	F	76	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G4	T3aN0M1	IV	no	
+pancancer	052290P	RNA006492	clear cell carcinoma of kidney	KIRC	3	03/05/2018	EDTA	plasma	F	69	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G3	T3aN0M1	IV	no	
+pancancer	052319P	RNA006493	clear cell carcinoma of kidney	KIRC	4	06/06/2018	EDTA	plasma	M	41	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G4	T3bN1M1	IV	no	
+pancancer	052341P	RNA006494	clear cell carcinoma of kidney	KIRC	5	02/07/2018	EDTA	plasma	M	65	Caucasian	"right kidney, lung mets"	"renal cell carcinoma, clear cell type"	N/A	T3NxM1	IV	no	
+pancancer	052370P	RNA006495	clear cell carcinoma of kidney	KIRC	6	30/07/2018	EDTA	plasma	M	47	Caucasian	"right kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G3	T2aN0M1	IV	no	
+pancancer	052394P	RNA006496	clear cell carcinoma of kidney	KIRC	7	23/08/2018	EDTA	plasma	M	61	Caucasian	"right kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G2	T2bN0M1	IV	no	
+pancancer	052482P	RNA006497	clear cell carcinoma of kidney	KIRC	8	02/11/2018	EDTA	plasma	M	48	Caucasian	"right kidney, lung mets"	"renal cell carcinoma, clear cell type"	G4	T3aN0M1	IV	no	
+pancancer	531624P	RNA006498	anaplastic astrocytoma - glioma	ANA	1	01/11/2017	EDTA	plasma	M	49	Caucasian	N/A	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531639P	RNA006499	anaplastic astrocytoma - glioma	ANA	2	06/12/2017	EDTA	plasma	F	52	Caucasian	left parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531650P	RNA006500	anaplastic astrocytoma - glioma	ANA	3	15/01/2018	EDTA	plasma	F	32	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531674P	RNA006501	anaplastic astrocytoma - glioma	ANA	4	20/02/2018	EDTA	plasma	M	34	Caucasian	right frontal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531725P	RNA006502	anaplastic astrocytoma - glioma	ANA	5	16/04/2018	EDTA	plasma	F	64	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531736P	RNA006503	anaplastic astrocytoma - glioma	ANA	6	15/05/2018	EDTA	plasma	F	31	Caucasian	left parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531755P	RNA006504	anaplastic astrocytoma - glioma	ANA	7	06/06/2018	EDTA	plasma	F	36	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531795P	RNA006505	anaplastic astrocytoma - glioma	ANA	8	14/09/2018	EDTA	plasma	F	68	Caucasian	parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	09957P	RNA006482	liver hepatocellular carcinoma	LIHC	1	07/04/2016	EDTA	plasma	F	76	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091015P	RNA006483	liver hepatocellular carcinoma	LIHC	2	13/07/2016	EDTA	plasma	M	36	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091050P	RNA006484	liver hepatocellular carcinoma	LIHC	3	28/09/2016	EDTA	plasma	F	52	Caucasian	liver	hepatocellular carcinoma	G3	T3aN0M0	IIIA	no	
+pancancer	091059P	RNA006485	liver hepatocellular carcinoma	LIHC	4	24/10/2016	EDTA	plasma	F	52	Caucasian	liver	hepatocellular carcinoma	N/A	T3aN0M0	IIIA	no	
+pancancer	091137P	RNA006486	liver hepatocellular carcinoma	LIHC	5	20/02/2017	EDTA	plasma	F	54	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091294P	RNA006487	liver hepatocellular carcinoma	LIHC	6	07/12/2017	EDTA	plasma	M	63	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091393P	RNA006488	liver hepatocellular carcinoma	LIHC	7	30/08/2018	EDTA	plasma	F	18	Caucasian	liver	hepatocellular carcinoma	N/A	T4N0M0	IIIB	no	
+pancancer	091430P	RNA006489	liver hepatocellular carcinoma	LIHC	8	05/12/2018	EDTA	plasma	M	62	Caucasian	liver	hepatocellular carcinoma	G2	T3N0M0	IIIA	no	
+pancancer	043642(II)P	RNA006514	lung adenocarcinoma	LUAD	1	24/05/2016	EDTA	plasma	M	58	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	044387P	RNA006515	lung adenocarcinoma	LUAD	2	23/08/2016	EDTA	plasma	F	62	Caucasian	"upper lobe of the left lung, pleural mets"	adenocarcinoma	G1	T3N2M1a	IV	no	
+pancancer	044425P	RNA006516	lung adenocarcinoma	LUAD	3	02/09/2016	EDTA	plasma	F	81	Caucasian	"upper lobe of the right lung, pleural mets"	adenocarcinoma	N/A	T2aN1M1a	IV	no	
+pancancer	044245(II)P	RNA006517	lung adenocarcinoma	LUAD	4	16/03/2017	EDTA	plasma	M	61	Caucasian	"lung, adrenal gland mets"	adenocarcinoma	G3	recurrent	N/A	no	
+pancancer	044744P	RNA006518	lung adenocarcinoma	LUAD	5	21/03/2017	EDTA	plasma	F	78	Caucasian	"upper lobe of the right lung, left lung mets"	adenocarcinoma	N/A	T4N0M1a	IV	no	
+pancancer	045328P	RNA006519	lung adenocarcinoma	LUAD	6	08/06/2018	EDTA	plasma	M	59	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	045337P	RNA006520	lung adenocarcinoma	LUAD	7	20/06/2018	EDTA	plasma	M	69	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	045349P	RNA006521	lung adenocarcinoma	LUAD	8	03/05/2018	EDTA	plasma	M	58	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	T3NxM1b	IVA	no	
+pancancer	042342P	RNA006522	lung squamous cell carcinoma	LUSC	1	01/04/2016	EDTA	plasma	M	58	Caucasian	lung mts	squamous cell carcinoma	N/A	recurrent	N/A	no	x
+pancancer	044207P	RNA006523	lung squamous cell carcinoma	LUSC	2	28/04/2016	EDTA	plasma	F	66	Caucasian	upper lobe of the right lung	squamous cell carcinoma	G3	T4N2M0	IIIB	no	
+pancancer	044339P	RNA006524	lung squamous cell carcinoma	LUSC	3	20/07/2016	EDTA	plasma	F	69	Caucasian	upper lobe of the right lung	squamous cell carcinoma	N/A	T4N2M0	IIIB	no	
+pancancer	044388P	RNA006525	lung squamous cell carcinoma	LUSC	4	24/08/2016	EDTA	plasma	M	68	Caucasian	upper lobe of the right lung	squamous cell carcinoma	G1	T4N2M0	IIIB	no	
+pancancer	044396P	RNA006526	lung squamous cell carcinoma	LUSC	5	26/08/2016	EDTA	plasma	F	66	Caucasian	"lung, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	044480P	RNA006527	lung squamous cell carcinoma	LUSC	6	04/10/2016	EDTA	plasma	M	65	Caucasian	"lung, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	044558P	RNA006528	lung squamous cell carcinoma	LUSC	7	21/11/2016	EDTA	plasma	M	73	Caucasian	upper lobe of the left lung	squamous cell carcinoma	N/A	T4N2M0	IIIB	no	
+pancancer	044282P	RNA006529	lung squamous cell carcinoma	LUSC	8	09/06/2016	EDTA	plasma	M	76	Caucasian	upper lobe of the left lung	squamous cell carcinoma	G2	T1bN0M1a	IV	no	
+pancancer	033253P	RNA006530	ovarian serous adenocarcinoma	OV	1	19/10/2015	EDTA	plasma	F	58	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN1M0	IIIC	no	
+pancancer	033803P	RNA006531	ovarian serous adenocarcinoma	OV	2	19/01/2018	EDTA	plasma	F	58	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G3	T3cN1M0	IIIC	no	
+pancancer	032924P	RNA006532	ovarian serous adenocarcinoma	OV	3	22/09/2014	EDTA	plasma	F	66	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G3	T3bN1M0	IIIC	no	
+pancancer	032958P	RNA006533	ovarian serous adenocarcinoma	OV	4	28/10/2014	EDTA	plasma	F	65	Caucasian	"ovary, omental mets"	serous cystadenocarcinoma	G1	T3cN0M0	IIIC	no	
+pancancer	033079P	RNA006534	ovarian serous adenocarcinoma	OV	5	28/01/2015	EDTA	plasma	F	42	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN0M0	IIIC	no	
+pancancer	033086P	RNA006535	ovarian serous adenocarcinoma	OV	6	04/02/2015	EDTA	plasma	F	73	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN0M0	IIIC	no	
+pancancer	032921P	RNA006536	ovarian serous adenocarcinoma	OV	7	19/09/2014	EDTA	plasma	F	46	Caucasian	"ovary, spleen mts"	serous papillary cystadenocarcinoma	G3	T3bN0M1	IV	no	
+pancancer	033850P	RNA006537	ovarian serous adenocarcinoma	OV	8	12/03/2018	EDTA	plasma	F	45	Caucasian	"ovary, skin mts"	serous papillary cystadenocarcinoma	N/A	T3cN0M1	IVB	no	
+pancancer	12732P	RNA006538	pancreatic adenocarcinoma	PAAD	1	20/02/2015	EDTA	plasma	M	78	Caucasian	pancreas	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	121039P	RNA006539	pancreatic adenocarcinoma	PAAD	2	22/08/2016	EDTA	plasma	M	28	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	recurrent	N/A	no	
+pancancer	12838(II)P	RNA006540	pancreatic adenocarcinoma	PAAD	3	28/04/2017	EDTA	plasma	M	47	Caucasian	"pancreas, liver mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	121350P	RNA006541	pancreatic adenocarcinoma	PAAD	4	29/05/2018	EDTA	plasma	M	54	Caucasian	"pancreas, liver mets"	adenocarcinoma	G1	T3NxM1	IV	no	
+pancancer	121362P	RNA006542	pancreatic adenocarcinoma	PAAD	5	18/06/2018	EDTA	plasma	F	65	Caucasian	"pancreas, peritoneum mets"	adenocarcinoma	N/A	T3NxM1	IV	no	
+pancancer	121373P	RNA006543	pancreatic adenocarcinoma	PAAD	6	04/07/2018	EDTA	plasma	F	59	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	T3N0M1	IV	no	
+pancancer	121380P	RNA006544	pancreatic adenocarcinoma	PAAD	7	13/07/2018	EDTA	plasma	F	57	Caucasian	"pancreas, liver mets"	adenocarcinoma	G3	T3NxM1	IV	no	
+pancancer	121436P	RNA006545	pancreatic adenocarcinoma	PAAD	8	24/10/2018	EDTA	plasma	M	50	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	T3NxM1	IV	no	
+pancancer	162127P	RNA006546	prostate adenocarcinoma	PRAD	1	22/04/2015	EDTA	plasma	M	68	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162310P	RNA006547	prostate adenocarcinoma	PRAD	2	25/11/2015	EDTA	plasma	M	54	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162378P	RNA006548	prostate adenocarcinoma	PRAD	3	27/01/2016	EDTA	plasma	M	61	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162512P	RNA006549	prostate adenocarcinoma	PRAD	4	18/05/2016	EDTA	plasma	M	65	Caucasian	"prostate, brain mets"	adenocarcinoma	N/A	recurrent	N/A	zoladex	
+pancancer	162680P	RNA006550	prostate adenocarcinoma	PRAD	5	10/10/2016	EDTA	plasma	M	63	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162784P	RNA006551	prostate adenocarcinoma	PRAD	6	23/01/2017	EDTA	plasma	M	63	Caucasian	"prostate, bones mets"	adenocarcinoma	N/A	T3bNxM1b	IV	no	
+pancancer	162957P	RNA006552	prostate adenocarcinoma	PRAD	7	13/09/2017	EDTA	plasma	M	62	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	163282P	RNA006817	prostate adenocarcinoma	PRAD	8	20/12/2018	EDTA	plasma	M	69	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	T3aN1M0	III	no	
+pancancer	024374P	RNA006553	rectum adenocarcinoma	READ	1	21/01/2016	EDTA	plasma	F	58	Caucasian	"rectum, liver and omental mets"	mucinous adenocarcinoma	G2	T4bN2bM1b	IVB	no	
+pancancer	025527P	RNA006554	rectum adenocarcinoma	READ	2	31/07/2018	EDTA	plasma	M	49	Caucasian	"rectum, sigmoid, liver mets"	adenocarcinoma	G1	T3N0M1a	IVA	no	
+pancancer	025617P	RNA006555	rectum adenocarcinoma	READ	3	08/08/2018	EDTA	plasma	F	56	Caucasian	rectum liver mets	adenocarcinoma	N/A	T3N2aM1a	IVA	no	
+pancancer	025563P	RNA006556	rectum adenocarcinoma	READ	4	20/08/2018	EDTA	plasma	M	71	Caucasian	"rectum, liver, lung mets"	adenocarcinoma	N/A	T3N1aM1b	IVB	no	
+pancancer	025589P	RNA006557	rectum adenocarcinoma	READ	5	07/09/2018	EDTA	plasma	M	39	Caucasian	"rectum,  liver mets"	adenocarcinoma	G2	T3N0M1a	IVA	no	
+pancancer	025615P	RNA006558	rectum adenocarcinoma	READ	6	26/09/2018	EDTA	plasma	M	65	Caucasian	"rectum, liver mets"	adenocarcinoma	N/A	T3N0M1a	IVA	no	
+pancancer	025635P	RNA006559	rectum adenocarcinoma	READ	7	11/10/2018	EDTA	plasma	M	74	Caucasian	"rectum, liver mets"	adenocarcinoma	G2	T3N1bM1a	IVA	no	
+pancancer	025662P	RNA006560	rectum adenocarcinoma	READ	8	24/10/2018	EDTA	plasma	F	57	Caucasian	"rectum, liver mets "	adenocarcinoma	N/A	T4bN1bM1a	IVA	no	
+pancancer	55693P	RNA006561	sarcoma	SARC	1	11/09/2017	EDTA	plasma	M	54	Caucasian	soft tissue of the thigh	synovial sarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55703P	RNA006562	sarcoma	SARC	2	15/11/2017	EDTA	plasma	M	69	Caucasian	soft tissue of the thigh	liposarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55716P	RNA006563	sarcoma	SARC	3	16/02/2018	EDTA	plasma	M	79	Caucasian	"soft tissue of the thigh, local recurrence"	liposarcoma	G1	recurrent	N/A	no	
+pancancer	55720P	RNA006564	sarcoma	SARC	4	16/03/2018	EDTA	plasma	F	62	Caucasian	soft tissue around knee	myxofibrosarcoma	G3	T2N0M0	IIIA	no	
+pancancer	55735P	RNA006565	sarcoma	SARC	5	11/05/2018	EDTA	plasma	M	50	Caucasian	soft tissue of the thigh	undifferentiated pleomorphic sarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55739P	RNA006566	sarcoma	SARC	6	23/05/2018	EDTA	plasma	M	69	Caucasian	soft tissue under mandibular area	myxofibrosarcoma	G3	T3N0M0	N/A	no	
+pancancer	55740P	RNA006567	sarcoma	SARC	7	29/05/2018	EDTA	plasma	M	54	Caucasian	soft tissue of anterior abdominal wall	undifferentiated pleomorphic sarcoma	G3	T2N0M0	IIIA	no	
+pancancer	55743P	RNA006568	sarcoma	SARC	8	20/06/2018	EDTA	plasma	F	45	Caucasian	soft tissue in axillary region	mixoid liposarcoma	G3	T2N0M0	IIIA	no	
+pancancer	132368P	RNA006506	skin melanoma	SKCM	1	25/01/2018	EDTA	plasma	M	66	Caucasian	skin of the back	pigmented nodular melanoma	N/A	T1bN1bM0	IIIC	no	
+pancancer	132386P	RNA006507	skin melanoma	SKCM	2	26/02/2018	EDTA	plasma	M	70	Caucasian	"skin, brain mets"	"non-pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132388P	RNA006508	skin melanoma	SKCM	3	01/03/2018	EDTA	plasma	M	45	Caucasian	"skin, esophagus"	"melanoma, epithelioid cell type"	N/A	T4bN3M0	IIIC	no	
+pancancer	132399P	RNA006509	skin melanoma	SKCM	4	21/03/2018	EDTA	plasma	F	47	Caucasian	skin and lymph nodes mets	"non-pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132410P	RNA006510	skin melanoma	SKCM	5	17/04/2018	EDTA	plasma	F	50	Caucasian	skin of the left foot	"non-pigmented melanoma, epithelioid cell type"	N/A	T3N3M0	IIIC	no	
+pancancer	132419P	RNA006511	skin melanoma	SKCM	6	16/05/2018	EDTA	plasma	M	79	Caucasian	skin of the abdomen	"pigmented nodular melanoma, epithelioid cell type"	N/A	T3bN2cM0	IIIB	no	
+pancancer	132424P	RNA006512	skin melanoma	SKCM	7	30/05/2018	EDTA	plasma	F	46	Caucasian	"skin, brain mets"	"pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132429P	RNA006513	skin melanoma	SKCM	8	15/06/2018	EDTA	plasma	F	67	Caucasian	"skin, brain mets"	"pigmented melanoma, epithelioid and spindle cell type"	N/A	recurrent	N/A	Reaferon	
+pancancer	082544P	RNA006458	stomach adenocarcinoma	STAD	1	17/08/2018	EDTA	plasma	F	64	Caucasian	"stomach, peritoneum mets "	adenocarcinoma	N/A	T3NxM1	IV	no	
+pancancer	081985(II)P	RNA006459	stomach adenocarcinoma	STAD	2	12/07/2018	EDTA	plasma	F	66	Caucasian	"stomach, ovarian mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	082564 P	RNA006460	stomach adenocarcinoma	STAD	3	07/09/2018	EDTA	plasma	F	70	Caucasian	stomach	adenocarcinoma	G3	T4bN0M0	IIIA	no	
+pancancer	082583 P	RNA006461	stomach adenocarcinoma	STAD	4	01/10/2018	EDTA	plasma	F	51	Caucasian	"stomach, ovarian mets"	adenocarcinoma	G3	T3NxM1	IV	no	
+pancancer	082591P	RNA006462	stomach adenocarcinoma	STAD	5	05/10/2018	EDTA	plasma	M	56	Caucasian	stomach	adenocarcinoma	G3	T3N2M0	IIIA	no	
+pancancer	082598P	RNA006463	stomach adenocarcinoma	STAD	6	10/10/2018	EDTA	plasma	F	69	Caucasian	stomach	adenocarcinoma	G3	T3N3aM0	IIIB	no	
+pancancer	082627P	RNA006464	stomach adenocarcinoma	STAD	7	14/11/2018	EDTA	plasma	M	43	Caucasian	stomach	adenocarcinoma	G3	T4bN1M0	IIIB	no	
+pancancer	082628P	RNA006465	stomach adenocarcinoma	STAD	8	14/11/2018	EDTA	plasma	M	47	Caucasian	stomach	adenocarcinoma	G3	T3N2M0	IIIA	no	
+pancancer	07472P	RNA006569	testicular germ cell tumor - seminoma	TGCT	1	07/04/2015	EDTA	plasma	M	29	Caucasian	"testis, lymph nodes mets"	seminoma	N/A	recurrent	N/A	no	
+pancancer	07626P	RNA006570	testicular germ cell tumor - seminoma	TGCT	2	20/10/2016	EDTA	plasma	M	48	Caucasian	"testis, lymph nodes mets"	seminoma	N/A	recurrent	N/A	no	
+pancancer	07690P	RNA006571	testicular germ cell tumor - seminoma	TGCT	3	06/04/2018	EDTA	plasma	M	34	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07695P	RNA006572	testicular germ cell tumor - seminoma	TGCT	4	18/05/2018	EDTA	plasma	M	30	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07699P	RNA006573	testicular germ cell tumor - seminoma	TGCT	5	05/06/2018	EDTA	plasma	M	28	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07700P	RNA006574	testicular germ cell tumor - seminoma	TGCT	6	26/06/2018	EDTA	plasma	M	43	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07703P	RNA006575	testicular germ cell tumor - seminoma	TGCT	7	29/06/2018	EDTA	plasma	M	34	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07717P	RNA006576	testicular germ cell tumor - seminoma	TGCT	8	26/10/2018	EDTA	plasma	M	28	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	111294P	RNA006577	thyroid carcinoma	THCA	1	13/12/2016	EDTA	plasma	M	67	Caucasian	thyroid	papillary carcinoma	N/A	T3N1aM0	IVA	no	
+pancancer	111297P	RNA006578	thyroid carcinoma	THCA	2	12/01/2017	EDTA	plasma	F	46	Caucasian	"thyroid, bone mets"	medullary carcinoma	N/A	T3N1bM1	IVC	no	
+pancancer	111404P	RNA006579	thyroid carcinoma	THCA	3	17/07/2017	EDTA	plasma	M	53	Caucasian	thyroid	papillary carcinoma	N/A	T3N1bM0	IVA	no	
+pancancer	111492P	RNA006580	thyroid carcinoma	THCA	4	06/02/2018	EDTA	plasma	F	47	Asian	thyroid	papillary carcinoma	N/A	T3N1bM0	IVA	no	
+pancancer	111534P	RNA006581	thyroid carcinoma	THCA	5	15/06/2018	EDTA	plasma	F	58	Caucasian	thyroid	medullary carcinoma	N/A	T2N1bM0	IVA	no	
+pancancer	111570P	RNA006582	thyroid carcinoma	THCA	6	23/10/2018	EDTA	plasma	F	42	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	111580P	RNA006583	thyroid carcinoma	THCA	7	14/11/2018	EDTA	plasma	F	58	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	111586P	RNA006584	thyroid carcinoma	THCA	8	23/11/2018	EDTA	plasma	F	37	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	061485P	RNA006442	uterine corpus endometrial carcinoma	UCEC	1	19/02/2015	EDTA	plasma	F	48	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061490P	RNA006443	uterine corpus endometrial carcinoma	UCEC	2	20/05/2015	EDTA	plasma	F	58	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061641P	RNA006444	uterine corpus endometrial carcinoma	UCEC	3	10/10/2016	EDTA	plasma	F	63	Caucasian	uterus	endometrial adenocarcinoma	G3	T3aN1M0	IIIC1	no	
+pancancer	061665P	RNA006445	uterine corpus endometrial carcinoma	UCEC	4	19/01/2017	EDTA	plasma	F	57	Caucasian	"uterus, brain"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061674P	RNA006446	uterine corpus endometrial carcinoma	UCEC	5	07/04/2017	EDTA	plasma	F	51	Caucasian	"uterus, brain"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061689P	RNA006447	uterine corpus endometrial carcinoma	UCEC	6	28/08/2017	EDTA	plasma	F	64	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061694P	RNA006448	uterine corpus endometrial carcinoma	UCEC	7	18/09/2017	EDTA	plasma	F	68	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061717P	RNA006449	uterine corpus endometrial carcinoma	UCEC	8	20/11/2017	EDTA	plasma	F	75	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+threecancer	D8946P	RNA019775	no	CONTROL	1	19/09/2017	EDTA	plasma	M	46	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9241P	RNA019776	no	CONTROL	2	05/03/2018	EDTA	plasma	M	60	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8742P	RNA019777	no	CONTROL	3	26/05/2017	EDTA	plasma	F	45	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D8806P	RNA019778	no	CONTROL	4	04/07/2017	EDTA	plasma	F	48	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9289P	RNA019779	no	CONTROL	5	20/04/2018	EDTA	plasma	F	57	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9326P	RNA019780	no	CONTROL	6	08/06/2018	EDTA	plasma	M	64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9327P	RNA019781	no	CONTROL	7	08/06/2018	EDTA	plasma	M	69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8675P	RNA019782	no	CONTROL	8	11/05/2017	EDTA	plasma	F	52	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8988P	RNA019677	no	CONTROL	9	29/09/2017	EDTA	plasma	M	59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9277P	RNA019678	no	CONTROL	10	05/04/2018	EDTA	plasma	M	52	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D8993P	RNA019679	no	CONTROL	11	29/09/2017	EDTA	plasma	F	49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8994P	RNA019680	no	CONTROL	12	29/09/2017	EDTA	plasma	M	55	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8995P	RNA019681	no	CONTROL	13	29/09/2017	EDTA	plasma	F	59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9361P	RNA019682	no	CONTROL	14	26/07/2018	EDTA	plasma	F	56	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9398P	RNA019683	no	CONTROL	15	22/08/2018	EDTA	plasma	M	45	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9473P	RNA019684	no	CONTROL	16	28/09/2018	EDTA	plasma	F	51	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9017P	RNA019685	no	CONTROL	17	25/10/2017	EDTA	plasma	F	37	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9018P	RNA019686	no	CONTROL	18	25/10/2017	EDTA	plasma	F	66	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9194P	RNA019687	no	CONTROL	19	22/02/2018	EDTA	plasma	M	43	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9225P	RNA019688	no	CONTROL	20	01/03/2018	EDTA	plasma	F	36	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9243P	RNA019689	no	CONTROL	21	05/03/2018	EDTA	plasma	M	41	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9253P	RNA019690	no	CONTROL	22	05/03/2018	EDTA	plasma	M	60	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9322P	RNA019691	no	CONTROL	23	31/05/2018	EDTA	plasma	M	54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9341P	RNA019692	no	CONTROL	24	22/06/2018	EDTA	plasma	F	55	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9365P	RNA019693	no	CONTROL	25	26/07/2018	EDTA	plasma	F	61	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9367P	RNA019694	no	CONTROL	26	26/07/2018	EDTA	plasma	F	42	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9371P	RNA019695	no	CONTROL	27	27/07/2018	EDTA	plasma	F	60	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9380P	RNA019696	no	CONTROL	28	02/08/2018	EDTA	plasma	M	56	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D9427P	RNA019697	no	CONTROL	29	13/09/2018	EDTA	plasma	M	56	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9694P	RNA019698	no	CONTROL	30	25/01/2019	EDTA	plasma	M	65	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	034344P	RNA019699	ovarian serous adenocarcinoma	OV	9	04/12/2019	EDTA	plasma	F	48	Caucasian	"ovary, lymph nodes mets"	serous adenocarcinoma	G3	recurrent	IIIC	no	
+threecancer	034465P	RNA019700	ovarian serous adenocarcinoma	OV	10	24/07/2020	EDTA	plasma	F	64	Caucasian	ovary	serous papillary adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034475P	RNA019701	ovarian serous adenocarcinoma	OV	11	11/08/2020	EDTA	plasma	F	59	Caucasian	ovary	serous papillary adenocarcinoma	G3	T3cN0M0	IIIC	no	x
+threecancer	034477P	RNA019702	ovarian serous adenocarcinoma	OV	12	24/08/2020	EDTA	plasma	F	39	Caucasian	ovary	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034485P	RNA019703	ovarian serous adenocarcinoma	OV	13	14/09/2020	EDTA	plasma	F	38	Caucasian	ovary	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034503P	RNA019704	ovarian serous adenocarcinoma	OV	14	03/11/2020	EDTA	plasma	F	36	Caucasian	"ovary, liver mets"	serous papillary adenocarcinoma	G1	T3bN1M1	IVB	no	
+threecancer	034510P	RNA019705	ovarian serous adenocarcinoma	OV	15	20/11/2020	EDTA	plasma	F	55	Caucasian	ovary	serous adenocarcinoma	G3	T3bN0M0	IIIB	no	
+threecancer	034518P	RNA019706	ovarian serous adenocarcinoma	OV	16	08/12/2020	EDTA	plasma	F	60	Caucasian	"ovary, umbilical ring mets"	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034524P	RNA019707	ovarian serous adenocarcinoma	OV	17	15/12/2020	EDTA	plasma	F	60	Caucasian	"ovary, liver mets"	serous adenocarcinoma	G3	T3bN0M1	IVB	no	
+threecancer	034531P	RNA019708	ovarian serous adenocarcinoma	OV	18	28/12/2020	EDTA	plasma	F	55	Caucasian	"ovary, diaphragmal mets"	serous adenocarcinoma	G3	T3cN1M1	IVB	no	
+threecancer	034534P	RNA019709	ovarian serous adenocarcinoma	OV	19	14/01/2021	EDTA	plasma	F	43	Caucasian	ovary	serous papillary cystadenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034539P	RNA019710	ovarian serous adenocarcinoma	OV	20	01/02/2021	EDTA	plasma	F	58	Caucasian	"ovary, anterior abdominal wall mets"	serous adenocarcinoma	G3	T3aN0M1	IVB	no	
+threecancer	061194P	RNA019711	uterine corpus endometrial carcinoma	UCEC	9	08/04/2013	EDTA	plasma	F	61	Caucasian	uterus	endometrial adenocarcinoma	G3	T3aN0M0	IIIA	no	
+threecancer	061226P	RNA019712	uterine corpus endometrial carcinoma	UCEC	10	14/05/2013	EDTA	plasma	F	71	Caucasian	uterus	endometrial adenocarcinoma	G1	T3aN0M0	IIIA	no	
+threecancer	061738P	RNA019713	uterine corpus endometrial carcinoma	UCEC	11	20/06/2018	EDTA	plasma	F	64	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	061742P	RNA019714	uterine corpus endometrial carcinoma	UCEC	12	04/05/2018	EDTA	plasma	F	59	Caucasian	"uterus, ovarian mets"	endometrial stromal sarcoma	N/A	recurrent	IV	no	
+threecancer	061747P	RNA019715	uterine corpus endometrial carcinoma	UCEC	13	27/07/2018	EDTA	plasma	F	66	Caucasian	uterus	endometrial adenocarcinoma	G2	T1bN1M0	IIIC1	no	
+threecancer	061759P	RNA019716	uterine corpus endometrial carcinoma	UCEC	14	14/09/2018	EDTA	plasma	F	48	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	061766P	RNA019717	uterine corpus endometrial carcinoma	UCEC	15	07/09/2018	EDTA	plasma	F	36	Caucasian	"uterus, omentum and anterior abdominal wall mets"	endometrial adenocarcinoma	G3	T2N0M1	IVB	no	
+threecancer	061939P	RNA019718	uterine corpus endometrial carcinoma	UCEC	16	23/03/2020	EDTA	plasma	F	42	Caucasian	uterus	endometrial adenocarcinoma	G1	T3bN0M0	IIIB	no	
+threecancer	061947P	RNA019719	uterine corpus endometrial carcinoma	UCEC	17	10/08/2020	EDTA	plasma	F	63	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	G3	recurrent	IV	no	
+threecancer	061952P	RNA019720	uterine corpus endometrial carcinoma	UCEC	18	23/10/2020	EDTA	plasma	F	62	Caucasian	"uterus, omentum mets"	endometrial adenocarcinoma	G3	T3bN0M1	IVB	no	
+threecancer	061958P	RNA019721	uterine corpus endometrial carcinoma	UCEC	19	02/11/2020	EDTA	plasma	F	72	Caucasian	uterus	endometrial adenocarcinoma	N/A	T4N0M0	IVA	no	
+threecancer	061959P	RNA019722	uterine corpus endometrial carcinoma	UCEC	20	28/08/2020	EDTA	plasma	F	59	Caucasian	uterus	endometrial adenocarcinoma	G2	T3bN0M0	IIIB	no	
+threecancer	163227P	RNA019723	prostate adenocarcinoma	PRAD	9	28/09/2018	EDTA	plasma	M	62	Caucasian	prostate	adenocarcinoma	8(3+5)	T3bN1M0	IV	no	
+threecancer	163242P	RNA019724	prostate adenocarcinoma	PRAD	10	25/10/2018	EDTA	plasma	M	58	Caucasian	prostate	adenocarcinoma	7(3+4)	T3bN1M0	IV	no	
+threecancer	163265P	RNA019725	prostate adenocarcinoma	PRAD	11	07/12/2018	EDTA	plasma	M	63	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163466P	RNA019726	prostate adenocarcinoma	PRAD	12	30/07/2019	EDTA	plasma	M	55	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163531P	RNA019727	prostate adenocarcinoma	PRAD	13	27/09/2019	EDTA	plasma	M	63	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163537P	RNA019728	prostate adenocarcinoma	PRAD	14	16/10/2019	EDTA	plasma	M	68	Caucasian	prostate	adenocarcinoma	8(4+4)	T3aN1M0	IV	no	
+threecancer	163629P	RNA019729	prostate adenocarcinoma	PRAD	15	06/02/2020	EDTA	plasma	M	59	Caucasian	prostate	adenocarcinoma	7(3+4)	T3bN1M0	IV	no	
+threecancer	163639P	RNA019730	prostate adenocarcinoma	PRAD	16	18/02/2020	EDTA	plasma	M	69	Caucasian	prostate	adenocarcinoma	8(4+4)	T3aN1M0	IV	no	
+threecancer	163695P	RNA019731	prostate adenocarcinoma	PRAD	17	22/06/2020	EDTA	plasma	M	65	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	163710P	RNA019732	prostate adenocarcinoma	PRAD	18	13/07/2020	EDTA	plasma	M	67	Caucasian	prostate	adenocarcinoma	7(4+3)	T3aN1M0	IV	no	
+threecancer	163722P	RNA019733	prostate adenocarcinoma	PRAD	19	29/07/2020	EDTA	plasma	M	60	Caucasian	prostate	adenocarcinoma	6(3+3)	T3bN1M0	IV	no	
+threecancer	163771P	RNA019734	prostate adenocarcinoma	PRAD	20	11/11/2020	EDTA	plasma	M	65	Caucasian	prostate	adenocarcinoma	9(5+4)	T3bN1M0	IV	no	
+lymphoma	K4N-I8CX	RNA019987	diffuse large B-cell lymphoma	DLBCL	1	29/06/2018	PAXgene	plasma	F	80	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-ZK85	RNA019970	diffuse large B-cell lymphoma	DLBCL	2	24/08/2018	PAXgene	plasma	F	49	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	000-HQ6Y	RNA019985	diffuse large B-cell lymphoma	DLBCL	3	26/06/2020	PAXgene	plasma	M	40	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-XIBW	RNA019973	diffuse large B-cell lymphoma	DLBCL	4	08/02/2019	PAXgene	plasma	F	80	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-FAMJ	RNA019986	diffuse large B-cell lymphoma	DLBCL	5	01/01/2019	PAXgene	plasma	F	69	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-232A	RNA020043	diffuse large B-cell lymphoma	DLBCL	6	27/11/2019	PAXgene	plasma	F	41	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-D4C8	RNA019976	diffuse large B-cell lymphoma	DLBCL	7	21/01/2020	PAXgene	plasma	M	54	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-KPTB	RNA019981	diffuse large B-cell lymphoma	DLBCL	8	09/05/2019	PAXgene	plasma	F	61	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-5AK9	RNA019991	diffuse large B-cell lymphoma	DLBCL	9	05/07/2019	PAXgene	plasma	M	64	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-LWHH	RNA019988	diffuse large B-cell lymphoma	DLBCL	10	29/10/2018	PAXgene	plasma	F	58	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-K7DU	RNA019982	diffuse large B-cell lymphoma	DLBCL	11	20/12/2018	PAXgene	plasma	F	56	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-K8Z5	RNA020042	diffuse large B-cell lymphoma	DLBCL	12	13/09/2019	PAXgene	plasma	F	59	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-GDBW	RNA020028	diffuse large B-cell lymphoma	DLBCL	13	16/01/2020	PAXgene	plasma	M	51	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	K4N-RIYD	RNA020016	diffuse large B-cell lymphoma	DLBCL	14	25/02/2020	PAXgene	plasma	F	84	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-9FL7	RNA020020	diffuse large B-cell lymphoma	DLBCL	15	23/04/2020	PAXgene	plasma	M	58	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-S5BK	RNA020021	diffuse large B-cell lymphoma	DLBCL	16	08/05/2020	PAXgene	plasma	M	74	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-UY4V	RNA020145	diffuse large B-cell lymphoma	DLBCL	17	04/06/2020	PAXgene	plasma	M	75	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-NFDN	RNA020133	diffuse large B-cell lymphoma	DLBCL	18	30/08/2018	PAXgene	plasma	M	80	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-8EGH	RNA020112	diffuse large B-cell lymphoma	DLBCL	19	20/09/2017	PAXgene	plasma	M	32	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-FQLK	RNA020164	diffuse large B-cell lymphoma	DLBCL	20	30/11/2018	PAXgene	plasma	M	72	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-KWJT	RNA020121	diffuse large B-cell lymphoma	DLBCL	21	01/08/2017	PAXgene	plasma	F	28	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-I736	RNA020166	diffuse large B-cell lymphoma	DLBCL	22	23/07/2018	PAXgene	plasma	F	85	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-G697	RNA020139	diffuse large B-cell lymphoma	DLBCL	23	27/02/2019	PAXgene	plasma	M	68	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-8ZTJ	RNA020137	diffuse large B-cell lymphoma	DLBCL	24	16/10/2019	PAXgene	plasma	F	62	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-UJB1	RNA020143	diffuse large B-cell lymphoma	DLBCL	25	04/03/2019	PAXgene	plasma	F	71	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	K4N-3EDF	RNA020183	diffuse large B-cell lymphoma	DLBCL	26	19/12/2019	PAXgene	plasma	F	76	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-IXBU	RNA020184	diffuse large B-cell lymphoma	DLBCL	27	08/12/2017	PAXgene	plasma	M	78	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-UQRR	RNA020111	diffuse large B-cell lymphoma	DLBCL	28	28/12/2017	PAXgene	plasma	F	91	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	000-5WXV	RNA020038	diffuse large B-cell lymphoma	DLBCL	29	09/04/2019	PAXgene	plasma	F	66	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-6IDP	RNA020125	diffuse large B-cell lymphoma	DLBCL	30	13/09/2017	PAXgene	plasma	M	76	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-GGXW	RNA020089	primary mediastinal large B-cell lymphoma	PMBCL	1	23/01/2019	PAXgene	plasma	M	37	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-TZ4F	RNA020118	primary mediastinal large B-cell lymphoma	PMBCL	2	30/10/2018	PAXgene	plasma	F	38	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	000-IHWE	RNA020110	primary mediastinal large B-cell lymphoma	PMBCL	3	04/04/2019	PAXgene	plasma	F	46	Caucasian	lymph nodes	PMBCL	N/A	N/A	I	no	
+lymphoma	K4N-D5VF	RNA020065	primary mediastinal large B-cell lymphoma	PMBCL	4	24/09/2020	PAXgene	plasma	F	31	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-979S	RNA020066	primary mediastinal large B-cell lymphoma	PMBCL	5	16/11/2020	PAXgene	plasma	M	17	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-JHF8	RNA020069	primary mediastinal large B-cell lymphoma	PMBCL	6	04/06/2020	PAXgene	plasma	M	74	Caucasian	lymph nodes	PMBCL	N/A	N/A	III	no	
+lymphoma	K4N-MDFS	RNA020083	primary mediastinal large B-cell lymphoma	PMBCL	7	02/09/2020	PAXgene	plasma	F	36	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-9R43	RNA020093	primary mediastinal large B-cell lymphoma	PMBCL	8	04/09/2018	PAXgene	plasma	F	20	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	000-3BWL	RNA020109	primary mediastinal large B-cell lymphoma	PMBCL	9	30/08/2017	PAXgene	plasma	M	38	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-I9UZ	RNA020084	primary mediastinal large B-cell lymphoma	PMBCL	10	13/10/2017	PAXgene	plasma	F	35	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-WXJ2	RNA020097	primary mediastinal large B-cell lymphoma	PMBCL	11	29/05/2017	PAXgene	plasma	M	24	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-WFZH	RNA020101	primary mediastinal large B-cell lymphoma	PMBCL	12	14/08/2017	PAXgene	plasma	M	49	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-97WS	RNA020076	primary mediastinal large B-cell lymphoma	PMBCL	13	09/01/2018	PAXgene	plasma	M	30	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-E7YE	RNA019992	no	CONTROL	1	01/03/2021	PAXgene	plasma	F	82	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-3BRX	RNA019993	no	CONTROL	2	01/03/2021	PAXgene	plasma	F	45	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-GCWW	RNA019994	no	CONTROL	3	01/03/2021	PAXgene	plasma	F	54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UD65	RNA019996	no	CONTROL	4	01/03/2021	PAXgene	plasma	F	66	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-8QE1	RNA019997	no	CONTROL	5	01/03/2021	PAXgene	plasma	F	74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UVWY	RNA019998	no	CONTROL	6	01/03/2021	PAXgene	plasma	F	86	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-6KGN	RNA019999	no	CONTROL	7	01/03/2021	PAXgene	plasma	M	92	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UVK3	RNA020000	no	CONTROL	8	01/03/2021	PAXgene	plasma	F	65	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-PSJB	RNA020001	no	CONTROL	9	01/03/2021	PAXgene	plasma	M	86	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-JH3H	RNA020002	no	CONTROL	10	01/03/2021	PAXgene	plasma	M	76	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-TYTH	RNA020005	no	CONTROL	11	01/03/2021	PAXgene	plasma	M	59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-PNKS	RNA020006	no	CONTROL	12	01/03/2021	PAXgene	plasma	M	78	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-C8TF	RNA020007	no	CONTROL	13	01/03/2021	PAXgene	plasma	M	66	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-IXQW	RNA020008	no	CONTROL	14	01/03/2021	PAXgene	plasma	M	54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-6XMM	RNA020009	no	CONTROL	15	01/03/2021	PAXgene	plasma	M	64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-RGJ5	RNA020011	no	CONTROL	16	01/03/2021	PAXgene	plasma	M	45	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-BMQE	RNA020029	no	CONTROL	17	01/03/2021	PAXgene	plasma	F	32	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-5VGB	RNA020030	no	CONTROL	18	01/03/2021	PAXgene	plasma	F	39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-QGNW	RNA020032	no	CONTROL	19	01/03/2021	PAXgene	plasma	M	23	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-SG5F	RNA020033	no	CONTROL	20	01/03/2021	PAXgene	plasma	M	34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-8EQF	RNA020035	no	CONTROL	21	01/03/2021	PAXgene	plasma	F	24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-BV8E	RNA020036	no	CONTROL	22	01/03/2021	PAXgene	plasma	M	36	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
