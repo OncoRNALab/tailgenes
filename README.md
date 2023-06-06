@@ -1,4 +1,4 @@
-This repository contains data and scripts used to generate numbers and figures for the paper by Morlion et al.: *"Patient-specific alterations in blood plasma cfRNA profiles enable accurate classification of cancer patients and controls"*
+This repository contains data and scripts used to generate numbers and figures for the paper by Morlion et al.: *"Patient-specific alterations in blood plasma cfRNA profiles enable accurate classification of cancer patients and controls"* currently on [medRxiv](https://doi.org/10.1101/2023.05.24.23290388)
 
 The `input` folder contains annotation and count data, used as input for data analysis:
 - *SupplTable1_sample_annotation.txt*: pan-cancer, three-cancer and lymphoma cohort sample annotation (plasma samples)
