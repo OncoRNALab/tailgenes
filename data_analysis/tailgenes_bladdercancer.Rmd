@@ -1,7 +1,7 @@
 ---
 title: "bladder cancer (urine) cohort - tail genes"
 author: "Annelien Morlion"
-date: '2023-05-18'
+date: '2024-12-24'
 output: html_document
 ---
 
@@ -40,6 +40,46 @@ full_nr <- scales::format_format(big.mark = ",", decimal.mark = ".", scientific 
 ##sample annotation
 sample_annotation <- data.table::fread("../input/bladdercancer_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort))
 
+# Wrapper function for roc (in case one group has no observations: output NA as AUC)
+require(pROC)
+safe_roc <- function(response, predictor, ...) {
+  # Check if there are both cases and controls
+  if (length(unique(response)) < 2) {
+    warning("ROC calculation skipped: response must have both cases and controls")
+    return(list(auc = NA))
+  }
+  
+  args <- list(response = response, predictor = predictor, ...)
+  tryCatch({
+    result <- do.call(pROC::roc, args)
+    return(result)
+  }, error = function(e) {
+    message("An error occurred in ROC calculation: ", e$message)
+    return(list(auc = NA))
+  })
+}
+
+# Wrapper function for roc.test (in case one group has no observations: output NA as AUC)
+safe_roc_test <- function(auc1, auc2) {
+  # Check if either AUC is NA
+  if (is.null(auc1$auc) || is.null(auc2$auc) || is.na(auc1$auc) || is.na(auc2$auc)) {
+    warning("ROC comparison skipped: one of the AUC values is NA")
+    return(NA)
+  }
+  
+  tryCatch({
+    test_result <- pROC::roc.test(auc1, auc2)
+    return(test_result$p.value)
+  }, error = function(e) {
+    message("An error occurred in ROC comparison: ", e$message)
+    return(NA)
+  })
+}
+
+# Globally suppress messages about grouped output in summarise() or join()
+options(dplyr.summarise.inform = FALSE)
+options(dplyr.join.inform = FALSE)
+
 ```
 
 
@@ -52,12 +92,16 @@ bladdercancer_counts <- data.table::fread("../input/bladdercancer_counts.txt", d
 
 library(biomaRt)
 library(DESeq2)
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
 genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+#data.table::fwrite(genes_ens,file="ensID_biotype.txt", sep="\t",quote =F)
 
 pc_gene_counts <- bladdercancer_counts %>% left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
   filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
   dplyr::select(-c("gene_biotype","RNAID")) %>% #remove gene biotype column, RNAID
   pivot_wider(names_from=UniqueID, values_from=counts) #back to original format: rows=genes, columns=samples
+
+gene_sum <- pc_gene_counts %>% pivot_longer(names_to="UniqueID", values_to="counts",-"gene_id") %>% filter(counts>=10) %>% group_by(UniqueID) %>% summarise(nr_genes=n()) %>% arrange(nr_genes)
 
 normal_samples <- sample_annotation %>% filter(Cohort=="bladdercancer") %>% filter(Abbreviation=="CONTROL") %>% pull(UniqueID)
 normal_counttable <- dplyr::select(pc_gene_counts, c("gene_id",(normal_samples)))
@@ -131,7 +175,7 @@ for (samp in (colnames(bladdercancer_normcounts)[-1])) {
   z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
 }
 
-data.table::fwrite(z_scores_LOO, file = "../data/bladdercancer_zscores_tail.txt", sep="\t",na="",quote=F, row.names = F)
+#data.table::fwrite(z_scores_LOO, file = "../data/bladdercancer_zscores_tail.txt", sep="\t",na="",quote=F, row.names = F)
 
 ### save table with tail genes per sample (|z|>3 and ncounts ≥40)
 tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
@@ -139,15 +183,15 @@ tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_
                    pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
                   by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
 #summary(tmp)
-data.table::fwrite(tail_genes, file="../data/bladdercancer_tailgenes.txt",sep="\t", row.names = F, quote=F, na="")
-rm(tail_genes,z_scores_LOO_sample, samp, z_scores_LOO)
+data.table::fwrite(tail_genes, file="../data/tail_genes/bladdercancer_tailgenes.txt",sep="\t", row.names = F, quote=F, na="")
+rm(tail_genes,z_scores_LOO_sample, samp)
 
 ```
 
 Number of tail genes (ncounts≥40, |z|>3) and heatmap
 ```{r}
-z_scores_LOO <- data.table::fread("../data/bladdercancer_zscores_tail.txt",data.table = F)
-tail_genes <- data.table::fread("../data/bladdercancer_tailgenes.txt",data.table=F)
+#z_scores_LOO <- data.table::fread("../data/tail_genes/bladdercancer_zscores_tail.txt",data.table = F)
+tail_genes <- data.table::fread("../data/tail_genes/bladdercancer_tailgenes.txt",data.table=F)
 length(unique(tail_genes$gene_id)) 
 
 require(pheatmap)
@@ -266,7 +310,7 @@ rm(tmp2,tmp3,tmp4,nr_samples_total,tail_genes)
 
 test whether there are significantly less tail genes in certain groups
 ```{r}
-tail_genes <- data.table::fread("../data/bladdercancer_tailgenes.txt",data.table=F) %>%
+tail_genes <- data.table::fread("../data/tail_genes/bladdercancer_tailgenes.txt",data.table=F) %>%
    mutate(disease=gsub("_.*","",sample)) #deviating genes (Tail) 
 
 tmp2 <- tail_genes %>% group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
@@ -319,157 +363,6 @@ ggsave("../figures/bladdercancer_tail_boxplot.pdf", plot=last_plot(), height=6.1
 kruskal.test(n_dev ~ disease, data = tmp2) # significant difference between Abbreviation types
 
 ```
-Fisher exact test (all samples except one) to make selection of tail genes specifically associated to cancer/control state, then build model on consensus genes only (also at this level LOO with cross-validation: test model on remaining sample)
-```{r}
-predictions <- c()
-original_type <- c()
-
-z_scores_LOO <- data.table::fread("../data/bladdercancer_zscores_tail.txt",data.table=F) 
-colnames(z_scores_LOO) <- gsub("_bladdercancer","",colnames(z_scores_LOO))
-tail_genes <- data.table::fread("../data/bladdercancer_tailgenes.txt",data.table=F) %>%
-   mutate(disease=gsub("_.*","",sample)) #Tail genes
-
-#subset z scores table to genes that are Tail genes in at least 1 sample
-z_scores_LOO_Tail <- z_scores_LOO %>% filter(gene_id %in% unique(tail_genes$gene_id)) 
-
-consensus_genes_100 <- list()
-gene_list <- vector(mode="list", length=length(colnames(z_scores_LOO_Tail)[-1]))
-### Find biomarker tail genes for (all) cancer vs control
-for (samplename in colnames(z_scores_LOO_Tail)[-1]){
-  print(samplename)
-  reduced_z_table <- z_scores_LOO_Tail %>% dplyr::select(-paste(samplename))
-  
-  #Fisher exact test on all samples except sample of interest
-  test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% #filter(!is.na(zscores)) %>% 
-                   #filter(abs(zscores)>3) %>%
-  mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", "N", "T"))  %>% #get tumor/normal annotation
-  #mutate(abszabove3=ifelse(abs(zscores)>3, "above3","below3"))
-  ungroup() %>% group_by(gene_id,cancer) %>% dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
-  test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
-  df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
-#df_fisher$p.adj = p.adjust(df_fisher$p.val, method = "BH")
-  df_fisher %>% filter(p.val<0.05) %>% nrow()
-  gene_list[[samplename]] <- df_fisher %>% filter(p.val<0.05) %>% rownames()
-}
-
-#count how many times a gene is significant in fisher test of all samples except 1 (24 repeats in total so max is 24)
-tmp <-data.frame("gene_id"=c(unlist(gene_list))) %>% group_by(gene_id) %>% 
-  dplyr::summarise(nr_occ=n())
-#ggplot(tmp, aes(x=nr_occ)) +geom_bar() + theme_point
-
-#Keep only genes that are significant in ALL sets to build model (+LOO crossval)
-nr_sets = length(colnames(z_scores_LOO_Tail)[-1])
-consensus_genes_100[["BLCA"]] <- tmp %>% filter(nr_occ==nr_sets) %>% pull(gene_id) #39 consensus genes
-
-
-### overlap biomarker genes with differential genes
-DAA_genes <- data.table::fread("../data/differentialabundance_bladdercancer.txt", data.table = F) %>% mutate(DA=ifelse((padj<0.05) & (log2FoldChange>1), "higher", ifelse((padj<0.05) & (log2FoldChange<(-1)), "lower", "no")))  #differentially abudant genes (DE)
-table(consensus_genes_100[["BLCA"]] %in% (DAA_genes %>% filter(DA!="no") %>% filter(cancertype=="BLCA") %>% pull(gene_id)))
-```
-
-```{r}
-### Now calculate nr of tail genes belonging to each type-specific biomarker tail set
-tail_genes_FT_ndev <- data.frame()
-
-tail_genes_FT_ndev_tmp <- tail_genes %>% #filter(disease %in% c("CONTROL",cancer)) %>% #no need to filter samples
-  filter(gene_id %in% (consensus_genes_100[["BLCA"]])) %>%
-  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% 
-  mutate(disease=gsub("_.*","",sample))
-#make sure all control and cancer samples of comparison are still present
-tail_genes_FT_ndev_tmp <- right_join(tail_genes_FT_ndev_tmp, 
-                               data.frame(sample=unique(sample_annotation %>% filter(Cohort=="bladdercancer") %>% pull(UniqueID))), by="sample") %>%
-  mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
-  mutate(comparison=paste0("BLCAvsCtrl")) %>% #add comparison to distinguish control outcomes
-  mutate(disease=ifelse(disease=="CONTROL","CONTROL","BLCA"))
-
-tail_genes_FT_ndev <- rbind(tail_genes_FT_ndev, tail_genes_FT_ndev_tmp)
-
-data <- tail_genes_FT_ndev %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
-  mutate(disease=factor(disease)) %>% 
-  mutate(disease=relevel(disease,ref="CONTROL"))
-
-ggplot(data, aes(x=disease,y=n_dev, fill=disease)) +
-  geom_boxplot(outlier.size = 0.6) + scale_y_log10() +
-  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
-  mytheme + labs(y="number of biomarker tail genes",x="") +
-  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
-  scale_fill_manual(values=c("CONTROL"="#DDAA33","BLCA"="#009988")) +
-  facet_wrap(~comparison, scales="free_x", nrow=1)
-
-ggsave(filename="../figures/bladdercancer_biomarkertail_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
-
-ggplot(data, aes(x=disease,y=n_dev, fill=disease)) +
-  geom_boxplot(outlier.size = 0.6) +
-  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
-  mytheme + labs(y="number of biomarker tail genes",x="") +
-  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
-  scale_fill_manual(values=c("CONTROL"="#DDAA33","BLCA"="#009988")) +
-  facet_wrap(~comparison, scales="free_x",nrow=1)
-
-ggsave(filename="../figures/bladdercancer_biomarkertail_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
-
-
-
-my_comparisons=list(c("CONTROL","BLCA"))
-#ggpubr::compare_means(n_dev ~ disease, data = data, method = "wilcox.test",p.adjust.method = "holm")
-ggpubr::compare_means(n_dev ~ disease, data = data, method = "wilcox.test",p.adjust.method = "BH")
-
-### add significance
-wilcox.test(n_dev ~ disease, data=data %>% filter(comparison=="BLCAvsCtrl"))
-
-### rstatix significance
-data_tmp <- data %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
-rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="BLCAvsCtrl"), n_dev ~ disease)
-rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="BLCAvsCtrl"), n_dev ~ disease)
-#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="BLCAvsCtrl"), n_dev ~ disease,ci=T)
-
-```
-
-```{r}
-require(pROC)
-
-#### AUC calculation on biomarker tail genes
-tail_genes_FT_ndev_all <- tail_genes %>% filter(gene_id %in% (consensus_genes_100[["BLCA"]])) %>%
-  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
-#make sure all samples are still present:
-tail_genes_FT_ndev_all <- right_join(tail_genes_FT_ndev_all, 
-                               data.frame(sample=unique(sample_annotation %>% filter(Cohort=="bladdercancer") %>% pull(UniqueID))), by="sample") %>% mutate(disease=gsub("_.*","", sample)) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
-
-data <- tail_genes_FT_ndev_all %>% mutate(cancer=ifelse(disease=="CONTROL", F, T))
-
-k <- dim(data)[1]
-predictions <- c()
-for (i in 1:k) {
-  model <- glm(cancer~n_dev, family="binomial", data=data[-i,])
-  predictions <- c(predictions, stats::predict(model, newdata=data[i,], type="response"))
-}
-#library(pROC)
-roc_modBLCA <- roc(response=data$cancer,predictor= predictions)
-
-ggroc(list(BLCA=roc_modBLCA), legacy.axes = TRUE) +
-    mytheme + coord_fixed(ratio=1) +
-    theme(legend.position="bottom", legend.title = element_blank()) +
-    scale_color_manual(values=c("BLCA"="#009988")) +
-    labs(x = 'False positive rate', y = 'True positive rate')
-
-ggsave(filename = "../figures/bladdercancer_biomarkertail_ROC_LOO.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
-
-auc(roc_modBLCA)
-ci(auc(roc_modBLCA))
-
-str(consensus_genes_100)
-
-```
-
-```{r, eval=F}
-require(biomaRt)
-ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
-genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','description'), mart =ensembl)
-
-biomarker_overview = data.frame(ensembl_gene_id=c( consensus_genes_100[["BLCA"]]), biomarkerset=c(rep("BLCAvsCtrl",length(consensus_genes_100[["BLCA"]])))) %>% left_join(genes_ens_full)
-data.table::fwrite(biomarker_overview,file = "../data/bladdercancer_biomarkertail_list.txt", sep="\t",quote=F,row.names=F)
-```
-
 
 
 Internal validation: what if we randomly shuffle sample names (reassign samples to control or cancer group)? + determine consensus biomarker tail genes (leave-one-out Fisher's exact test) of (all) cancer vs control
@@ -536,9 +429,708 @@ for (i in 1:20){
 ## get original normalized counts (with correct sample order)
 bladdercancer_normcounts <- data.table::fread("../data/bladdercancer_normcounts.txt", data.table=F)
 
-rm(tail_genes_random,z_scores_LOO_random, tail_genes, tail_genes_FT_ndev)
+rm(tail_genes_random,z_scores_LOO_random, tail_genes, tail_genes_ndev)
 
 ```
 
 
 
+# Biomarker tail gene identification + classification
+
+(10x) 5-fold CV from start (now with FT both on counts and z) + assess performance according to sex
+```{r, 5fold CV bladdercancer, message=F}
+sample_annotation <- data.table::fread("../input/bladdercancer_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort))
+
+bladdercancer_normcounts <- data.table::fread("../data/bladdercancer_normcounts.txt")
+
+# Initialize vector to store AUC values & list to store BTG per repeat and CV
+consensus_genes <- list() #for BTG in Fisher's Exact test on entire training set
+all_auc_values <- c() #for classification results BTG of 1 FT
+all_auc_ci_lower <- c()
+all_auc_ci_upper <- c()
+all_auc_male_values <- c()
+all_auc_female_values <- c()
+auc_comparison_sex_pval <- c()
+
+fold_labels <- list()
+fold_predictions <- list()
+
+BTGpersample <- data.frame() #dataframe to gather nr of BTG identified in every sample
+
+## Perform repeated 5-fold cross-validation from start to end
+set.seed(123)  # for reproducibility
+# Number of repeats and folds
+num_repeats <- 10 #10 repeats of 5-fold CV  
+num_folds <- 5
+# Perform repeated cross-validation
+for (repeat_x in 1:num_repeats) {
+  # Create stratified folds
+  sample_annotation$foldID <- seq(1:nrow(sample_annotation))
+  sample_annotation$cancer_binary <- ifelse(sample_annotation$Cancer=="control",0,1)
+  # make stratified folds of cancer vs control and get the 5 test sets
+  folds <- caret::createFolds(factor(sample_annotation$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
+  
+  # Perform cross-validation for each fold
+  for(i in 1:num_folds) {
+    print(paste0("rep",repeat_x,"_",i))
+    # Split the data into training and test sets
+    test_indices <- folds[[i]]
+    testIDs <- sample_annotation$UniqueID[test_indices] #get sample names test set
+    trainIDs <- sample_annotation$UniqueID[-test_indices] #get sample names training set
+    
+    ## z-score calculation
+    # based on CONTROLS in training set and not sample itself
+    z_scores <- data.frame(gene_id = bladdercancer_normcounts %>% pull(gene_id))
+    ##reference only based on CONTROLS in training except sample itself
+    for (samp in (colnames(bladdercancer_normcounts)[-1])) {
+      #print(samp)
+      z_scores_sample <- tail_z_score(bladdercancer_normcounts %>%
+                                            dplyr::select(c("gene_id",all_of(samp))) %>%
+                                            column_to_rownames("gene_id"),
+                                          bladdercancer_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",trainIDs,value =T))) %>% #only training set CONTROL samples
+                                            dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                            column_to_rownames("gene_id"))
+      
+      z_scores <- left_join(z_scores, z_scores_sample %>% rownames_to_column("gene_id"), by="gene_id")
+    }
+    rm(z_scores_sample)
+    
+    gene_list <- vector(mode="list")
+    
+    ### overview tail genes
+    tail_genes <- left_join(z_scores %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                            bladdercancer_normcounts %>% #add normalized counts
+                              pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                            by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+    
+    z_scores_Tail <- z_scores %>% filter(gene_id %in% unique(tail_genes$gene_id))
+    
+    ###Do one Fisher test on entire training set (no consensus on LOO) & repeat classification with this BTG set:
+    reduced_z_table <- z_scores_Tail %>% dplyr::select(-all_of(testIDs)) #remove test samples
+    #Fisher exact test on all samples except sample of interest
+    test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% 
+        mutate(disease=gsub("_.*","",sample)) %>% 
+        mutate(cancer=ifelse(disease=="CONTROL", "N", "T")) %>% #get tumor/normal annotation
+        ungroup() %>% group_by(gene_id,cancer) %>% 
+        left_join(bladdercancer_normcounts %>% #add normalized counts
+                    pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id","sample")) %>%
+        dplyr::summarise(absz3 = sum( ((abs(zscores)>3) & (ncounts>=40)), na.rm=T), absznot3 = sum( !((abs(zscores)>3) & (ncounts>=40)), na.rm=T))
+        #dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+      
+    test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+    df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+    consensus_genes[[paste0("rep",repeat_x,"_",i)]]<- df_fisher %>% rownames_to_column("gene_id") %>% filter(p.val<0.05) %>% pull(gene_id) #xxx BTG based on 1 FT
+    rm(test_wide, test, df_fisher, reduced_z_table)
+    
+    ## count nr of BTG consensus genes for each sample
+    tail_genes <- tail_genes %>% 
+      filter(gene_id %in% consensus_genes[[paste0("rep",repeat_x,"_",i)]]) %>%
+      group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+      #make sure all samples are present
+      full_join(sample_annotation %>% filter(Cohort=="bladdercancer") %>% dplyr::select(c("sample"=UniqueID)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) 
+    
+    #### Model training and testing (x repeats in y-fold cross-validation!)
+    ### train with training, test on testing data
+    data <- tail_genes %>% mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      #add ID of stratification as rownames to select rows using these indices
+      left_join(sample_annotation %>% dplyr::select(c(sample="UniqueID","foldID"))) #%>%
+      #column_to_rownames("foldID")
+    
+    ## save nr of BTG per sample for each fold and repeat (+indicate test or training status of sample)
+    BTGpersample <- rbind(BTGpersample, data %>%
+                            mutate(rep=paste0("rep",repeat_x,"_",i), sampletype=ifelse(foldID %in% test_indices, "test","train"), BTGset=length(consensus_genes[[paste0("rep",repeat_x,"_",i)]])))
+    
+    train_data <- data %>% filter(!(foldID %in% test_indices))
+    test_data <- data %>% filter(foldID %in% test_indices)
+
+    # Train a logistic regression model (or any other binomial classification model)
+    model <- glm(cancer ~ n_dev, data = train_data, family = binomial)
+    
+    # Predict probabilities for the test set
+    prob_predictions <- predict(model, test_data, type = "response")
+    
+    # Calculate AUC for the current fold
+    roc_curve <- roc(test_data$cancer, prob_predictions, levels=c(F,T), direction = "<")
+    # Store predictions and labels for this fold
+    fold_predictions[[paste0("rep",repeat_x,"_",i)]] <- prob_predictions
+    fold_labels[[paste0("rep",repeat_x,"_",i)]] <- test_data$cancer
+  
+    #calculate AUC and confidence interval on entire test set
+    all_auc_values <- c(all_auc_values, auc(roc_curve))
+    all_auc_ci_lower <- c(all_auc_ci_lower, round(ci(roc_curve),4)[1])
+    all_auc_ci_upper <- c(all_auc_ci_upper, round(ci(roc_curve),4)[3])
+    
+    ## Check for impact of confounders
+    # Calculate roc data 
+    roc_data <- test_data %>% mutate(predictions=prob_predictions, cancer=ifelse(disease=="CONTROL", F, T))
+    roc_data <- roc_data %>% left_join(sample_annotation, by=c("sample"="UniqueID"))
+    # Stratify by sex
+    roc_data_male <- roc_data[roc_data$Sex == "M", ]
+    roc_data_female <- roc_data[roc_data$Sex == "F", ]
+    # Compute ROC curve and AUC for males
+    auc_male <- safe_roc(roc_data_male$cancer, roc_data_male$predictions, levels=c(F,T), direction = "<") #will output NA in case one group has no observations
+    all_auc_male_values <- c(all_auc_male_values, auc_male$auc)
+    # Compute ROC curve and AUC for females
+    auc_female <- safe_roc(roc_data_female$cancer, roc_data_female$predictions, levels=c(F,T), direction = "<") #will output NA in case one group has no observations
+    all_auc_female_values <- c(all_auc_female_values, auc_female$auc)
+    # Compare ROC curves
+    #will output NA as p-value in case there were no observations for one group in male/female set
+    auc_comparison_sex_pval <- c(auc_comparison_sex_pval, safe_roc_test(auc_male, auc_female))
+    
+    rm(auc_male, auc_female, roc_data, roc_data_male, roc_data_female, model)
+    
+    
+    rm(z_scores, z_scores_Tail, data, train_data, test_data, prob_predictions, tail_genes, roc_curve, gene_list, trainIDs, testIDs, samp, roc_curve)
+    
+  }
+}
+
+### plot all ROC curves + mean
+roc_curves <- list()  # List to store ROC curves for 10 repetitions
+# Simulating ROC curves for 10 folds (replace with your actual data)
+for (repeat_x in 1:num_repeats){
+  for (i in 1:num_folds) {
+    # Generate the ROC curve
+    roc_curves[[paste0("rep",repeat_x,"_",i)]] <- roc(response = fold_labels[[paste0("rep",repeat_x,"_",i)]], predictor = fold_predictions[[paste0("rep",repeat_x,"_",i)]], levels = c(F, T), direction = "<")
+  }
+}
+
+### Plotting mean ROC curve as well
+# Define specificity points in descending order (from 1 to 0)
+specificities <- seq(1, 0, length.out = 100)
+
+# Interpolate sensitivities for each fold at common specificity points
+sensitivities <- mapply(function(roc) {
+  coords(roc, x = specificities, input = "specificity", ret = "sensitivity", transpose = FALSE)
+}, roc = roc_curves, SIMPLIFY = TRUE)
+
+# Convert result to a matrix and ensure each column represents sensitivities for a fold
+sensitivities <- matrix(unlist(sensitivities), nrow = length(specificities), byrow = FALSE)
+
+# Calculate the mean sensitivity across folds
+mean_sensitivities <- rowMeans(sensitivities, na.rm = TRUE)
+
+# Create a data frame for individual ROC curves
+roc_data <- data.frame(
+  Specificity = rep(specificities, times = length(roc_curves)),
+  Sensitivity = as.vector(sensitivities),
+  Fold = rep(1:length(roc_curves), each = length(specificities))
+)
+
+# Calculate FPR and arrange
+roc_data <- roc_data %>%
+  mutate(FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create mean ROC data
+mean_roc_data <- data.frame(
+  Specificity = specificities,
+  Sensitivity = mean_sensitivities
+) %>%
+  mutate(Fold = "mean", FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create a data frame for (0, 0) point for mean ROC data
+mean_roc_data <- rbind(data.frame(Specificity = 1, Sensitivity = 0, Fold = "mean", FPR = 0), mean_roc_data)
+
+# Create a data frame for (0, 0) points, one for each fold
+zero_points <- data.frame(Specificity = 1, Sensitivity = 0, Fold = rep(1:length(roc_curves), each = 1), FPR=0)
+
+# Combine the (0, 0) points with the existing ROC data
+roc_data <- rbind(zero_points, roc_data)
+
+# Calculate the AUC for the mean ROC curve
+# based on trapezoidal rule:
+mean_FPR <- 1 - specificities
+# Calculate the AUC using the trapezoidal rule
+mean_auc <- sum(diff(mean_FPR) * (head(mean_sensitivities, -1) + tail(mean_sensitivities, -1)) / 2)
+# Print the AUC
+print(mean_auc) 
+
+### Save the roc_data object for later
+roc_data_bladdercancer_5fCV <- rbind(roc_data, mean_roc_data)
+rm(roc_curves, roc_data, mean_roc_data, fold_predictions, fold_labels,sensitivities, specificities, zero_points)
+
+BTG_AUC_CV <- data.frame(
+    comparison="bladdercancervsCTRL",
+    CV = "start",
+    iteration = names(consensus_genes),
+    BTG_identification="1FT_zc",
+    BTG_set = sapply(consensus_genes, length),
+    auc=round(all_auc_values,4),
+    ci_lower=all_auc_ci_lower,
+    ci_upper=all_auc_ci_upper,
+    auc_male = all_auc_male_values,
+    auc_female = all_auc_female_values,
+    sex_comparison_pval= auc_comparison_sex_pval)
+#data.frame(auc=all_auc_values) %>% View()
+
+# Print mean AUC
+tmp <- t.test(all_auc_values)
+# Extract the mean and confidence interval
+mean_auc <- tmp$estimate
+lower_ci <- tmp$conf.int[1]
+upper_ci <- tmp$conf.int[2]
+# Print the results
+cat("Mean AUC:", mean_auc, "\n")
+cat("95% Confidence Interval:", lower_ci, "-", upper_ci, "\n")
+summary(all_auc_values)
+rm(tmp)
+
+# Print mean AUC males
+tmp <- t.test(all_auc_male_values)
+# Extract the mean and confidence interval
+mean_auc <- tmp$estimate
+lower_ci <- tmp$conf.int[1]
+upper_ci <- tmp$conf.int[2]
+# Print the results
+cat("Mean AUC (males):", mean_auc, "\n")
+cat("95% Confidence Interval:", lower_ci, "-", upper_ci, "\n")
+summary(all_auc_male_values)
+rm(tmp)
+
+# Print mean AUC females
+tmp <- t.test(all_auc_female_values)
+# Extract the mean and confidence interval
+mean_auc <- tmp$estimate
+lower_ci <- tmp$conf.int[1]
+upper_ci <- tmp$conf.int[2]
+# Print the results
+cat("Mean AUC (females):", mean_auc, "\n")
+cat("95% Confidence Interval:", lower_ci, "-", upper_ci, "\n")
+summary(all_auc_female_values)
+rm(tmp)
+
+write.table(BTG_AUC_CV,file="../data/tail_genes/BTG_AUC_bladdercancer_5fCV.txt", row.names = F, , col.names=T, quote=F, na="")
+  
+write.table(roc_data_bladdercancer_5fCV, file=paste0("../data/tail_genes/ROC_bladdercancer_5fCV.txt"), row.names = F, , col.names=T, quote=F, na="")
+  
+saveRDS(consensus_genes, file=paste0("../data/tail_genes/BTGidentity_bladdercancer_5fCV.RData"))
+  #consensus_genes <- readRDS(paste0("../data/tail_genes/BTG_identity_bladdercancer_5fCV.RData"))
+saveRDS(BTGpersample, file=paste0("../data/tail_genes/BTGpersample_bladdercancer_5fCV.RData"))
+
+
+rm(list=c("test_indices", "all_auc_values", "bladdercancer_normcounts", "sample_annotation", "repeat_x", "mean_auc", "num_folds", "consensus_genes_100","i", "all_auc_values"))
+#rm("BTG_AUC_CV","BTG_AUC_CV")
+
+#rm(list=ls())
+
+```
+
+Mean ROC curves for 10x 5-fold CV analyses
+```{r}
+ROC_curves_all <- data.frame()
+BTG_AUC_all <- data.frame()
+
+for (cancer in c("bladdercancer")){
+  print(cancer)
+  ROC_curves_all <- plyr::rbind.fill(ROC_curves_all, data.table::fread(file=paste0("../data/tail_genes/ROC_",cancer,"_5fCV.txt"), fill=T, data.table=F) %>% mutate(cohort="bladdercancer",comparison=paste0(cancer,"vsCTRL"),cancertype=cancer))
+  
+  BTG_AUC_all <- plyr::rbind.fill(BTG_AUC_all, data.table::fread(file=paste0("../data/tail_genes/BTG_AUC_",cancer,"_5fCV.txt"),fill=T, data.table=F) %>% mutate(cohort="bladdercancer"))
+  
+}
+
+# Plot with ggplot2
+print(ggplot(ROC_curves_all %>% filter(Fold=="mean"),
+             aes(x = FPR, y = Sensitivity, color = cancertype)) +
+        # Plot individual ROC curves in grey
+        geom_line() +
+        #facet_wrap(~cancertype) +
+        mytheme + coord_fixed(ratio=1) +
+        labs(x = 'false positive rate', y = 'true positive rate') +
+        theme(legend.position="bottom", legend.title = element_blank()) +
+    scale_color_manual(values=c(bladdercancer="#009988")) +
+        
+        geom_abline(intercept=0, slope=1, linetype="dashed", linewidth=0.5, color="grey"))
+
+ggsave(filename = "../figures/bladdercancer_biomarkertail_ROC_5fCV.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+```
+
+
+Consensus BTG and boxplots for 10x 5-fold CV
+```{r}
+sample_annotation <- data.table::fread("../input/bladdercancer_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% filter(Cohort=="bladdercancer") %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort)) 
+
+bladdercancer_normcounts <- data.table::fread("../data/bladdercancer_normcounts.txt", data.table=F)
+
+BTG_genes <- list()
+BTG_consensus_50 <- list()
+BTG_union <- list()
+
+for (cancer in c("bladdercancer")) {
+  print(cancer)
+  BTG_genes[[cancer]] <- readRDS(file=paste0("../data/tail_genes/BTGidentity_",cancer,"_5fCV.RData"))
+  
+  ### Consensus sets of BTG over all repeats:
+  ## present in 50% of repeat-folds (so for 10x 5-fold CV: threshold = 25)
+  threshold <- ceiling(0.5 * length(BTG_genes[[cancer]])) 
+  #count occurence of every gene across elements
+  all_words <- unlist(BTG_genes[[cancer]]) 
+  word_counts <- table(all_words)
+  # Filter words that appear in at least 50%
+  consensus_50 <- names(word_counts[word_counts >= threshold])
+  print(paste("50% consensus BTG:",length(consensus_50)))
+  BTG_consensus_50[[cancer]] <- consensus_50
+  rm(all_words, word_counts, threshold, consensus_50)
+  
+  union_BTG <- unique(unlist(BTG_genes[[cancer]]))
+  print(paste("union BTG:",length(union_BTG)))
+  BTG_union[[cancer]] <- union_BTG
+  rm(union_BTG)
+  
+}
+
+my_comparisons <- list( c("CONTROL", "bladdercancer") )
+
+### LOO z-score calculation
+z_scores_LOO <- data.frame(gene_id = bladdercancer_normcounts %>% pull(gene_id))
+for (samp in (colnames(bladdercancer_normcounts)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(bladdercancer_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                      bladdercancer_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(bladdercancer_normcounts),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), bladdercancer_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) %>% mutate(Abbreviation=gsub("_.*","", sample))
+
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample <- data.frame()
+for (cancer in c("bladdercancer")) {
+  BTG_consensus_50_persample <- rbind(BTG_consensus_50_persample, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[[cancer]]) %>%
+    filter(Abbreviation %in% c("CONTROL","BLCA")) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all samples are present
+    full_join(sample_annotation %>% filter(Abbreviation %in% c("CONTROL","BLCA")) %>% dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","BLCA")), 
+           cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(comparison=factor(comparison, levels=c("bladdercancervsCtrl")))
+
+ggplot(BTG_consensus_50_persample, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10() +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","BLCA"="#009988")) +
+  facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/bladdercancer_biomarkertail_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","BLCA"="#009988")) +
+  facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/bladdercancer_biomarkertail_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+
+data_tmp <- BTG_consensus_50_persample %>% mutate(disease=paste(disease)) #mutate disease column to string for wilcox_test
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="bladdercancervsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="bladdercancervsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="bladdercancervsCtrl"), n_dev ~ disease,ci=T)
+
+### count the nr of BTG in each fold/repeat
+count_words <- function(sublist) {
+  sum(sapply(sublist, function(sentence) str_count(sentence, "\\S+")))
+}
+
+# summary bladdercancer
+sapply(BTG_genes[["bladdercancer"]], count_words) %>% unlist() %>% summary()
+
+
+#Overlap of unique biomarker tail genes in different types and differentially abundant mRNAs across types
+DAA_genes <- data.table::fread("../data/differentialabundance_bladdercancer.txt", data.table = F) %>% mutate(DA=ifelse((padj<0.05) & (log2FoldChange>1), "higher", ifelse((padj<0.05) & (log2FoldChange<(-1)), "lower", "no")))  #higher/lower: differentially abundant genes (DA)
+
+table((BTG_consensus_50[["bladdercancer"]]) %in% (DAA_genes %>% filter(DA!="no") %>% pull(gene_id) %>% unique()))
+```
+
+
+Overview table of 50% consensus BTG for the different comparisons
+```{r}
+require(biomaRt)
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl",version=91)
+genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','description'), mart =ensembl)
+#data.table::fwrite(genes_ens_full,file="ensID_genename.txt", sep="\t",quote =F)
+
+
+biomarker_overview = data.frame(ensembl_gene_id=c( BTG_consensus_50[["bladdercancer"]]), biomarkerset=c(rep("BLCA vs CONTROL",length(BTG_consensus_50[["bladdercancer"]])))) %>% left_join(genes_ens_full)
+data.table::fwrite(biomarker_overview %>% dplyr::select(c("set"="biomarkerset","ensembl_gene"="ensembl_gene_id","gene_name"="external_gene_name")),file = "../data/bladdercancer_biomarkertail_list_5fCV_consensus50.txt", sep="\t",quote=F,row.names=F)
+```
+
+
+
+
+
+
+
+
+Test whether there are sex-linked tail genes
+- make reference consisting of 1 sex, determine tail genes in samples from other sex
+```{r, eval=F}
+### male reference and determine tail genes in female samples (for check: if you determine them in the male samples from reference, none identified)
+z_scores_maleref <- data.frame(gene_id = bladdercancer_normcounts %>% pull(gene_id))
+for (samp in (all_of(sample_annotation %>% filter(Abbreviation=="CONTROL") %>% filter(Sex=="F") %>% pull(UniqueID)))) {
+  #print(samp)
+  z_scores_maleref_sample <- tail_z_score(bladdercancer_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                                                bladdercancer_normcounts %>% dplyr::select(c("gene_id",all_of(sample_annotation %>% filter(Abbreviation=="CONTROL") %>% filter(Sex=="M") %>% pull(UniqueID)))) %>% 
+                                                  #dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference #reference is always based on other samples other sex
+                                                  column_to_rownames("gene_id"))
+  
+  z_scores_maleref <- left_join(z_scores_maleref, z_scores_maleref_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_maleref_sample)
+
+gene_list <- vector(mode="list")
+### overview tail genes
+tail_genes <- left_join(z_scores_maleref %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), bladdercancer_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+
+tail_genes_female <- tail_genes$gene_id %>% unique() #474 female tail genes
+
+length(intersect(consensus_union, tail_genes_female)) #62 overlap
+
+
+### same but now female reference and determine tail genes in male samples (for check: if you determine them in the female samples from reference, none identified)
+z_scores_femaleref <- data.frame(gene_id = bladdercancer_normcounts %>% pull(gene_id))
+for (samp in (all_of(sample_annotation %>% filter(Abbreviation=="CONTROL") %>% filter(Sex=="M") %>% pull(UniqueID)))) {
+  #print(samp)
+  z_scores_femaleref_sample <- tail_z_score(bladdercancer_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                                                bladdercancer_normcounts %>% dplyr::select(c("gene_id",all_of(sample_annotation %>% filter(Abbreviation=="CONTROL") %>% filter(Sex=="F") %>% pull(UniqueID)))) %>% 
+                                                  #dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference #reference is always based on other samples other sex
+                                                  column_to_rownames("gene_id"))
+  
+  z_scores_femaleref <- left_join(z_scores_femaleref, z_scores_femaleref_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_femaleref_sample)
+
+gene_list <- vector(mode="list")
+### overview tail genes
+tail_genes <- left_join(z_scores_femaleref %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), bladdercancer_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+
+tail_genes_male <- tail_genes$gene_id %>% unique() #282 male tail genes
+
+length(intersect(consensus_union, tail_genes_male)) #7 overlap
+
+length(intersect(tail_genes_male, tail_genes_female)) #34 overlap
+
+```
+
+
+
+
+Internal validation: what if we randomly shuffle sample names (label swap: reassign samples to control or cancer group)? + determine consensus biomarker tail genes (leave-one-out Fisher's exact test) of (all) cancer vs control
+```{r, warning=F}
+require(pROC)
+require(ggpubr)
+
+sample_annotation <- data.table::fread("../input/bladdercancer_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort))
+
+set.seed(124)
+for (swap_x in 1:10){
+#for (i in 1:2){
+  print(paste0("Label swap: ",swap_x))
+  bladdercancer_normcounts <- data.table::fread("../data/bladdercancer_normcounts.txt", data.table=F) #start from original normalized counts
+  
+  ## reorder sample names (and thus cancer/normal type) randomly
+  ordersamples_random <- sample(bladdercancer_normcounts %>% dplyr::select(-gene_id) %>% colnames(.), replace=F)
+  #print(grep("CONTROL",ordersamples_random[1:12],value=T))
+  print(paste0(length(grep("CONTROL",ordersamples_random[1:12],value=T)), " original control samples in reference"))
+  colnames(bladdercancer_normcounts) <- c("gene_id",ordersamples_random)
+
+
+  # Initialize vector to store AUC values & list to store BTG per repeat and CV
+  consensus_genes <- list() #for BTG in Fisher's Exact test on entire training set
+  all_auc_values <- c() #for classification results BTG of 1 FT
+  all_auc_ci_lower <- c()
+  all_auc_ci_upper <- c()
+  all_auc_male_values <- c()
+  all_auc_female_values <- c()
+  auc_comparison_sex_pval <- c()
+  
+  fold_labels <- list()
+  fold_predictions <- list()
+  
+  BTGpersample <- data.frame() #dataframe to gather nr of BTG identified in every sample
+  
+  ## Perform repeated 5-fold cross-validation from start to end
+  set.seed(124)  # for reproducibility
+  # Number of repeats and folds
+  num_repeats <- 10 #10 repeats of 5-fold CV  
+  num_folds <- 5
+  # Perform repeated cross-validation
+  for (repeat_x in 1:num_repeats) {
+    # Create stratified folds
+    sample_annotation$foldID <- seq(1:nrow(sample_annotation))
+    sample_annotation$cancer_binary <- ifelse(sample_annotation$Cancer=="control",0,1)
+    # make stratified folds of cancer vs control and get the 5 test sets
+    folds <- caret::createFolds(factor(sample_annotation$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
+    
+    # Perform cross-validation for each fold
+    for(i in 1:num_folds) {
+      print(paste0("rep",repeat_x,"_",i))
+      # Split the data into training and test sets
+      test_indices <- folds[[i]]
+      testIDs <- sample_annotation$UniqueID[test_indices] #get sample names test set
+      trainIDs <- sample_annotation$UniqueID[-test_indices] #get sample names training set
+      
+      ## z-score calculation
+      # based on CONTROLS in training set and not sample itself
+      z_scores <- data.frame(gene_id = bladdercancer_normcounts %>% pull(gene_id))
+      ##reference only based on CONTROLS in training except sample itself
+      for (samp in (colnames(bladdercancer_normcounts)[-1])) {
+        #print(samp)
+        z_scores_sample <- tail_z_score(bladdercancer_normcounts %>%
+                                              dplyr::select(c("gene_id",all_of(samp))) %>%
+                                              column_to_rownames("gene_id"),
+                                            bladdercancer_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",trainIDs,value =T))) %>% #only training set CONTROL samples
+                                              dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                              column_to_rownames("gene_id"))
+        
+        z_scores <- left_join(z_scores, z_scores_sample %>% rownames_to_column("gene_id"), by="gene_id")
+      }
+      rm(z_scores_sample)
+      
+      gene_list <- vector(mode="list")
+      
+      ### overview tail genes
+      tail_genes <- left_join(z_scores %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                              bladdercancer_normcounts %>% #add normalized counts
+                                pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                              by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+      
+      z_scores_Tail <- z_scores %>% filter(gene_id %in% unique(tail_genes$gene_id))
+      
+      #### do classification on BTG as result of 1 FT on entire training set
+      ###Do one Fisher test on entire training set (no consensus on LOO) & repeat classification with this BTG set:
+      reduced_z_table <- z_scores_Tail %>% dplyr::select(-all_of(testIDs)) #remove test samples
+      #Fisher exact test on all samples except sample of interest
+      test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% 
+          mutate(disease=gsub("_.*","",sample)) %>% 
+          mutate(cancer=ifelse(disease=="CONTROL", "N", "T")) %>% #get tumor/normal annotation
+          ungroup() %>% group_by(gene_id,cancer) %>% 
+          left_join(bladdercancer_normcounts %>% #add normalized counts
+                      pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id","sample")) %>%
+          dplyr::summarise(absz3 = sum( ((abs(zscores)>3) & (ncounts>=40)), na.rm=T), absznot3 = sum( !((abs(zscores)>3) & (ncounts>=40)), na.rm=T))
+          #dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+        
+      test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+      df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+      consensus_genes[[paste0("rep",repeat_x,"_",i)]]<- df_fisher %>% rownames_to_column("gene_id") %>% filter(p.val<0.05) %>% pull(gene_id) #xxx BTG based on 1 FT
+      rm(test_wide, test, df_fisher, reduced_z_table)
+      
+      ## count nr of BTG consensus genes for each sample
+      tail_genes <- tail_genes %>% 
+        filter(gene_id %in% consensus_genes[[paste0("rep",repeat_x,"_",i)]]) %>%
+        group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+        #make sure all samples are present
+        full_join(sample_annotation %>% filter(Cohort=="bladdercancer") %>% dplyr::select(c("sample"=UniqueID)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) 
+      
+      #### Model training and testing (x repeats in y-fold cross-validation!)
+      ### train with training, test on testing data
+      data <- tail_genes %>% mutate(disease=gsub("_.*","",sample)) %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+        #add ID of stratification as rownames to select rows using these indices
+        left_join(sample_annotation %>% dplyr::select(c(sample="UniqueID","foldID"))) #%>%
+        #column_to_rownames("foldID")
+      
+      ## save nr of BTG per sample for each fold and repeat (+indicate test or training status of sample)
+      BTGpersample <- rbind(BTGpersample, data %>%
+                              mutate(rep=paste0("rep",repeat_x,"_",i), sampletype=ifelse(foldID %in% test_indices, "test","train"), BTGset=length(consensus_genes[[paste0("rep",repeat_x,"_",i)]])))
+      
+      train_data <- data %>% filter(!(foldID %in% test_indices))
+      test_data <- data %>% filter(foldID %in% test_indices)
+  
+      # Train a logistic regression model (or any other binomial classification model)
+      model <- glm(cancer ~ n_dev, data = train_data, family = binomial)
+      
+      # Predict probabilities for the test set
+      prob_predictions <- predict(model, test_data, type = "response")
+      
+      # Calculate AUC for the current fold
+      roc_curve <- roc(test_data$cancer, prob_predictions, levels=c(F,T), direction = "<")
+      # Store predictions and labels for this fold
+      fold_predictions[[paste0("rep",repeat_x,"_",i)]] <- prob_predictions
+      fold_labels[[paste0("rep",repeat_x,"_",i)]] <- test_data$cancer
+    
+      #calculate AUC and confidence interval on entire test set
+      all_auc_values <- c(all_auc_values, auc(roc_curve))
+      all_auc_ci_lower <- c(all_auc_ci_lower, round(ci(roc_curve),4)[1])
+      all_auc_ci_upper <- c(all_auc_ci_upper, round(ci(roc_curve),4)[3])
+      
+      ## Check for impact of confounders
+      # Calculate roc data 
+      roc_data <- test_data %>% mutate(predictions=prob_predictions, cancer=ifelse(disease=="CONTROL", F, T))
+      roc_data <- roc_data %>% left_join(sample_annotation, by=c("sample"="UniqueID"))
+      # Stratify by sex
+      roc_data_male <- roc_data[roc_data$Sex == "M", ]
+      roc_data_female <- roc_data[roc_data$Sex == "F", ]
+      # Compute ROC curve and AUC for males
+      auc_male <- safe_roc(roc_data_male$cancer, roc_data_male$predictions, levels=c(F,T), direction = "<") #will output NA in case one group has no observations
+      all_auc_male_values <- c(all_auc_male_values, auc_male$auc)
+      # Compute ROC curve and AUC for females
+      auc_female <- safe_roc(roc_data_female$cancer, roc_data_female$predictions, levels=c(F,T), direction = "<") #will output NA in case one group has no observations
+      all_auc_female_values <- c(all_auc_female_values, auc_female$auc)
+      # Compare ROC curves
+      #will output NA as p-value in case there were no observations for one group in male/female set
+      auc_comparison_sex_pval <- c(auc_comparison_sex_pval, safe_roc_test(auc_male, auc_female))
+      
+      rm(auc_male, auc_female, roc_data, roc_data_male, roc_data_female, model)
+      
+      
+      rm(z_scores, z_scores_Tail, data, train_data, test_data, prob_predictions, tail_genes, roc_curve, gene_list, trainIDs, testIDs, samp, roc_curve)
+      
+    }
+  }
+  
+  BTG_AUC_CV <- data.frame(
+      comparison="bladdercancervsCTRL",
+      CV = "start",
+      labelswap = swap_x,
+      iteration = names(consensus_genes),
+      BTG_identification="1FT_zc",
+      BTG_set = sapply(consensus_genes, length),
+      auc=round(all_auc_values,4),
+      ci_lower=all_auc_ci_lower,
+      ci_upper=all_auc_ci_upper,
+      auc_male = all_auc_male_values,
+      auc_female = all_auc_female_values,
+      sex_comparison_pval= auc_comparison_sex_pval)
+  #data.frame(auc=all_auc_values) %>% View()
+  
+  write.table(BTG_AUC_CV,file=paste0("../data/tail_genes/labelswap/BTG_AUC_bladdercancer_5fCV_labelswap-",swap_x,".txt"), row.names = F, , col.names=T, quote=F, na="")
+  
+  #write.table(roc_data_bladdercancer_5fCV, file=paste0("../data/tail_genes/labelswap/ROC_bladdercancer_5fCV_labelswap-",swap_x,".txt"), row.names = F, , col.names=T, quote=F, na="")
+  
+  saveRDS(consensus_genes, file=paste0("../data/tail_genes/labelswap/BTGidentity_bladdercancer_5fCV_labelswap-",swap_x,".RData"))
+  saveRDS(BTGpersample, file=paste0("../data/tail_genes/labelswap/BTGpersample_bladdercancer_5fCV_labelswap-",swap_x,".RData"))
+  
+  rm(BTG_AUC_CV, all_auc_female_values,
+     all_auc_male_values, z_scores, z_scores_LOO, 
+     consensus_80, consensus_genes,
+     all_auc_ci_lower, all_auc_ci_upper, 
+     all_auc_values, auc_comparison_sex_pval, 
+     tail_genes, tail_genes_consensus, BTGpersample)
+}
+
+rm(tail_genes,z_scores_LOO, tail_genes, tail_genes_ndev)
+rm(list=c("test_indices", "all_auc_values", "bladdercancer_normcounts", "sample_annotation", "repeat_x", "mean_auc", "num_folds", "consensus_genes_100","swap_x","i", "all_auc_values"))
+
+## get original normalized counts (with correct sample order)
+bladdercancer_normcounts <- data.table::fread("../data/bladdercancer_normcounts.txt", data.table=F)
+
+```
