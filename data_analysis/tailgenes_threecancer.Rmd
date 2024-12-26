@@ -1846,5 +1846,5 @@ genes_ens_full <- getBM(attributes=c('ensembl_gene_id','external_gene_name','des
 
 biomarker_overview = data.frame(ensembl_gene_id=c(BTG_consensus_50[["threecancer"]], BTG_consensus_50[["OV"]], BTG_consensus_50[["PRAD"]], BTG_consensus_50[["UCEC"]]), biomarkerset=c(rep("all vs CONTROL",length(BTG_consensus_50[["threecancer"]])), rep("OV vs CONTROL",length(BTG_consensus_50[["OV"]])), rep("PRAD vs CONTROL",length(BTG_consensus_50[["PRAD"]])),rep("UCEC vs CONTROL",length(BTG_consensus_50[["UCEC"]])))) %>% left_join(genes_ens_full)
 
-data.table::fwrite(biomarker_overview %>% dplyr::select(c("set"="biomarkerset","ensembl_gene"="ensembl_gene_id","gene_name"="external_gene_name")),file = "../data/threecancer_biomarkertail_list_5foldCV_consensus50.txt", sep="\t",quote=F,row.names=F)
+data.table::fwrite(biomarker_overview %>% dplyr::select(c("set"="biomarkerset","ensembl_gene"="ensembl_gene_id","gene_name"="external_gene_name")),file = "../data/threecancer_biomarkertail_list_5fCV_consensus50.txt", sep="\t",quote=F,row.names=F)
 ```

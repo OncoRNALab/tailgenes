@@ -181,13 +181,13 @@ tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_
                   by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
 #summary(tmp)
 data.table::fwrite(tail_genes, file="../data/lymphoma_tailgenes.txt",sep="\t", row.names = F, quote=F, na="")
-rm(tail_genes,z_scores_LOO_sample, samp, z_scores_LOO)
+rm(tail_genes,z_scores_LOO_sample, samp)
 
 ```
 
 Number of tail genes (ncounts≥40, |z|>3) and heatmap
 ```{r}
-z_scores_LOO <- data.table::fread("../data/lymphoma_zscores_tail.txt",data.table = F)
+#z_scores_LOO <- data.table::fread("../data/lymphoma_zscores_tail.txt",data.table = F)
 tail_genes <- data.table::fread("../data/lymphoma_tailgenes.txt",data.table=F)
 length(unique(tail_genes$gene_id)) 
 
