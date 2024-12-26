@@ -1,0 +1,51 @@
+comparison CV iteration BTG_identification BTG_set auc ci_lower ci_upper auc_male auc_female sex_comparison_pval
+bladdercancervsCTRL start rep1_1 1FT_zc 5 1 1 1  1 
+bladdercancervsCTRL start rep1_2 1FT_zc 12 0.6667 0 1 1 0 
+bladdercancervsCTRL start rep1_3 1FT_zc 16 0.6667 0.1677 1 0.833333333333333  
+bladdercancervsCTRL start rep1_4 1FT_zc 53 0.625 0 1  0.75 
+bladdercancervsCTRL start rep1_5 1FT_zc 14 1 1 1 1  
+bladdercancervsCTRL start rep2_1 1FT_zc 11 1 1 1 1 1 
+bladdercancervsCTRL start rep2_2 1FT_zc 33 0.375 0 1 0 0.5 
+bladdercancervsCTRL start rep2_3 1FT_zc 12 0.6667 0.1677 1 1 0.5 
+bladdercancervsCTRL start rep2_4 1FT_zc 19 1 1 1  1 
+bladdercancervsCTRL start rep2_5 1FT_zc 7 1 1 1 1  
+bladdercancervsCTRL start rep3_1 1FT_zc 17 0.6667 0.0133 1 1 0.5 
+bladdercancervsCTRL start rep3_2 1FT_zc 27 0.75 0.26 1  0.75 
+bladdercancervsCTRL start rep3_3 1FT_zc 16 1 1 1 1 1 
+bladdercancervsCTRL start rep3_4 1FT_zc 25 1 1 1 1  
+bladdercancervsCTRL start rep3_5 1FT_zc 13 1 1 1 1 1 
+bladdercancervsCTRL start rep4_1 1FT_zc 13 0.75 0.26 1 0.75  
+bladdercancervsCTRL start rep4_2 1FT_zc 93 0.5833 0 1 1 0.5 
+bladdercancervsCTRL start rep4_3 1FT_zc 12 0.8333 0.3714 1  0.75 
+bladdercancervsCTRL start rep4_4 1FT_zc 2 1 1 1 1 1 
+bladdercancervsCTRL start rep4_5 1FT_zc 8 1 1 1 1 1 
+bladdercancervsCTRL start rep5_1 1FT_zc 6 1 1 1 1 1 
+bladdercancervsCTRL start rep5_2 1FT_zc 15 0.375 0 1 1 0 
+bladdercancervsCTRL start rep5_3 1FT_zc 35 0.5556 0 1 0 0.75 
+bladdercancervsCTRL start rep5_4 1FT_zc 7 1 1 1 1  
+bladdercancervsCTRL start rep5_5 1FT_zc 30 1 1 1 1 1 
+bladdercancervsCTRL start rep6_1 1FT_zc 10 1 1 1 1  
+bladdercancervsCTRL start rep6_2 1FT_zc 15 1 1 1 1 1 
+bladdercancervsCTRL start rep6_3 1FT_zc 37 0.8333 0.5067 1 1 0.75 
+bladdercancervsCTRL start rep6_4 1FT_zc 8 0.7778 0.3288 1 0.625 1 
+bladdercancervsCTRL start rep6_5 1FT_zc 27 1 1 1  1 
+bladdercancervsCTRL start rep7_1 1FT_zc 11 0.8333 0.5067 1 1 0.75 
+bladdercancervsCTRL start rep7_2 1FT_zc 14 0.75 0.26 1 1 0.5 
+bladdercancervsCTRL start rep7_3 1FT_zc 12 0.75 0.26 1 0.5 1 
+bladdercancervsCTRL start rep7_4 1FT_zc 8 1 1 1 1  
+bladdercancervsCTRL start rep7_5 1FT_zc 26 0.5556 0.0686 1 0.75 0.25 
+bladdercancervsCTRL start rep8_1 1FT_zc 33 0.625 0 1  0.25 
+bladdercancervsCTRL start rep8_2 1FT_zc 14 1 1 1 1  
+bladdercancervsCTRL start rep8_3 1FT_zc 8 1 1 1   
+bladdercancervsCTRL start rep8_4 1FT_zc 21 0.5 0 1   
+bladdercancervsCTRL start rep8_5 1FT_zc 9 1 1 1 1 1 
+bladdercancervsCTRL start rep9_1 1FT_zc 7 1 1 1 1 1 
+bladdercancervsCTRL start rep9_2 1FT_zc 15 0.75 0.26 1   
+bladdercancervsCTRL start rep9_3 1FT_zc 28 0.9167 0.6857 1 0.5 1 
+bladdercancervsCTRL start rep9_4 1FT_zc 52 0.5 0 1   
+bladdercancervsCTRL start rep9_5 1FT_zc 6 0.8333 0.5067 1 0.75 1 
+bladdercancervsCTRL start rep10_1 1FT_zc 5 0.9444 0.7905 1 0.75 1 
+bladdercancervsCTRL start rep10_2 1FT_zc 6 1 1 1 1 1 
+bladdercancervsCTRL start rep10_3 1FT_zc 14 1 1 1 1 1 
+bladdercancervsCTRL start rep10_4 1FT_zc 34 0.625 0 1  0.25 
+bladdercancervsCTRL start rep10_5 1FT_zc 35 0.75 0.2335 1 0.833333333333333  
