@@ -1,12 +1,11 @@
 This repository contains data and scripts used to generate numbers and figures for the paper by Morlion et al.: *"Patient-specific alterations in blood plasma cfRNA profiles enable accurate classification of cancer patients and controls"* currently on [medRxiv](https://doi.org/10.1101/2023.05.24.23290388)
 
-The `data_analysis` folder contains scripts to run differential abundance and tail gene analyses. 
-These scripts run in R (v4.2.1) and rely on several R packages. These can be installed with Bioconductor:
+The `data_analysis` folder contains scripts to run differential abundance and tail gene analyses.  
+The scripts can be run in R (v4.2.1) and RStudio, on any operating system and - depending on the input data - require several minutes to a few hours. Several R packages (listed below) are used in the scripts and these can be installed with Bioconductor:
 ```r
 if (!require("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install("<name package>")
-
 ```
 The following package versions were used for the analyses in the manuscript: 
 biomarRt v2.62.0; caret v6.0.94; data.table v1.16.4; DESeq2 v1.36.0; EnhancedVolcano v1.24.0; fgsea v1.22.0; GeneOverlap v1.32.0; ggpubr v0.6.0; ggrepel v0.9.6; gridExtra v2.3; here v1.0.1; pheatmap v1.0.12; pROC v1.18.0; rstatix v0.7.2; tidyverse v1.3.2.
