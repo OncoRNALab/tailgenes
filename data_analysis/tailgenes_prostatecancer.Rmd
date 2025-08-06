@@ -1,0 +1,1983 @@
+---
+title: "prostate & nonmalignant cohort - tail genes"
+author: "Annelien Morlion"
+date: '2025-7-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+require(ggrepel)
+library(here)
+library(DESeq2)
+require(caret)
+require(pROC)
+
+## Define plot style for paper
+mytheme = theme_classic(base_size = 7) +
+  theme(text = element_text(size=7, colour="black"),
+        title = element_text(size=7, colour="black"),
+        line = element_line(size=0.5),
+        axis.title = element_text(size=7, colour="black"),
+        axis.text = element_text(size=7, colour="black"),
+        axis.ticks = element_line(size=0.5),
+        strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),
+        legend.position = c(0.8,0.8),
+        legend.text = element_text(size=6))
+mytheme_discrete_x = mytheme + theme(axis.text.x = element_text(angle=90, hjust=1,vjust=0.5))
+
+color_panel<-c("#e35d6a","#428bca","#5bb75b","#e87810","#23496b","#ffbf00","#cc2028","#039748","pink","gray","darkgray")
+cb_color_panel <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+#see https://personal.sron.nl/~pault/
+cb_color_panel_highcontrast <- c("#000000","#004488", "#DDAA33", "#BB5566") #+"#FFFFFF" white
+cb_color_panel_mediumcontrastpairs <- c('#6699CC', '#004488', '#EECC66', '#994455', '#997700', '#EE99AA') #+"#FFFFFF" white and "#000000" black
+cb_color_panel_bright <- c('#4477AA', '#EE6677', '#228833', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
+
+full_nr <- scales::format_format(big.mark = ",", decimal.mark = ".", scientific = FALSE)
+
+##sample annotation
+sample_annotation_AB <- data.table::fread("../input/SupplTable1_sample_annotation.txt", sep="\t", quote="",header=T, data.table=FALSE) %>% mutate(UniqueID = paste0(Abbreviation,"_",ReplicateNr,"_",Cohort)) %>%
+  filter(Cohort %in% c("prostatecancer","nonmalignant"))
+sample_annotation_all <- sample_annotation_AB # keep original table
+sample_annotation_AB <- sample_annotation_all %>% filter(Excluded != "x") #filter out low read samples
+
+sample_annotation_A <- sample_annotation_AB %>% filter(Cohort == "prostatecancer")
+sample_annotation_B <- sample_annotation_AB %>% filter(Cohort == "nonmalignant")
+sample_annotation <- sample_annotation_AB
+
+# Wrapper function for roc (in case one group has no observations: output NA as AUC)
+require(pROC)
+safe_roc <- function(response, predictor, ...) {
+  # Check if there are both cases and controls
+  if (length(unique(response)) < 2) {
+    warning("ROC calculation skipped: response must have both cases and controls")
+    return(list(auc = NA))
+  }
+  
+  args <- list(response = response, predictor = predictor, ...)
+  tryCatch({
+    result <- do.call(pROC::roc, args)
+    return(result)
+  }, error = function(e) {
+    message("An error occurred in ROC calculation: ", e$message)
+    return(list(auc = NA))
+  })
+}
+
+# Wrapper function for roc.test (in case one group has no observations: output NA as AUC)
+safe_roc_test <- function(auc1, auc2) {
+  # Check if either AUC is NA
+  if (is.null(auc1$auc) || is.null(auc2$auc) || is.na(auc1$auc) || is.na(auc2$auc)) {
+    warning("ROC comparison skipped: one of the AUC values is NA")
+    return(NA)
+  }
+  
+  tryCatch({
+    test_result <- pROC::roc.test(auc1, auc2)
+    return(test_result$p.value)
+  }, error = function(e) {
+    message("An error occurred in ROC comparison: ", e$message)
+    return(NA)
+  })
+}
+
+# Globally suppress messages about grouped output in summarise() or join()
+options(dplyr.summarise.inform = FALSE)
+options(dplyr.join.inform = FALSE)
+```
+
+
+Tail gene analysis: z-score calculation function
+```{r}
+### log transformation + z scores calculation based on mean and stdev of (log transformed) reference distribution
+tail_z_score <- function(samples, Ref_matrix, na.rm=T) {
+  #samples: (normalized, non-log transformed) count matrix of samples of interest (genes as rownames, samples as columns)
+  #N_matrix: (normalized, non-log transformed) count matrix of reference (genes as rownames, samples as columns) 
+  require(tidyverse)
+  #logtransform reference
+  Ref_logmatrix <- log2(Ref_matrix+1)
+  Ref_zscores <- t(Ref_logmatrix) %>% scale(center=T,scale=T) #column scaling and centering (per gene after transformation)
+  ##check: mean per gene = 0, sd = 1
+  #Ref_zscores %>% data.frame() %>% rownames_to_column("sample") %>% pivot_longer(names_to="gene", values_to = "counts", -"sample") %>% group_by(gene) %>% dplyr::summarise(mean_x=mean(counts), sd_x=sd(counts)) %>% View()
+  scaling_factors <- data.frame(mean_Ref = attr(Ref_zscores, "scaled:center"), sd_Ref = attr(Ref_zscores, "scaled:scale")) %>% rownames_to_column("gene_id")
+  #mns <- scaling_factors %>% pull(mean_Ref) #mean
+  #sds <- scaling_factors %>% pull(sd_Ref) #stdev
+  
+  #logtransform samples and subtract mean and stdev of reference matrix
+  x <- log2(samples+1) %>% data.frame()
+  #match returns a vector of the positions of (first) matches of its first argument in its second -> retrieves the corresponding scaling factors for these genes
+  mns <- scaling_factors$mean_Ref[match(rownames(x), scaling_factors$gene_id)] 
+  sds <- scaling_factors$sd_Ref[match(rownames(x), scaling_factors$gene_id)]
+  
+  x <- sweep(x,1,mns,"-", check.margin = T) #subtract corresponding reference gene mean from gene counts
+  x <- sweep(x,1,sds,"/", check.margin = T) #then divide gene counts by corresponding reference gene stdev
+  x
+}
+
+```
+
+
+Normalize all counts together (only needed once)
+```{r, eval=F}
+cohortB_counts <- data.table::fread("../input/nonmalignant_counts.txt")
+cohortA_counts <- data.table::fread("../input/prostatecancer_counts.txt")
+
+cohortAB_counts <- cbind(cohortA_counts, cohortB_counts %>% dplyr::select(-"gene_id"))
+
+cohortAB_counts_long <- cohortAB_counts %>% 
+  pivot_longer(names_to="RNAID",values_to="counts",-"gene_id") %>%
+  left_join(sample_annotation %>% dplyr::select("RNAID", "UniqueID"), by="RNAID") %>% 
+  dplyr::select(-"RNAID") #%>%
+  #pivot_wider(names_from = "UniqueID",values_from = "ncounts")
+
+library(biomaRt)
+library(DESeq2)
+ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=109)
+genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+
+pc_gene_counts <- cohortAB_counts_long %>% #left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_id %in% (genes_ens %>% filter(gene_biotype=="protein_coding") %>% pull("ensembl_gene_id"))) %>% #only keep protein coding genes
+  #dplyr::select(-c("gene_biotype")) %>% #remove gene biotype column
+  base::unique() %>%
+  pivot_wider(names_from=UniqueID, values_from=counts) #back to original format: rows=genes, columns=samples
+
+# Create a sample metadata dataframe
+counts_matrix <- pc_gene_counts %>% column_to_rownames("gene_id")
+col_data <- data.frame(
+  condition = factor(c(rep("A",floor(ncol(counts_matrix)/2)), rep("B",ceiling(ncol(counts_matrix)/2)))),  # Dummy conditions
+  row.names = colnames(counts_matrix)
+)
+
+# Create a DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = counts_matrix, colData = col_data, design = ~condition)
+
+# Normalize using DESeq
+dds <- DESeq(dds)
+
+# Extract normalized counts
+normalized_counts <- counts(dds, normalized = TRUE) %>% as.data.frame() %>% rownames_to_column("gene_id")
+
+cohortA_normcounts <- normalized_counts %>% dplyr::select(all_of(grep("gene_id|prostatecancer",colnames(normalized_counts), value=T)) )
+
+data.table::fwrite(cohortA_normcounts, file="../data/prostatecancer_normcounts.txt", quote=F, na="", row.names = F, sep="\t")
+
+cohortB_normcounts <- normalized_counts %>% dplyr::select(all_of(grep("gene_id|nonmalignant",colnames(normalized_counts), value=T)) )
+
+data.table::fwrite(cohortB_normcounts, file="../data/nonmalignant_normcounts.txt", quote=F, na="", row.names = F, sep="\t")
+
+rm(normalized_counts, dds, col_data, pc_gene_counts, ensembl, genes_ens, counts_matrix)
+rm(cohortA_counts, cohortAB_counts, cohortAB_counts_long, cohortA_normcounts, cohortB_normcounts)
+
+```
+
+# Prostate cancer cohort
+## Split before calculating z-scores
+Split into test/train & validation cohort (70/30 split)
+
+
+```{r}
+sample_annotation <- sample_annotation_A
+
+cohortA_normcounts <- data.table::fread("../data/prostatecancer_normcounts.txt")
+
+set.seed(123)
+#get names of validation and train/test samples
+val_index <- caret::createDataPartition(sample_annotation$Abbreviation, p = 0.7, list = FALSE)
+# 70%: train+test
+traintestIDs <- sample_annotation[val_index, ]$UniqueID
+# 30% held out as validation set
+validationIDs <- sample_annotation[-val_index, ]$UniqueID
+
+#check the nr of control and cancer samples in each set
+#table(grepl("CONTROL",sample_annotation$UniqueID)) 
+table(grepl("CONTROL",traintestIDs)) 
+table(grepl("CONTROL",validationIDs))
+
+sample_annotation_traintest <- sample_annotation %>% filter(UniqueID %in% traintestIDs)
+sample_annotation_validation <- sample_annotation %>% filter(UniqueID %in% validationIDs)
+
+cohortA_normcounts_traintest <- data.table::fread("../data/prostatecancer_normcounts.txt") %>% dplyr::select(c("gene_id",all_of(traintestIDs)))
+
+cohortA_normcounts_validation <- data.table::fread("../data/prostatecancer_normcounts.txt") %>% dplyr::select(c("gene_id",all_of(validationIDs)))
+
+```
+
+### Z-scores train-test
+
+calculate z-scores for each sample, each time using all control samples as reference except the control sample of interest
+```{r}
+sample_annotation <- sample_annotation_traintest
+cohortA_normcounts <- cohortA_normcounts_traintest
+
+# z-score calculation based on leave one out (LOO) reference in case sample of interest is control sample
+z_scores_LOO <- data.frame(gene_id = cohortA_normcounts %>% pull(gene_id))
+for (samp in (colnames(cohortA_normcounts)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortA_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                                                cohortA_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts),value =T))) %>% 
+                                                  dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                                  column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+
+### save table with tail genes per sample (|z|>3 and ncounts ≥40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                  cohortA_normcounts %>% #add normalized counts
+                   pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                  by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+#summary(tmp)
+data.table::fwrite(tail_genes, file=here::here("data/prostatecancer_tailgenes.txt"),sep="\t", row.names = F, quote=F, na="")
+rm(tail_genes,z_scores_LOO_sample, samp)
+
+tail_genes <- data.table::fread("../data/prostatecancer_tailgenes.txt",data.table=F)
+length(unique(tail_genes$gene_id)) #1923
+
+```
+
+Recurrence of tail genes within a group
+```{r}
+nr_samples_total <- sample_annotation %>% group_by(Abbreviation) %>% dplyr::summarise(nr_samples_total=n())
+#number (and %) of samples per group for which gene is tail gene
+tmp2 <- tail_genes %>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) %>% group_by(gene_id,Abbreviation) %>% dplyr::summarise(nr_dev_samples=n()) %>% ungroup() %>% left_join(nr_samples_total, by="Abbreviation") %>% mutate(perc_dev_samples=nr_dev_samples/nr_samples_total)
+#number of tail genes with same number of samples for which they are tail genes
+#make sure all rows are represented (0 if absent)
+tmp3 <- tmp2 %>% ungroup() %>% group_by(Abbreviation,nr_dev_samples) %>% dplyr::summarise(nr_genes=n()) %>% full_join(data.frame(Abbreviation=c(rep("CONTROL",max(tmp2$nr_dev_samples)+1),rep("PRAD",max(tmp2$nr_dev_samples)+1)), nr_dev_samples=rep(seq(0:max(tmp2$nr_dev_samples)),2))) %>%
+  mutate(Abbreviation=ifelse(Abbreviation=="CONTROL","CONTROL",Abbreviation))
+
+tmp3[is.na(tmp3)] <- 0
+
+ggplot(tmp3, aes(x=nr_dev_samples, y=nr_genes+0.05,fill=Abbreviation)) +
+  geom_bar(stat="identity",position="dodge", width=0.8) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  scale_y_log10(expand=c(0,NA),limits=c(0.9,NA)) +
+  mytheme + theme(legend.title = element_blank()) +
+  labs(x="shared among x samples", y="number of tail genes")
+ggsave("../figures/prostatecancer_tail_recurrence.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+
+#make sure 100% is represented (0 if absent)
+tmp3 <- tmp2 %>% ungroup() %>% group_by(Abbreviation,perc_dev_samples) %>% dplyr::summarise(nr_genes=n())
+tmp3 <- tmp3 %>% 
+  full_join(tmp3 %>% group_by(Abbreviation) %>% dplyr::summarise(perc_dev_samples=max(perc_dev_samples)+0.05)) %>% #add a row with the max perc + 5%
+  full_join(data.frame(Abbreviation=c("CONTROL","PRAD"), perc_dev_samples=c(1,1))) #add rows for 100%
+tmp3$nr_genes[is.na(tmp3$nr_genes)] <- 0 #fill in 0 deviating genes for missing values
+
+ggplot(tmp3, aes(x=perc_dev_samples*100, y=nr_genes,color=Abbreviation)) +
+  geom_line() + geom_point(size=0.5) + 
+  scale_color_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  scale_y_log10() +
+  scale_x_continuous() +
+  mytheme + theme(legend.title = element_blank()) +
+  labs(x="shared among % of samples", y="number of tail genes")
+ggsave("../figures/prostatecancer_tail_recurrence_perc.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+
+
+tmp4 <- tmp2 %>% ungroup() %>% mutate(CN=ifelse(Abbreviation=="CONTROL","control","cancer")) %>% 
+  group_by(gene_id,CN) %>% dplyr::summarise(nr_dev_samples_allcancer=sum(nr_dev_samples)) %>% #sum nr dev cancer samples
+  ungroup() %>% group_by(CN,nr_dev_samples_allcancer) %>% dplyr::summarise(nr_genes=n())
+#nr of tail genes not unique for 1 sample
+(tmp4 %>% filter(CN=="cancer") %>% filter(nr_dev_samples_allcancer!=1) %>% pull(nr_genes) %>% sum())/(tmp4 %>% filter(CN=="cancer") %>% pull(nr_genes) %>% sum()) #59.6%
+
+
+rm(tmp2,tmp3,tmp4,nr_samples_total,tail_genes)
+
+```
+
+Test whether there are significantly less tail genes in certain groups
+```{r}
+tail_genes <- data.table::fread("../data/prostatecancer_tailgenes.txt",data.table=F) %>%
+   mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) #deviating genes (Tail) 
+
+tmp2 <- tail_genes %>% group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+#make sure no sample is missing
+tmp2 <- tmp2 %>% full_join(sample_annotation %>%  dplyr::select(c("sample"=UniqueID,"disease"=Abbreviation,"Stage")), by=c("sample","disease")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev))
+
+library(ggpubr)
+my_comparisons <- list( c("CONTROL", "PRAD"))
+
+ggplot(tmp2, aes(x=disease,y=n_dev)) +
+  geom_boxplot(outlier.size = 0.75,aes(fill=disease)) +
+  geom_jitter(height=0, width=0.1,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488"))+
+  scale_y_log10(labels=full_nr) +
+  labs(y="tail genes",x="") +
+  ggpubr::stat_compare_means(method="wilcox",label.y=4, size = 2)   # Add global p-value
+
+rstatix::kruskal_test(data=tmp2, n_dev ~ disease)
+rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=tmp2, n_dev ~ disease, p.adjust.method = "BH")
+rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease, ci = T)
+
+ggsave("../figures/prostatecancer_tail_boxplot_logscale.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+wilcox.test(n_dev ~ disease, data = tmp2) # significant difference between Abbreviation types
+
+ggplot(tmp2 %>% 
+         mutate(Stage = ifelse(disease=="CONTROL","CONTROL",Stage), cancer=ifelse(disease=="CONTROL","control","cancer")) %>%
+         mutate(Stage=ifelse(Stage=="","cancer",Stage)), aes(x=Stage, y=n_dev, color=cancer)) +
+  geom_jitter(size=0.2, width=0.1) +
+  scale_color_manual(values=c("control"="#DDAA33","cancer"="#004488")) +
+  mytheme + theme(legend.position="none") + 
+  labs(y="nr of tail genes")
+
+
+ggplot(tmp2, aes(x=disease,y=n_dev)) +
+  geom_boxplot(varwidth = TRUE, outlier.size = 0.75,aes(fill=disease)) +
+  geom_jitter(height=0, width=0.1,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488"))+
+  #scale_y_log10(labels=full_nr) +
+  labs(y="tail genes",x="") +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) # Pairwise comparison against reference
+
+rstatix::wilcox_test(data=tmp2, n_dev ~ disease)
+rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=tmp2, n_dev ~ disease,ci=T)
+rstatix::wilcox_test(data=tmp2 %>% filter(!(Stage %in% c("1","2b","2c"))), n_dev ~ disease, p.adjust.method = "BH")
+rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=tmp2, n_dev ~ disease, ci = T)
+
+ggsave("../figures/prostatecancer_tail_boxplot.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F)
+wilcox.test(n_dev ~ disease, data = tmp2) # significant difference between Abbreviation types
+
+#differences in number of tail genes prostate cancer patient samples according to Stage staging?
+kruskal.test(n_dev ~ Stage, data = tmp2 %>% filter(disease=='PRAD'))
+#p-value Kruskal-Wallis rank sum test = 0.20249 
+
+```
+
+### BTG train-test
+
+Biomarker tail gene identification + classification for PRAD
+(10x) 5-fold CV from start
+
+```{r, 5fold CV cohortA, message=F}
+sample_annotation <- sample_annotation_traintest
+cohortA_normcounts <- cohortA_normcounts_traintest
+## select the controls with matching sex to evaluate performance (male samples only for PRAD & CONTROL)
+sample_annotation_selected <- sample_annotation_traintest %>% filter(Sex=="M")
+
+# Initialize vector to store AUC values & list to store BTG per repeat and CV
+consensus_genes <- list() #for BTG in Fisher's Exact test on entire training set
+all_auc_values <- c() #for classification results BTG of 1 FT
+all_auc_ci_lower <- c()
+all_auc_ci_upper <- c()
+all_auc_male_values <- c()
+
+fold_labels <- list()
+fold_predictions <- list()
+
+BTGpersample <- data.frame() #dataframe to gather nr of BTG identified in every sample
+
+## Perform repeated 5-fold cross-validation from start to end
+set.seed(124)  # for reproducibility
+# Number of repeats and folds
+num_repeats <- 10 #10 repeats of 5-fold CV 
+num_folds <- 5
+# Perform repeated cross-validation
+for (repeat_x in 1:num_repeats) {
+  # Create stratified folds
+  sample_annotation_selected$foldID <- seq(1:nrow(sample_annotation_selected))
+  sample_annotation_selected$cancer_binary <- ifelse(sample_annotation_selected$Abbreviation=="CONTROL",0,1)
+  # make stratified folds of cancer vs control and get the 5 test sets
+  folds <- caret::createFolds(factor(sample_annotation_selected$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
+  
+  # Perform cross-validation for each fold
+  for(i in 1:num_folds) {
+    print(paste0("rep",repeat_x,"_",i))
+    # Split the data into training and test sets
+    test_indices <- folds[[i]]
+    testIDs <- sample_annotation_selected$UniqueID[test_indices] #get sample names test set
+    trainIDs <- sample_annotation_selected$UniqueID[-test_indices] #get sample names training set
+    
+    ## z-score calculation
+    # based on CONTROLS in training set and not sample itself
+    z_scores <- data.frame(gene_id = cohortA_normcounts %>% pull(gene_id))
+    ##reference only based on CONTROLS in training except sample itself
+    for (samp in (sample_annotation_selected %>% pull(UniqueID))) {
+      #print(samp)
+      z_scores_sample <- tail_z_score(cohortA_normcounts %>%
+                                            dplyr::select(c("gene_id",all_of(samp))) %>%
+                                            column_to_rownames("gene_id"),
+                                          cohortA_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",trainIDs,value =T))) %>% #only training set CONTROL samples
+                                            dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                            column_to_rownames("gene_id"))
+      
+      z_scores <- left_join(z_scores, z_scores_sample %>% rownames_to_column("gene_id"), by="gene_id")
+    }
+    rm(z_scores_sample)
+    
+    gene_list <- vector(mode="list")
+    
+    ### overview tail genes
+    tail_genes <- left_join(z_scores %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                            cohortA_normcounts %>% #add normalized counts
+                              pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                            by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+    
+    z_scores_Tail <- z_scores %>% filter(gene_id %in% unique(tail_genes$gene_id)) 
+
+    #### do classification on BTG as result of 1 FT on entire training set
+    ###Do one Fisher test on entire training set (no consensus on LOO) & repeat classification with this BTG set:
+    reduced_z_table <- z_scores_Tail %>% dplyr::select(-all_of(testIDs)) #remove test samples
+    #Fisher exact test on all samples except sample of interest
+    test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% 
+        mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) %>% 
+        mutate(cancer=ifelse(disease=="CONTROL", "N", "T")) %>% #get tumor/normal annotation
+        ungroup() %>% group_by(gene_id,cancer) %>% 
+        left_join(cohortA_normcounts %>% #add normalized counts
+                    pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id","sample")) %>%
+        dplyr::summarise(absz3 = sum( ((abs(zscores)>3) & (ncounts>=40)), na.rm=T), absznot3 = sum( !((abs(zscores)>3) & (ncounts>=40)), na.rm=T))
+        #dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+      
+    test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+    df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+    consensus_genes[[paste0("rep",repeat_x,"_",i)]]<- df_fisher %>% rownames_to_column("gene_id") %>% filter(p.val<0.05) %>% pull(gene_id) #xxx BTG based on 1 FT
+    rm(test_wide, test, df_fisher, reduced_z_table)
+    
+    ## count nr of BTG consensus genes for each sample
+    tail_genes_FT <- tail_genes %>% 
+      filter(gene_id %in% consensus_genes[[paste0("rep",repeat_x,"_",i)]]) %>%
+      group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+      #make sure all samples are present
+      full_join(sample_annotation_selected %>% #filter(Cohort=="prostatecancer") %>%
+                  dplyr::select(c("sample"=UniqueID)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) 
+    
+    #### Model training and testing (x repeats in y-fold cross-validation!)
+    ### train with training, test on testing data
+    data <- tail_genes_FT %>% mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      #add ID of stratification as rownames to select rows using these indices
+      left_join(sample_annotation_selected %>% dplyr::select(c(sample="UniqueID","foldID"))) #%>%
+      #column_to_rownames("foldID")
+    
+    ## save nr of BTG per sample for each fold and repeat (+indicate test or training status of sample)
+      BTGpersample <- rbind(BTGpersample, data %>%
+                              mutate(rep=paste0("rep",repeat_x,"_",i), sampletype=ifelse(foldID %in% test_indices, "test","train"), BTGset=length(consensus_genes[[paste0("rep",repeat_x,"_",i)]])))
+    
+    train_data <- data %>% filter(!(foldID %in% test_indices))
+    test_data <- data %>% filter(foldID %in% test_indices)
+
+    # Train a logistic regression model (or any other binomial classification model)
+    model <- glm(cancer ~ n_dev, data = train_data, family = binomial)
+    
+    # Predict probabilities for the test set
+    prob_predictions <- predict(model, test_data, type = "response")
+    
+    # Calculate AUC for the current fold
+    roc_curve <- roc(test_data$cancer, prob_predictions, levels=c(F,T), direction = "<")
+    # Store predictions and labels for this fold
+    fold_predictions[[paste0("rep",repeat_x,"_",i)]] <- prob_predictions
+    fold_labels[[paste0("rep",repeat_x,"_",i)]] <- test_data$cancer
+  
+    #calculate AUC and confidence interval on entire test set
+    all_auc_values <- c(all_auc_values, auc(roc_curve))
+    all_auc_ci_lower <- c(all_auc_ci_lower, round(ci(roc_curve),4)[1])
+    all_auc_ci_upper <- c(all_auc_ci_upper, round(ci(roc_curve),4)[3])
+    
+    ## Check for impact of confounders
+    # Calculate roc data 
+    roc_data <- test_data %>% mutate(predictions=prob_predictions, cancer=ifelse(disease=="CONTROL", F, T))
+    roc_data <- roc_data %>% left_join(sample_annotation_selected, by=c("sample"="UniqueID"))
+    # Stratify by sex
+    roc_data_male <- roc_data[roc_data$Sex == "M", ]
+    # Compute ROC curve and AUC for males
+    auc_male <- safe_roc(roc_data_male$cancer, roc_data_male$predictions, levels=c(F,T), direction = "<") #will output NA in case one group has no observations
+    all_auc_male_values <- c(all_auc_male_values, auc_male$auc)
+    rm(auc_male, roc_data, roc_data_male, model)
+    
+    rm(z_scores, z_scores_Tail, data, train_data, test_data, prob_predictions, tail_genes, tail_genes_FT, gene_list, trainIDs, testIDs, samp, roc_curve)
+    
+  }
+}
+
+### Consensus sets of BTG over all repeats:
+## present in 50%
+threshold <- ceiling(0.5 * length(consensus_genes))
+#count occurence of every gene across elements
+all_words <- unlist(consensus_genes) 
+word_counts <- table(all_words)
+# Filter words that appear in at least 80% of the elements
+consensus_50 <- names(word_counts[word_counts >= threshold])
+print("50% consensus BTG:")
+print(length(consensus_50))
+rm(all_words, word_counts, threshold)
+
+## present in any of the sets
+consensus_union <- Reduce(union, consensus_genes)
+print("union of BTG:")
+print(length(consensus_union))
+
+### based on BTG 1 FT on entire set
+roc_curves <- list()  # List to store ROC curves for 10 repetitions
+# Simulating ROC curves for 10 folds (replace with your actual data)
+for (repeat_x in 1:num_repeats){
+  for (i in 1:num_folds) {
+    # Generate the ROC curve
+    roc_curves[[paste0("rep",repeat_x,"_",i)]] <- roc(response = fold_labels[[paste0("rep",repeat_x,"_",i)]], predictor = fold_predictions[[paste0("rep",repeat_x,"_",i)]], levels = c(F, T), direction = "<")
+  }
+}
+
+### Plotting mean ROC curve as well
+# Define specificity points in descending order (from 1 to 0)
+specificities <- seq(1, 0, length.out = 100)
+
+# Interpolate sensitivities for each fold at common specificity points
+sensitivities <- mapply(function(roc) {
+  coords(roc, x = specificities, input = "specificity", ret = "sensitivity", transpose = FALSE)
+}, roc = roc_curves, SIMPLIFY = TRUE)
+
+# Convert result to a matrix and ensure each column represents sensitivities for a fold
+sensitivities <- matrix(unlist(sensitivities), nrow = length(specificities), byrow = FALSE)
+# Calculate the mean sensitivity across folds
+mean_sensitivities <- rowMeans(sensitivities, na.rm = TRUE)
+
+# Create a data frame for individual ROC curves
+roc_data <- data.frame(
+  Specificity = rep(specificities, times = length(roc_curves)),
+  Sensitivity = as.vector(sensitivities),
+  Fold = rep(1:length(roc_curves), each = length(specificities))
+)
+
+# Calculate FPR and arrange
+roc_data <- roc_data %>%
+  mutate(FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create mean ROC data
+mean_roc_data <- data.frame(
+  Specificity = specificities,
+  Sensitivity = mean_sensitivities
+) %>%
+  mutate(Fold = "mean", FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create a data frame for (0, 0) point for mean ROC data
+mean_roc_data <- rbind(data.frame(Specificity = 1, Sensitivity = 0, Fold = "mean", FPR = 0), mean_roc_data)
+
+# Create a data frame for (0, 0) points, one for each fold
+zero_points <- data.frame(Specificity = 1, Sensitivity = 0, Fold = rep(1:length(roc_curves), each = 1), FPR=0)
+
+# Combine the (0, 0) points with the existing ROC data
+roc_data <- rbind(zero_points, roc_data)
+
+### Save the roc_data object for later
+roc_data_prostatecancer_5fCV <- rbind(roc_data, mean_roc_data)
+rm(roc_curves, roc_data, mean_roc_data, fold_predictions, fold_labels,sensitivities, specificities, zero_points)
+
+BTG_AUC_CV <- data.frame(
+    comparison="PRADvsCTRL",
+    CV = "start",
+    iteration = names(consensus_genes),
+    BTG_identification="1FT_zc",
+    BTG_set = sapply(consensus_genes, length),
+    auc=round(all_auc_values,4),
+    ci_lower=all_auc_ci_lower,
+    ci_upper=all_auc_ci_upper)
+#data.frame(auc=all_auc_values) %>% View()
+
+# Print mean AUC
+tmp <- t.test(all_auc_values)
+# Extract the mean and confidence interval
+mean_auc <- tmp$estimate
+lower_ci <- tmp$conf.int[1]
+upper_ci <- tmp$conf.int[2]
+# Print the results
+cat("Mean AUC:", mean_auc, "\n")
+cat("95% Confidence Interval:", lower_ci, "-", upper_ci, "\n")
+summary(all_auc_values)
+rm(tmp)
+
+# Print mean AUC males
+tmp <- t.test(all_auc_male_values)
+# Extract the mean and confidence interval
+mean_auc <- tmp$estimate
+lower_ci <- tmp$conf.int[1]
+upper_ci <- tmp$conf.int[2]
+# Print the results
+cat("Mean AUC (males):", mean_auc, "\n")
+cat("95% Confidence Interval:", lower_ci, "-", upper_ci, "\n")
+summary(all_auc_male_values)
+rm(tmp)
+
+
+write.table(BTG_AUC_CV,file="../data/tail_genes/BTG_AUC_prostatecancer_5fCV.txt", row.names = F, , col.names=T, quote=F, na="")
+  
+write.table(roc_data_prostatecancer_5fCV, file="../data/tail_genes/ROC_prostatecancer_5fCV.txt", row.names = F, , col.names=T, quote=F, na="")
+  
+saveRDS(consensus_genes, file=paste0("../data/tail_genes/BTGidentity_prostatecancer_5fCV.RData"))
+
+saveRDS(BTGpersample, file="../data/tail_genes/BTGpersample_prostatecancer_5fCV.RData")
+
+rm(list=c("test_indices", "all_auc_values", "cohortA_normcounts", "sample_annotation", "sample_annotation_selected", "repeat_x", "mean_auc", "num_folds", "i","upper_ci","lower_ci","mean_sensitivities","consensus_50","consensus_union","all_auc_male_values","all_auc_ci_lower","all_auc_ci_upper"))
+
+#mean(BTG_AUC_CV$auc)
+
+```
+
+Mean ROC curves for 10x 5-fold CV analyses
+```{r}
+ROC_curves_all <- data.frame()
+BTG_AUC_all <- data.frame()
+
+ROC_curves_all <- plyr::rbind.fill(ROC_curves_all, data.table::fread(file=paste0("../data/tail_genes/ROC_prostatecancer_5fCV.txt"), fill=T, data.table=F) %>% mutate(cohort="prostatecancer",comparison=paste0("PRADvsCTRL"),cancertype="PRAD"))
+  
+BTG_AUC_all <- plyr::rbind.fill(BTG_AUC_all, data.table::fread(file=paste0("../data/tail_genes/BTG_AUC_prostatecancer_5fCV.txt"), fill=TRUE, data.table=F) %>% mutate(cohort="prostatecancer"))
+
+
+# Plot with ggplot2
+print(ggplot(ROC_curves_all %>% filter(Fold=="mean"),
+             aes(x = FPR, y = Sensitivity, color = cancertype)) +
+        # Plot individual ROC curves in grey
+        geom_line() +
+        #facet_wrap(~cancertype) +
+        mytheme + coord_fixed(ratio=1) +
+        labs(x = 'false positive rate', y = 'true positive rate', title=paste0("AUC: ",mean(BTG_AUC_all$auc))) +
+        theme(legend.position="bottom", legend.title = element_blank()) +
+    scale_color_manual(values=c("PRAD"="#004488")) +
+        
+        geom_abline(intercept=0, slope=1, linetype="dashed", linewidth=0.5, color="grey"))
+
+ggsave(filename = "../figures/prostatecancer_BTG_ROC_5fCV.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+```
+
+Consensus BTG and boxplots for 10x 5-fold CV
+```{r}
+sample_annotation <- sample_annotation_traintest
+cohortA_normcounts <- cohortA_normcounts_traintest
+
+BTG_genes <- list()
+BTG_consensus_50 <- list()
+BTG_union <- list()
+
+cohort = "prostatecancer"
+BTG_genes[[cohort]] <- readRDS(file=paste0("../data/tail_genes/BTGidentity_",cohort,"_5fCV.RData"))
+  
+### Consensus sets of BTG over all repeats:
+## present in 50% of repeat-folds (so for 10x 5-fold CV: threshold = 25)
+threshold <- ceiling(0.5 * length(BTG_genes[[cohort]])) 
+#count occurence of every gene across elements
+all_words <- unlist(BTG_genes[[cohort]]) 
+word_counts <- table(all_words)
+# Filter words that appear in at least 50%
+consensus_50 <- names(word_counts[word_counts >= threshold])
+print(paste("50% consensus BTG:",length(consensus_50)))
+BTG_consensus_50[[cohort]] <- consensus_50
+rm(all_words, word_counts, threshold, consensus_50)
+
+union_BTG <- unique(unlist(BTG_genes[[cohort]]))
+print(paste("union BTG:",length(union_BTG)))
+BTG_union[[cohort]] <- union_BTG
+rm(union_BTG)
+
+### Leave-one-out z-score calculation
+z_scores_LOO <- data.frame(gene_id = cohortA_normcounts %>% pull(gene_id))
+for (samp in (colnames(cohortA_normcounts)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortA_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                      cohortA_normcounts %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), cohortA_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) %>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+for (cancer in c("PRAD")) {
+  BTG_consensus_50_persample <- rbind(BTG_consensus_50_persample, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+    filter(Abbreviation %in% c("CONTROL",cancer)) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all samples are present
+    full_join(sample_annotation %>% filter(Abbreviation %in% c("CONTROL",cancer)) %>% dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation, Sex)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","PRAD")), 
+           cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+#BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(comparison=factor(comparison, levels=c("PRADvsCtrl")))
+
+#only keep male donor samples of validation set for testing
+BTG_consensus_50_persample_maleonly <- BTG_consensus_50_persample %>% filter(Sex=="M")
+
+ggplot(BTG_consensus_50_persample_maleonly, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) +  
+  scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488"))  +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTG_boxplot_5fCVconsensus50_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample_maleonly, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_continuous(limits=c(0,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) #+ # Pairwise comparison against reference
+  #facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTG_boxplot_5fCVconsensus50.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+
+rstatix::kruskal_test(data=BTG_consensus_50_persample_maleonly, n_dev ~ disease)
+rstatix::kruskal_effsize(data=BTG_consensus_50_persample_maleonly, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=data, n_dev ~ disease,ci=T)
+data_tmp <- BTG_consensus_50_persample_maleonly %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+
+### count the nr of BTG in each fold/repeat
+count_words <- function(sublist) {
+  sum(sapply(sublist, function(sentence) str_count(sentence, "\\S+")))
+}
+
+# summary cohortA
+sapply(BTG_genes[["prostatecancer"]], count_words) %>% unlist() %>% summary() #min 240 BTG, max 335, mean 290.8, median 292
+
+
+```
+
+
+
+Same on validation cohort (z based on all controls test&train sets)
+```{r}
+sample_annotation <- sample_annotation_validation
+cohortA_normcounts <- cohortA_normcounts_validation
+
+##BTG determined based on 50% consensus in 10x 5-fold CV training sets
+#BTG_consensus_50[["prostatecancer"]]
+
+### LOO z-score calculation in using all controls as reference
+z_scores_LOO <- data.frame(gene_id = cohortA_normcounts %>% pull(gene_id))
+for (samp in (sample_annotation %>% pull(UniqueID))) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortA_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                      cohortA_normcounts_traintest %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts_traintest),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), cohortA_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) %>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample_traintestref <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+for (cancer in c("PRAD")) {
+  BTG_consensus_50_persample_traintestref <- rbind(BTG_consensus_50_persample_traintestref, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+    filter(Abbreviation %in% c("CONTROL",cancer)) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all samples are present (male controls and PRAD validation set)
+    full_join(sample_annotation %>% filter(Abbreviation %in% c("CONTROL",cancer)) %>% dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation,Sex)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","PRAD")), 
+           cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+#BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(comparison=factor(comparison, levels=c("PRADvsCtrl")))
+
+#only keep male donor samples of validation set for testing
+BTG_consensus_50_persample_traintestref_maleonly <- BTG_consensus_50_persample_traintestref %>% filter(Sex=="M")
+
+
+ggplot(BTG_consensus_50_persample_traintestref_maleonly, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTGtrain_recalculatedzvalidation_basedontraintest_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample_traintestref_maleonly, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_continuous(limits=c(0,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) #+ # Pairwise comparison against reference
+  #facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTGtrain_recalculatedzvalidation_basedontraintest_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+# male & female controls
+#rstatix::kruskal_test(data=sum_BTG_tailgenes, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=sum_BTG_tailgenes, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=data, n_dev ~ disease,ci=T)
+data_tmp <- BTG_consensus_50_persample_traintestref %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp, n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+
+# male only
+data_tmp <- BTG_consensus_50_persample_traintestref_maleonly %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp, n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+
+```
+
+### Define threshold in test-train cohort, apply to validation cohort
+```{r}
+length(BTG_consensus_50[["prostatecancer"]]) #260 BTG
+
+tail_genes <- data.table::fread("../data/prostatecancer_tailgenes.txt",data.table=F) %>%
+   mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) #deviating genes (Tail) 
+
+BTG_consensus_50_persample <- tail_genes %>%
+  filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>% #only keep BTG identified in train-test %>%
+  dplyr::group_by(sample) %>%
+  dplyr::summarise(n_dev=n()) %>%
+  #add samples without BTG
+  full_join(sample_annotation_traintest %>% 
+              dplyr::select(c("sample"="UniqueID","Sex"))) %>%
+  mutate(n_dev = ifelse(is.na(n_dev),0,n_dev)) %>% 
+  mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+  
+
+my_comparisons <- list(c("CONTROL","PRAD"))
+
+ggplot(BTG_consensus_50_persample, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + 
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33", "PRAD"="#004488"))+
+  scale_y_log10(labels=full_nr, breaks=c(1,10,100,1000)) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+library(pROC)
+
+BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(cancer=ifelse(disease=="PRAD",1,0))
+roc_obj <- roc(as.factor(BTG_consensus_50_persample$cancer), BTG_consensus_50_persample$n_dev)
+
+# Get all thresholds and corresponding metrics
+coords_all <- coords(
+  roc_obj,
+  x = "all",
+  ret = c("threshold", "sensitivity", "specificity", "tp", "fp", "tn", "fn"),
+  transpose = FALSE
+)
+
+# Convert to a data frame for filtering
+coords_df <- as.data.frame(coords_all)
+
+# Find the threshold that maximizes Youden’s J statistic (sensitivity - FPR)
+best_youden <- coords(
+  roc_obj,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity", "tp", "fp", "tn", "fn"),
+  transpose = FALSE
+)
+
+cat("🔹 Best by Youden's index:\n")
+print(best_youden)
+
+# # --- Best threshold by Closest to Top-Left ---
+# best_closest <- coords(
+#   roc_obj,
+#   x = "best",
+#   best.method = "closest.topleft",
+#   ret = c("threshold", "sensitivity", "specificity", "tp", "fp", "tn", "fn"),
+#   transpose = FALSE
+# )
+# 
+# cat("\n🔹 Best by Closest to Top-Left:\n")
+# print(best_closest)
+
+##calculate sens/sp on train-test cohort, male only, using best threshold in train-test
+PRAD_traintest <- BTG_consensus_50_persample_maleonly
+
+threshold <- as.numeric(paste(best_youden$threshold))
+
+# Apply threshold to make predictions
+PRAD_traintest$predicted <- ifelse(PRAD_traintest$n_dev >= threshold, 1, 0)
+
+# Calculate confusion matrix components
+TP <- sum(PRAD_traintest$predicted == 1 & PRAD_traintest$cancer == 1)
+FP <- sum(PRAD_traintest$predicted == 1 & PRAD_traintest$cancer == 0)
+TN <- sum(PRAD_traintest$predicted == 0 & PRAD_traintest$cancer == 0)
+FN <- sum(PRAD_traintest$predicted == 0 & PRAD_traintest$cancer == 1)
+
+# Calculate sensitivity and specificity
+sensitivity <- TP / (TP + FN)
+specificity <- TN / (TN + FP)
+
+# Output results
+cat("Threshold:", threshold, "\n")
+cat("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN, "\n")
+cat("Sensitivity:", sensitivity, "Specificity:", specificity, "\n")
+
+
+
+##calculate sens/sp on validation cohort using best threshold in train-test
+PRAD_validation <- BTG_consensus_50_persample_traintestref
+
+threshold <- as.numeric(paste(best_youden$threshold))
+
+# Apply threshold to make predictions
+PRAD_validation$predicted <- ifelse(PRAD_validation$n_dev >= threshold, 1, 0)
+
+# Calculate confusion matrix components
+TP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 1)
+FP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 0)
+TN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 0)
+FN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 1)
+
+# Calculate sensitivity and specificity
+sensitivity <- TP / (TP + FN)
+specificity <- TN / (TN + FP)
+
+# Output results
+cat("Threshold:", threshold, "\n")
+cat("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN, "\n")
+cat("Sensitivity:", sensitivity, "Specificity:", specificity, "\n")
+
+
+```
+
+### According to stage
+```{r}
+BTG_PRAD_all <- rbind(BTG_consensus_50_persample_maleonly,BTG_consensus_50_persample_traintestref_maleonly) %>% #filter(disease=="PRAD") %>%
+  left_join(sample_annotation_A %>% dplyr::select("UniqueID","Stage"), by=c("sample"="UniqueID")) %>% mutate(Stage=ifelse(disease=="CONTROL","CONTROL",Stage)) %>% mutate(Stage=gsub("V[A-D]","V",(gsub("I[A-D]","I",Stage)))) 
+
+ggplot(BTG_PRAD_all, aes(x=Stage, y=n_dev, color=disease)) +
+  geom_jitter(size=0.5, height=0, width=0.1) +
+  #geom_violin() +
+  #facet_wrap(~comparison,scales="free_y") +
+  mytheme +
+  theme(legend.position="none") +
+  labs(x="stage", y="number of biomarker tail genes") +
+  scale_color_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488"))
+
+ggsave(filename = "../figures/prostatecancer_BTG_stage.pdf", plot=last_plot(), width=5.8, height=5.1, units="cm")
+
+glm(formula = n_dev~disease+Stage, data=BTG_PRAD_all) %>% summary()
+
+## Statistical test (Jonkheere-terpstra test) 
+library(clinfun) 
+
+tmp_data <- BTG_PRAD_all %>% filter(Stage != "CONTROL") %>% mutate(stage_nr=ifelse(Stage=="I",1, ifelse(Stage=="II",2, ifelse(Stage=="III",3, ifelse(Stage=="IV",4,0)))))
+jonckheere.test(tmp_data$n_dev, tmp_data$stage_nr)
+
+data_tmp <- BTG_PRAD_all %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp %>% filter(Stage %in% c("CONTROL","I")), n_dev ~ disease)
+
+rstatix::wilcox_test(data=data_tmp %>% filter(Stage %in% c("CONTROL","II")), n_dev ~ disease)
+
+rstatix::wilcox_test(data=data_tmp %>% filter(Stage %in% c("CONTROL","III")), n_dev ~ disease)
+
+rstatix::wilcox_test(data=data_tmp %>%filter(Stage %in% c("CONTROL","IV")), n_dev ~ disease)
+
+
+### early (I & II)
+rstatix::wilcox_test(data=data_tmp %>% filter(Stage %in% c("CONTROL","I","II")), n_dev ~ disease)
+
+### late (III & IV)
+rstatix::wilcox_test(data=data_tmp %>% filter(Stage %in% c("CONTROL","III","IV")), n_dev ~ disease)
+
+```
+
+
+### Apply to non-malignant cohort
+calculate z-scores based on train-test reference
+
+```{r}
+sample_annotation <- sample_annotation_B %>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_nonmalignant","",UniqueID)))
+cohortB_normcounts <- data.table::fread("../data/nonmalignant_normcounts.txt")
+
+##BTG determined based on 50% consensus in 10x 5-fold CV training sets
+#BTG_consensus_50[["prostatecancer"]]
+
+### LOO z-score calculation in using all controls as reference
+z_scores_LOO <- data.frame(gene_id = cohortB_normcounts %>% pull(gene_id))
+for (samp in (sample_annotation %>% pull(UniqueID))) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortB_normcounts %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                      cohortA_normcounts_traintest %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts_traintest),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), cohortB_normcounts %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) %>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_nonmalignant","",sample)))
+
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample_nonmalig_traintestref <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+for (cancer in c("PRAD")) {
+  BTG_consensus_50_persample_nonmalig_traintestref <- rbind(BTG_consensus_50_persample_nonmalig_traintestref, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all samples are present (male controls and PRAD validation set)
+    full_join(sample_annotation %>% 
+                #filter(Abbreviation %in% c("CONTROL",cancer)) %>%
+                dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation,Sex)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","NONMALIG")), 
+           cancer=ifelse(disease=="CONTROL", F, ifelse(disease=="NONMALIG",F, T))) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+#BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(comparison=factor(comparison, levels=c("PRADvsCtrl")))
+
+#only keep male donor samples of validation set for testing
+BTG_consensus_50_persample_nonmalig_traintestref_maleonly <- BTG_consensus_50_persample_nonmalig_traintestref %>% filter(Sex=="M")
+
+my_comparisons <- list(c("CONTROL","PRAD"), c("CONTROL","NONMALIG"))
+
+ggplot(BTG_consensus_50_persample_nonmalig_traintestref, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","NONMALIG"="#754F44", "PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+##calculate sens/sp on validation cohort using best threshold in train-test
+nonmalig <- BTG_consensus_50_persample_nonmalig_traintestref
+
+threshold <- as.numeric(paste(best_youden$threshold))
+
+# Apply threshold to make predictions
+nonmalig$predicted <- ifelse(nonmalig$n_dev >= threshold, 1, 0)
+
+# Calculate confusion matrix components
+TP <- sum(nonmalig$predicted == 1 & nonmalig$cancer == 1)
+FP <- sum(nonmalig$predicted == 1 & nonmalig$cancer == 0)
+TN <- sum(nonmalig$predicted == 0 & nonmalig$cancer == 0)
+FN <- sum(nonmalig$predicted == 0 & nonmalig$cancer == 1)
+
+# Calculate sensitivity and specificity
+sensitivity <- TP / (TP + FN)
+specificity <- TN / (TN + FP)
+
+# Output results
+cat("Threshold:", threshold, "\n")
+cat("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN, "\n")
+cat("Sensitivity:", sensitivity, "Specificity:", specificity, "\n")
+
+
+```
+### Boxplot of all groups combined
+```{r}
+BTG_all <- rbind(BTG_consensus_50_persample_maleonly %>% mutate(comp="train-test"),
+      BTG_consensus_50_persample_traintestref_maleonly %>% mutate(comp="validation"),
+      BTG_consensus_50_persample_nonmalig_traintestref %>% mutate(comp="nonmalignant"))
+
+BTG_all <- BTG_all %>% mutate(disease=factor(disease,levels=c("CONTROL","PRAD","NONMALIG"))) %>% mutate(comp=factor(comp, levels=c("train-test","validation","nonmalignant")))
+
+ggplot(BTG_all, aes(x=disease,y=n_dev)) +
+  geom_boxplot(outlier.size=0.1, aes(fill=disease)) +
+  scale_y_log10() +
+  facet_wrap(~comp, scales = "free_x") +
+  geom_jitter(height=0,width= 0.1, size=0.5, color= "grey") +
+  geom_hline(yintercept = 7.5, linewidth=0.1, linetype="dashed") +
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","NONMALIG"="#754F44", "PRAD"="#004488")) +
+  labs(x=NULL,y="number of biomarker tail genes") 
+
+ggsave(filename="../figures/prostatecancer_biomarkertail_boxplot_5fCVconsensus50.pdf", plot=last_plot(), width=6.6, height=5.5, units="cm")
+
+
+data_tmp <- BTG_all %>% mutate(disease=paste(disease)) %>% mutate(comp=paste(comp)) #mutate disease & comp column to string (otherwise error when performing wilcoxon tests because factors are missing)
+
+# PRAD vs CONTROL (train-test)
+rstatix::wilcox_test(data=data_tmp %>% filter(comp=="train-test"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comp=="train-test"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>%  filter(comp=="train-test"), n_dev ~ disease,ci=T)
+
+# PRAD vs CONTROL (validation)
+rstatix::wilcox_test(data=data_tmp %>% filter(comp=="validation"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comp=="validation"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>%  filter(comp=="validation"), n_dev ~ disease,ci=T)
+
+# NONMALIG vs CONTROL
+rstatix::wilcox_test(data=data_tmp %>% filter(comp=="nonmalignant"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comp=="nonmalignant"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>%  filter(comp=="nonmalignant"), n_dev ~ disease,ci=T)
+
+# CONTROL train-test vs CONTROL nonmalig
+rstatix::wilcox_test(data=data_tmp %>% filter(disease=="CONTROL") %>% filter(comp !="validation"), n_dev ~ comp)
+rstatix::wilcox_effsize(data=data_tmp %>%  filter(disease=="CONTROL") %>% filter(comp !="validation"), n_dev ~ comp)
+#rstatix::wilcox_effsize(data=data_tmp %>%   filter(disease=="CONTROL") %>% filter(comp !="validation"), n_dev ~ comp,ci=T)
+
+# CONTROL validation vs CONTROL nonmalig
+rstatix::wilcox_test(data=data_tmp %>% filter(disease=="CONTROL") %>% filter(comp !="train-test"), n_dev ~ comp)
+rstatix::wilcox_effsize(data=data_tmp %>%  filter(disease=="CONTROL") %>% filter(comp !="train-test"), n_dev ~ comp)
+#rstatix::wilcox_effsize(data=data_tmp %>%   filter(disease=="CONTROL") %>% filter(comp !="train-test"), n_dev ~ comp,ci=T)
+
+# CONTROL (train-test & validation) vs CONTROL nonmalig
+rstatix::wilcox_test(data=data_tmp %>% filter(disease=="CONTROL") %>% mutate(comp2 = ifelse(comp=="nonmalignant","nonmalignant","prostatecancer")), n_dev ~ comp2)
+rstatix::wilcox_effsize(data=data_tmp %>%  filter(disease=="CONTROL")  %>% mutate(comp2 = ifelse(comp=="nonmalignant","nonmalignant","prostatecancer")), n_dev ~ comp2)
+#rstatix::wilcox_effsize(data=data_tmp %>%   filter(disease=="CONTROL") %>% mutate(comp2 = ifelse(comp=="nonmalignant","nonmalignant","prostatecancer")), n_dev ~ comp2,ci=T)
+
+
+# PRAD (train-test & validation) vs NONMALIG
+rstatix::wilcox_test(data=data_tmp %>% filter(disease %in% c("PRAD","NONMALIG")), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(disease %in% c("PRAD","NONMALIG")), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>%   filter(disease=="CONTROL") %>% filter(disease %in% c("PRAD","NONMALIG")), n_dev ~ disease,ci=T)
+
+
+
+
+
+```
+
+
+### Apply to three-cancer cohort (PRAD & CONTROL)
+
+First on tail genes paper
+```{r}
+
+tail_genes_paper <- data.table::fread("../data/threecancer_tailgenes.txt" ) %>% mutate(disease=gsub("_.*","",sample))
+
+BTG_tmp <- tail_genes_paper %>% 
+  filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev=n())
+
+```
+
+50% consensus BTG applied to PRAD samples paper (male samples only + normalized together (prostatecancer & threecancer) + recalculated z-score based on prostatecancer controls)
+```{r}
+sample_annotation_paper <- data.table::fread("../input/SupplTable1_sample_annotation.txt", data.table=F) %>% filter(Cohort=="threecancer") %>%
+  mutate(sample= paste0(Abbreviation,"_",ReplicateNr,"_",Cohort)) 
+
+#paper_normcounts <- data.table::fread("/Users/almorlio/Library/CloudStorage/OneDrive-UGent/Personal/Projects/PANcancer_plasmapools/AMR2204_Github/data/threecancer_normcounts_all.txt", data.table=F) %>% dplyr::select(c("gene_id",grep("CONTROL|PRAD",colnames(.),value=T)))
+
+### normalize counts paper together with those of prostatecancer
+paper_counts <- data.table::fread("../input/threecancer_counts.txt", data.table=F) 
+
+# Create a named vector for renaming
+rename_vector <- setNames(sample_annotation_paper$sample, sample_annotation_paper$RNAID)
+# Rename columns using dplyr::rename_with()
+paper_counts_renamed <- paper_counts %>%
+  rename_with(.fn = ~ rename_vector[.x], .cols = all_of(sample_annotation_paper$RNAID))
+
+sample_annotation_paper <- sample_annotation_paper %>%
+  filter(Abbreviation %in% c("CONTROL","PRAD")) %>% 
+  filter(Excluded!="x")
+
+paper_counts_renamed <- paper_counts_renamed %>% dplyr::select(c("gene_id",sample_annotation_paper$sample))
+rm(paper_counts)
+sample_annotation_paper <- sample_annotation_paper %>% filter(Sex=="M") #select male only for testing
+
+prostatecancer_counts <- data.table::fread("../input/prostatecancer_counts.txt", data.table = F)
+
+# Create a named vector for renaming
+rename_vector <- setNames(sample_annotation_A$UniqueID, sample_annotation_A$RNAID)
+# Rename columns using dplyr::rename_with()
+prostatecancer_counts_renamed <- prostatecancer_counts %>%
+  rename_with(.fn = ~ rename_vector[.x], .cols = all_of(sample_annotation_A$RNAID))
+prostatecancer_counts_renamed <- prostatecancer_counts_renamed %>% dplyr::select(c("gene_id",(sample_annotation_A %>% filter(cohort=="prostatecancer") %>% filter(Sex=="M") %>% pull(UniqueID))))
+rm(prostatecancer_counts)
+
+paper_prostatecancer_counts <- left_join(paper_counts_renamed, prostatecancer_counts_renamed, by="gene_id") %>%
+  filter(!str_starts(gene_id, "__")) #filter out extra genes
+
+library(biomaRt)
+library(DESeq2)
+ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=109)
+genes_ens <- getBM(attributes=c('ensembl_gene_id','gene_biotype'),mart=ensembl) #get gene biotype
+
+pc_gene_counts <- paper_prostatecancer_counts %>% left_join(., genes_ens, by=c("gene_id"="ensembl_gene_id")) %>% #add gene biotype
+  filter(gene_biotype=="protein_coding") %>% #only keep protein coding genes
+  dplyr::select(-c("gene_biotype")) %>% #remove gene biotype column
+  unique() %>% column_to_rownames("gene_id")
+
+col_data <- tibble(
+  sample = colnames(pc_gene_counts),
+  condition = c(rep("A",ceiling(length(colnames(pc_gene_counts))/2)), rep("B",floor(length(colnames(pc_gene_counts))/2)))  # Does not matter for normalization only
+) %>% column_to_rownames("sample")
+
+dds <- DESeqDataSetFromMatrix(
+  countData = pc_gene_counts,
+  colData = col_data,
+  design = ~ condition  # Replace with your design
+)
+# Estimate size factors (normalization)
+dds <- estimateSizeFactors(dds)
+# Get normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Optionally convert to tibble with gene_id column
+normalized_df <- as.data.frame(normalized_counts) %>%
+  rownames_to_column("gene_id") %>%
+  as_tibble()
+
+
+### LOO z-score calculation in using all controls as reference
+z_scores_LOO <- data.frame(gene_id = normalized_df %>% pull(gene_id))
+for (samp in (sample_annotation_paper %>% pull(sample))) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(normalized_df %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"), #reference of controls prostatecancer only (invert=T)
+                                      normalized_df %>% dplyr::select(c("gene_id",grep("threecancer",grep("CONTROL",colnames(normalized_df),value =T), value=T, invert=T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes_paper <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), normalized_df %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) #%>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+
+length(unique(tail_genes_paper$gene_id)) #438 unique tail genes in PRAD (three-cancer) cohort paper
+
+#BTG prostatecancer
+length(unique(BTG_consensus_50[["prostatecancer"]])) #252
+
+
+tmp3 <- tail_genes_paper %>% 
+  filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+#make sure no sample is missing
+tmp3 <- tmp3 %>% full_join(sample_annotation_paper, by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+  filter(Abbreviation %in% c("PRAD","CONTROL")) %>%
+  filter(Sex == "M")
+
+filter(tmp3, n_dev==0) %>% pull(Abbreviation) %>% table()
+filter(tmp3, n_dev>0) %>% pull(Abbreviation) %>% table()
+
+my_comparisons <- list(c("CONTROL","PRAD"))
+ggplot(tmp3, aes(x=Abbreviation,y=n_dev)) +
+  geom_boxplot(outlier.size = 0.5, aes(fill=Abbreviation)) +
+  geom_jitter(height=0.06, width=0.2,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  scale_y_continuous(limits=c(0,NA)) +
+  #scale_y_log10(labels=full_nr) +
+  labs(y="tail genes (subset: BTG in train-test prostatecancer)",x="") +
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+
+ggsave("../figures/threecancer_BTGprostatecancer_boxplot_maleonly_recalculatedz_basedonprostatecancer.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F) ### remark: normalization should be on paper and prostatecancer samples together!
+
+```
+
+
+50% consensus BTG three-cancer paper in prostatecancer cohort (using controls three-cancer cohort paper as reference)
+```{r}
+### LOO z-score calculation in using all controls as reference
+z_scores_LOO <- data.frame(gene_id = normalized_df %>% pull(gene_id))
+for (samp in (sample_annotation_A %>% pull(UniqueID))) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(normalized_df %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"), #normalization based on controls threecancer (paper) cohort: invert=F
+                                      normalized_df %>% dplyr::select(c("gene_id",grep("threecancer",grep("CONTROL",colnames(normalized_df),value =T), value=T, invert=F))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes_paper <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), normalized_df %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) #%>% mutate(Abbreviation=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+
+length(unique(tail_genes_paper$gene_id)) #10566 unique tail genes in PRAD prostatecancer cohort paper
+
+#BTG paper
+#length(unique(BTG_consensus_50[["prostatecancer"]])) #193
+BTG_PRAD_paper <- data.table::fread("../data/threecancer_biomarkertail_list_5fCV_consensus50.txt", data.table=F) %>% filter(set=="PRAD vs CONTROL")
+
+BTG_PRAD_prostatecancer <- data.frame(ensembl_gene_id=BTG_consensus_50[["prostatecancer"]]) 
+#ensembl <- useEnsembl( biomart="ensembl",dataset="hsapiens_gene_ensembl",version=109)
+genes_ens <- getBM(attributes=c('ensembl_gene_id','hgnc_symbol'),mart=ensembl) #get gene biotype
+
+# BTG_PRAD_prostatecancer <-BTG_PRAD_prostatecancer %>% left_join(genes_ens)
+# 
+# table(BTG_PRAD_paper$ensembl_gene %in% BTG_PRAD_prostatecancer$ensembl_gene_id)
+# 
+# table(BTG_PRAD_paper$gene_name %in% BTG_PRAD_prostatecancer$gene_name)
+
+tmp3 <- tail_genes_paper %>% 
+  filter(gene_id %in% BTG_PRAD_paper$ensembl_gene) %>%
+  group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample)))
+#make sure no sample is missing
+tmp3 <- tmp3 %>% full_join(sample_annotation_A, by=c("sample"="UniqueID")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+  filter(Abbreviation %in% c("PRAD","CONTROL")) %>%
+  filter(Sex == "M")
+
+filter(tmp3, n_dev==0) %>% pull(Abbreviation) %>% table()
+filter(tmp3, n_dev>0) %>% pull(Abbreviation) %>% table()
+
+ggplot(tmp3, aes(x=Abbreviation,y=n_dev)) +
+  geom_boxplot(outlier.size = 0.5, aes(fill=Abbreviation)) +
+  geom_jitter(height=0.06, width=0.2,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  scale_y_continuous(limits=c(0,NA)) +
+  #scale_y_log10(labels=full_nr) +
+  labs(y="tail genes (subset: BTG in paper)",x="") +
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#
+
+#ggsave("../figures/prostatecancer_BTGpaper_boxplot_maleonly_recalculatedz_basedonpaper.pdf", plot=last_plot(), height=6.1, width=5.8, units="cm",  dpi = 300, useDingbats=F) 
+
+```
+
+
+Test whether sex/age has an impact on BTG classification performance
+```{r}
+sample_annotation <- sample_annotation_A
+ggplot(sample_annotation %>% filter(Sex=="M"), aes(x=Abbreviation,y=Age)) +
+  geom_boxplot(outlier.size = 0.5) +#,aes(fill=Abbreviation)) +
+  geom_jitter(height=0.06, width=0.2,size=0.5,color="grey")+
+  mytheme + theme(legend.position="none") +
+  scale_y_continuous(limits=c(0,NA)) +
+  ggpubr::stat_compare_means(method="wilcox.test", size = 2) 
+
+### Select age-matched samples
+set.seed(123)  # For reproducibility
+
+# Define the overlapping age range
+age_control <- sample_annotation %>% filter(Abbreviation == "CONTROL", Sex=="M") %>% pull(Age)
+age_prad <- sample_annotation %>% filter(Abbreviation == "PRAD") %>% pull(Age)
+
+age_min <- max(min(age_control), min(age_prad))
+age_max <- min(max(age_control), max(age_prad))
+
+# Subset to only include samples in the overlapping age range
+df_overlap <- sample_annotation[sample_annotation$Age >= age_min & sample_annotation$Age <= age_max & sample_annotation$Sex=="M", ]
+
+control <- df_overlap[df_overlap$Abbreviation == "CONTROL", ]
+prad <- df_overlap[df_overlap$Abbreviation == "PRAD", ]
+
+n_control <- nrow(control) #13 controls remaining, now select PRAD samples
+
+# Weight PRAD sampling by inverse age
+prad$prob <- 1 / (prad$Age - age_min + 1)
+prad$prob <- prad$prob / sum(prad$prob)  # Normalize
+
+# Sample until age not significantly different (start with all samples)
+# Iterate over possible PRAD sample sizes
+for (n in seq(nrow(prad), n_control, by = -1)) {
+  sampled_indices <- sample(1:nrow(prad), size = n, prob = prad$prob, replace = FALSE)
+  sampled_prad <- prad[sampled_indices, ]
+  
+  pval <- wilcox.test(control$Age, sampled_prad$Age, exact = FALSE)$p.value
+  
+  if (pval > 0.1) {
+    final_control <- control
+    final_prad <- sampled_prad
+    cat("Selected", n, "PRAD samples with p-value:", pval, "\n")
+    break
+  }
+}
+
+# Combine for final dataset
+matched_data <- rbind(final_control, final_prad %>% dplyr::select(-"prob"))
+
+# Check balance
+wilcox.test(Age ~ Abbreviation, data = matched_data)
+
+# Double-check the dimensions
+table(matched_data$Abbreviation) #13 controls and 69 PRAD
+
+#Visualize
+ggplot(matched_data, aes(x=Abbreviation,y=Age)) +
+  geom_boxplot(outlier.size = 0.5) +#,aes(fill=Abbreviation)) +
+  geom_jitter(height=0.06, width=0.2,size=0.5,aes(color=factor(Sex)))+
+  mytheme + theme(legend.position="bottom") +
+  scale_y_continuous(limits=c(0,NA)) +
+  scale_color_manual(values=c("F"="#AA3377","M"="#BBBBBB")) +
+  labs(x=NULL) +
+  ggpubr::stat_compare_means(method="wilcox.test", size = 2) 
+
+```
+
+Use all other (non-matched) samples to determine BTG and then look at performance in matched data group
+```{r}
+sample_annotation_nonmatched <- sample_annotation %>% filter(! (UniqueID %in% matched_data$UniqueID)) #remove samples present in matched data
+cohortA_normcounts <- data.table::fread("../data/prostatecancer_normcounts.txt")
+cohortA_normcounts_nonmatched <- cohortA_normcounts %>% dplyr::select(c("gene_id",sample_annotation$UniqueID))
+
+# z-score calculation based on leave one out (LOO) reference in case sample of interest is control sample
+z_scores_LOO <- data.frame(gene_id = cohortA_normcounts_nonmatched %>% pull(gene_id))
+for (samp in (colnames(cohortA_normcounts_nonmatched)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortA_normcounts_nonmatched %>%
+                                        dplyr::select(c("gene_id",all_of(samp))) %>%
+                                        column_to_rownames("gene_id"),
+                                      cohortA_normcounts_nonmatched %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts_nonmatched),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+
+#data.table::fwrite(z_scores_LOO, file = "../data/cohortA_zscores_tail.txt", sep="\t",na="",quote=F, row.names = F)
+
+### save table with tail genes per sample (|z|>3 and ncounts ≥40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                  cohortA_normcounts_nonmatched %>% #add normalized counts
+                   pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                  by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+#summary(tmp)
+data.table::fwrite(tail_genes, file="../data/prostatecancer_tailgenes_nonmatched.txt",sep="\t", row.names = F, quote=F, na="")
+rm(tail_genes,z_scores_LOO_sample, samp)
+
+tail_genes <- data.table::fread("../data/prostatecancer_tailgenes_nonmatched.txt",data.table=F)
+length(unique(tail_genes$gene_id)) #2063
+
+```
+Calculate BTG
+(10x) 5-fold CV from start
+```{r}
+# Initialize vector to store AUC values & list to store BTG per repeat and CV
+consensus_genes <- list() #for BTG in Fisher's Exact test on entire training set
+all_auc_values <- c() #for classification results BTG of 1 FT
+all_auc_ci_lower <- c()
+all_auc_ci_upper <- c()
+
+fold_labels <- list()
+fold_predictions <- list()
+
+BTGpersample <- data.frame() #dataframe to gather nr of BTG identified in every sample
+
+
+
+## Perform repeated 5-fold cross-validation from start to end
+set.seed(125)  # for reproducibility
+# Number of repeats and folds
+num_repeats <- 10 #10 repeats of 5-fold CV 
+num_folds <- 5
+for (repeat_x in 1:num_repeats) {
+  # Create stratified folds
+  sample_annotation_nonmatched$foldID <- seq(1:nrow(sample_annotation_nonmatched))
+  sample_annotation_nonmatched$cancer_binary <- ifelse(sample_annotation_nonmatched$Abbreviation=="CONTROL",0,1)
+  # make stratified folds of cancer vs control and get the 5 test sets
+  folds <- caret::createFolds(factor(sample_annotation_nonmatched$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
+  
+  # Perform cross-validation for each fold
+  for(i in 1:num_folds) {
+    print(paste0("rep",repeat_x,"_",i))
+    # Split the data into training and test sets
+    test_indices <- folds[[i]]
+    testIDs <- sample_annotation_nonmatched$UniqueID[test_indices] #get sample names test set
+    trainIDs <- sample_annotation_nonmatched$UniqueID[-test_indices] #get sample names training set
+    
+    ## z-score calculation
+    # based on CONTROLS in training set and not sample itself
+    z_scores <- data.frame(gene_id = cohortA_normcounts_nonmatched %>% pull(gene_id))
+    ##reference only based on CONTROLS in training except sample itself
+    for (samp in (sample_annotation_nonmatched %>% pull(UniqueID))) {
+      #print(samp)
+      z_scores_sample <- tail_z_score(cohortA_normcounts_nonmatched %>%
+                                            dplyr::select(c("gene_id",all_of(samp))) %>%
+                                            column_to_rownames("gene_id"),
+                                          cohortA_normcounts_nonmatched %>% dplyr::select(c("gene_id",grep("CONTROL",trainIDs,value =T))) %>% #only training set CONTROL samples
+                                            dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                            column_to_rownames("gene_id"))
+      
+      z_scores <- left_join(z_scores, z_scores_sample %>% rownames_to_column("gene_id"), by="gene_id")
+    }
+    rm(z_scores_sample)
+    
+    gene_list <- vector(mode="list")
+    
+    ### overview tail genes
+    tail_genes <- left_join(z_scores %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), 
+                            cohortA_normcounts_nonmatched %>% #add normalized counts
+                              pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"),
+                            by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) 
+    
+    z_scores_Tail <- z_scores %>% filter(gene_id %in% unique(tail_genes$gene_id)) 
+
+    #### do classification on BTG as result of 1 FT on entire training set
+    ###Do one Fisher test on entire training set (no consensus on LOO) & repeat classification with this BTG set:
+    reduced_z_table <- z_scores_Tail %>% dplyr::select(-all_of(testIDs)) #remove test samples
+    #Fisher exact test on all samples except sample of interest
+    test <- reduced_z_table %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% 
+        mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) %>% 
+        mutate(cancer=ifelse(disease=="CONTROL", "N", "T")) %>% #get tumor/normal annotation
+        ungroup() %>% group_by(gene_id,cancer) %>% 
+        left_join(cohortA_normcounts_nonmatched %>% #add normalized counts
+                    pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id","sample")) %>%
+        dplyr::summarise(absz3 = sum( ((abs(zscores)>3) & (ncounts>=40)), na.rm=T), absznot3 = sum( !((abs(zscores)>3) & (ncounts>=40)), na.rm=T))
+        #dplyr::summarise(absz3 = sum(abs(zscores)>3, na.rm = T), absznot3 = sum(abs(zscores)<=3, na.rm=T))
+      
+    test_wide <- test %>% distinct() %>% pivot_wider(names_from=cancer, values_from=c(absz3,absznot3)) %>% column_to_rownames("gene_id")
+    df_fisher <- data.frame(p.val=apply(test_wide,1, function(x) fisher.test(matrix(as.numeric(x[1:4]), ncol=2, byrow=T))$p.value))
+    consensus_genes[[paste0("rep",repeat_x,"_",i)]]<- df_fisher %>% rownames_to_column("gene_id") %>% filter(p.val<0.05) %>% pull(gene_id) #xxx BTG based on 1 FT
+    rm(test_wide, test, df_fisher, reduced_z_table)
+    
+    ## count nr of BTG consensus genes for each sample
+    tail_genes_FT <- tail_genes %>% 
+      filter(gene_id %in% consensus_genes[[paste0("rep",repeat_x,"_",i)]]) %>%
+      group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+      #make sure all samples are present
+      full_join(sample_annotation_nonmatched %>% #filter(Cohort=="prostatecancer") %>%
+                  dplyr::select(c("sample"=UniqueID)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) 
+    
+    #### Model training and testing (x repeats in y-fold cross-validation!)
+    ### train with training, test on testing data
+    data <- tail_genes_FT %>% mutate(disease=gsub("_[0-9].*","",gsub("_prostatecancer","",sample))) %>% mutate(cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      #add ID of stratification as rownames to select rows using these indices
+      left_join(sample_annotation_nonmatched %>% dplyr::select(c(sample="UniqueID","foldID"))) #%>%
+      #column_to_rownames("foldID")
+    
+    ## save nr of BTG per sample for each fold and repeat (+indicate test or training status of sample)
+      BTGpersample <- rbind(BTGpersample, data %>%
+                              mutate(rep=paste0("rep",repeat_x,"_",i), sampletype=ifelse(foldID %in% test_indices, "test","train"), BTGset=length(consensus_genes[[paste0("rep",repeat_x,"_",i)]])))
+    
+    train_data <- data %>% filter(!(foldID %in% test_indices))
+    test_data <- data %>% filter(foldID %in% test_indices)
+
+    # Train a logistic regression model (or any other binomial classification model)
+    model <- glm(cancer ~ n_dev, data = train_data, family = binomial)
+    
+    # Predict probabilities for the test set
+    prob_predictions <- predict(model, test_data, type = "response")
+    
+    # Calculate AUC for the current fold
+    roc_curve <- roc(test_data$cancer, prob_predictions, levels=c(F,T), direction = "<")
+    # Store predictions and labels for this fold
+    fold_predictions[[paste0("rep",repeat_x,"_",i)]] <- prob_predictions
+    fold_labels[[paste0("rep",repeat_x,"_",i)]] <- test_data$cancer
+  
+    #calculate AUC and confidence interval on entire test set
+    all_auc_values <- c(all_auc_values, auc(roc_curve))
+    all_auc_ci_lower <- c(all_auc_ci_lower, round(ci(roc_curve),4)[1])
+    all_auc_ci_upper <- c(all_auc_ci_upper, round(ci(roc_curve),4)[3])
+    
+    rm(z_scores, z_scores_Tail, data, train_data, test_data, prob_predictions, tail_genes, tail_genes_FT, gene_list, trainIDs, testIDs, samp, roc_curve)
+    
+  }
+}
+
+### Consensus sets of BTG over all repeats:
+## present in 50%
+threshold <- ceiling(0.5 * length(consensus_genes))
+#count occurence of every gene across elements
+all_words <- unlist(consensus_genes) 
+word_counts <- table(all_words)
+# Filter words that appear in at least 80% of the elements
+consensus_50 <- names(word_counts[word_counts >= threshold])
+print("50% consensus BTG:")
+print(length(consensus_50))
+
+
+
+### based on BTG 1 FT on entire set
+roc_curves <- list()  # List to store ROC curves for 10 repetitions
+# Simulating ROC curves for 10 folds (replace with your actual data)
+for (repeat_x in 1:num_repeats){
+  #for (i in 1:num_folds) {
+  for (i in 1) {
+    # Generate the ROC curve
+    roc_curves[[paste0("rep",repeat_x,"_",i)]] <- roc(response = fold_labels[[paste0("rep",repeat_x,"_",i)]], predictor = fold_predictions[[paste0("rep",repeat_x,"_",i)]], levels = c(F, T), direction = "<")
+  }
+}
+
+### Plotting mean ROC curve as well
+# Define specificity points in descending order (from 1 to 0)
+specificities <- seq(1, 0, length.out = 100)
+
+# Interpolate sensitivities for each fold at common specificity points
+sensitivities <- mapply(function(roc) {
+  coords(roc, x = specificities, input = "specificity", ret = "sensitivity", transpose = FALSE)
+}, roc = roc_curves, SIMPLIFY = TRUE)
+
+# Convert result to a matrix and ensure each column represents sensitivities for a fold
+sensitivities <- matrix(unlist(sensitivities), nrow = length(specificities), byrow = FALSE)
+# Calculate the mean sensitivity across folds
+mean_sensitivities <- rowMeans(sensitivities, na.rm = TRUE)
+
+# Create a data frame for individual ROC curves
+roc_data <- data.frame(
+  Specificity = rep(specificities, times = length(roc_curves)),
+  Sensitivity = as.vector(sensitivities),
+  Fold = rep(1:length(roc_curves), each = length(specificities))
+)
+
+# Calculate FPR and arrange
+roc_data <- roc_data %>%
+  mutate(FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create mean ROC data
+mean_roc_data <- data.frame(
+  Specificity = specificities,
+  Sensitivity = mean_sensitivities
+) %>%
+  mutate(Fold = "mean", FPR = 1 - Specificity) %>%
+  arrange(FPR)  # Sort by FPR
+
+# Create a data frame for (0, 0) point for mean ROC data
+mean_roc_data <- rbind(data.frame(Specificity = 1, Sensitivity = 0, Fold = "mean", FPR = 0), mean_roc_data)
+
+# Create a data frame for (0, 0) points, one for each fold
+zero_points <- data.frame(Specificity = 1, Sensitivity = 0, Fold = rep(1:length(roc_curves), each = 1), FPR=0)
+
+# Combine the (0, 0) points with the existing ROC data
+roc_data <- rbind(zero_points, roc_data)
+
+### Save the roc_data object for later
+roc_data_nonmatched_5fCV <- rbind(roc_data, mean_roc_data)
+rm(roc_curves, roc_data, mean_roc_data, fold_predictions, fold_labels,sensitivities, specificities, zero_points)
+
+BTG_AUC_CV <- data.frame(
+    comparison="PRADvsCTRLnonmatched",
+    CV = "start",
+    iteration = names(consensus_genes),
+    BTG_identification="1FT_zc",
+    BTG_set = sapply(consensus_genes, length),
+    auc=round(all_auc_values,4),
+    ci_lower=all_auc_ci_lower,
+    ci_upper=all_auc_ci_upper)
+
+rm(list=c("test_indices", "all_auc_values", "cohortA_normcounts", "sample_annotation", "repeat_x", "mean_auc", "num_folds", "i"))
+
+
+BTG_genes <- list()
+BTG_consensus_50 <- list()
+BTG_union <- list()
+
+cohort = "prostatecancer_nonmatched"
+BTG_genes[[cohort]] <- consensus_genes
+  
+### Consensus sets of BTG over all repeats:
+## present in 50% of repeat-folds (so for 10x 5-fold CV: threshold = 25)
+threshold <- ceiling(0.5 * length(BTG_genes[[cohort]])) 
+#count occurence of every gene across elements
+all_words <- unlist(BTG_genes[[cohort]]) 
+word_counts <- table(all_words)
+# Filter words that appear in at least 50%
+consensus_50 <- names(word_counts[word_counts >= threshold])
+print(paste("50% consensus BTG:",length(consensus_50)))
+BTG_consensus_50[[cohort]] <- consensus_50
+rm(all_words, word_counts, threshold, consensus_50)
+
+union_BTG <- unique(unlist(BTG_genes[[cohort]]))
+print(paste("union BTG:",length(union_BTG)))
+BTG_union[[cohort]] <- union_BTG
+rm(union_BTG)
+
+tail_genes <- data.table::fread("../data/prostatecancer_tailgenes_nonmatched.txt",data.table=F) %>% mutate(Abbreviation=gsub("_.*","",sample))
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+BTG_consensus_50_persample <- tail_genes %>% filter(gene_id %in% BTG_consensus_50[["prostatecancer_nonmatched"]]) %>% 
+  filter(Abbreviation %in% c("CONTROL","PRAD")) %>% group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+                                      #make sure all samples are present
+  full_join(sample_annotation_nonmatched %>% filter(Abbreviation %in% c("CONTROL","PRAD")) %>% dplyr::select(c("sample"=UniqueID)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev), disease=gsub("_.*","",sample)) %>%
+                                      mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","PRAD")), 
+                                             cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+                                      mutate(disease=factor(disease)) %>%
+                                      mutate(disease=relevel(disease,ref="CONTROL"))
+
+ggplot(BTG_consensus_50_persample, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488"))  +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/prostatecancer_nonmatched_boxplot_5fCVconsensus50_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_continuous(limits=c(0,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) #+ # Pairwise comparison against reference
+  #facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/prostatecancer_nonmatched_biomarkertail_boxplot_5fCVconsensus50.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+
+rstatix::kruskal_test(data=BTG_consensus_50_persample, n_dev ~ disease)
+rstatix::kruskal_effsize(data=BTG_consensus_50_persample, n_dev ~ disease)
+#rstatix::kruskal_effsize(data=data, n_dev ~ disease,ci=T)
+data_tmp <- BTG_consensus_50_persample %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+
+### count the nr of BTG in each fold/repeat
+count_words <- function(sublist) {
+  sum(sapply(sublist, function(sentence) str_count(sentence, "\\S+")))
+}
+
+# summary cohortA
+sapply(BTG_genes[["prostatecancer_nonmatched"]], count_words) %>% unlist() %>% summary()
+
+
+BTG_consensus_50_persample <- BTG_consensus_50_persample %>% mutate(cancer=ifelse(disease=="PRAD",1,0))
+roc_obj <- roc(as.factor(BTG_consensus_50_persample$cancer), BTG_consensus_50_persample$n_dev)
+
+coords_all <- coords(
+  roc_obj,
+  x = "all",
+  ret = c("threshold", "sensitivity", "specificity", "tp", "fp", "tn", "fn"),
+  transpose = FALSE
+)
+
+# Convert to a data frame for filtering
+coords_df <- as.data.frame(coords_all)
+
+# Find the threshold that maximizes Youden’s J statistic (sensitivity - FPR)
+best_youden_nonmatched <- coords(
+  roc_obj,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity", "tp", "fp", "tn", "fn"),
+  transpose = FALSE
+)
+
+cat("🔹 Best by Youden's index:\n")
+print(best_youden_nonmatched)
+
+```
+
+
+Apply to age-matched cohort (z based on all controls non-matched (train-test) sets)
+```{r}
+sample_annotation_matched <- matched_data
+cohortA_normcounts_matched <- data.table::fread("../data/prostatecancer_normcounts.txt", data.table = F) %>% dplyr::select(c("gene_id",matched_data$UniqueID))
+
+##BTG determined based on 50% consensus in 10x 5-fold CV training sets
+#BTG_consensus_50[["prostatecancer_nonmatched"]]
+
+### LOO z-score calculation in using all controls as reference
+z_scores_LOO <- data.frame(gene_id = cohortA_normcounts_matched %>% pull(gene_id))
+for (samp in (colnames(cohortA_normcounts_matched)[-1])) {
+  #print(samp)
+  z_scores_LOO_sample <- tail_z_score(cohortA_normcounts_matched %>% dplyr::select(c("gene_id",all_of(samp))) %>% column_to_rownames("gene_id"),
+                                      cohortA_normcounts_nonmatched %>% dplyr::select(c("gene_id",grep("CONTROL",colnames(cohortA_normcounts_nonmatched),value =T))) %>% 
+                                        dplyr::select(-any_of(samp)) %>% #remove sample of interest from reference
+                                        column_to_rownames("gene_id"))
+  
+  z_scores_LOO <- left_join(z_scores_LOO, z_scores_LOO_sample %>% rownames_to_column("gene_id"), by="gene_id")
+}
+rm(z_scores_LOO_sample)
+
+
+### only keep tail genes per sample (|z|>3 and normalized counts ≥ 40)
+tail_genes <- left_join(z_scores_LOO %>% pivot_longer(names_to="sample", values_to="zscores",-"gene_id") %>% filter(!is.na(zscores)) %>% filter(abs(zscores)>3), cohortA_normcounts_matched %>% #add normalized counts             
+pivot_longer(names_to="sample",values_to="ncounts",-"gene_id"), by=c("gene_id"="gene_id","sample")) %>% filter(ncounts>=40) %>% mutate(Abbreviation=gsub("_.*","",gsub("A_","",sample)))
+
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample_nonmatchedref <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+for (cancer in c("PRAD")) {
+  BTG_consensus_50_persample_nonmatchedref <- rbind(BTG_consensus_50_persample_nonmatchedref, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[["prostatecancer_nonmatched"]]) %>%
+    filter(Abbreviation %in% c("CONTROL",cancer)) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all matched samples are present
+    full_join(sample_annotation_matched %>% filter(Abbreviation %in% c("CONTROL",cancer)) %>% dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","PRAD")), 
+           cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+
+ggplot(BTG_consensus_50_persample_nonmatchedref, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  geom_hline(yintercept = best_youden$threshold, color="grey",linetype="dashed") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTG_recalculatedzmatched_basedonnonmatched_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample_nonmatchedref, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_continuous(limits=c(0,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  geom_hline(yintercept = best_youden$threshold, color="grey",linetype="dashed") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) #+ # Pairwise comparison against reference
+  #facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTG_recalculatedzmatched_basedonnonmatched_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+
+data_tmp <- BTG_consensus_50_persample_nonmatchedref %>% mutate(disease=paste(disease)) #mutate disease column to string (otherwise error when performing wilcoxon tests because factors are missing)
+rstatix::wilcox_test(data=data_tmp, n_dev ~ disease)
+rstatix::wilcox_effsize(data=data_tmp, n_dev ~ disease)
+#rstatix::wilcox_effsize(data=data_tmp %>% filter(comparison=="PRADvsCtrl"), n_dev ~ disease,ci=T)
+
+#check if it makes a difference in nr of BTG identified as tail gene when recalculating z-values with smaller control set (validation only) vs all controls
+tmp <-full_join(BTG_consensus_50_persample_nonmatchedref %>% dplyr::select(c("sample","n_dev_zall"="n_dev")), BTG_consensus_50_persample) %>% left_join(sample_annotation_matched, by=c("sample"="UniqueID"))
+
+##calculate sens/sp on validation (age-matched) cohort using best threshold in train-test
+PRAD_validation <- BTG_consensus_50_persample_nonmatchedref
+
+threshold <- as.numeric(paste(best_youden$threshold))
+
+# Apply threshold to make predictions
+PRAD_validation$predicted <- ifelse(PRAD_validation$n_dev >= threshold, 1, 0)
+
+# Calculate confusion matrix components
+TP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 1)
+FP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 0)
+TN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 0)
+FN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 1)
+
+# Calculate sensitivity and specificity
+sensitivity <- TP / (TP + FN)
+specificity <- TN / (TN + FP)
+
+# Output results
+cat("Threshold:", threshold, "\n")
+cat("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN, "\n")
+cat("Sensitivity:", sensitivity, "Specificity:", specificity, "\n")
+
+```
+
+```{r}
+#comparison with other BTG set
+cohort="prostatecancer"
+BTG_genes[[cohort]] <- readRDS(file=paste0("../data/tail_genes/BTGidentity_",cohort,"_5fCV.RData"))
+  
+### Consensus sets of BTG over all repeats:
+## present in 50% of repeat-folds (so for 10x 5-fold CV: threshold = 25)
+threshold <- ceiling(0.5 * length(BTG_genes[[cohort]])) 
+#count occurence of every gene across elements
+all_words <- unlist(BTG_genes[[cohort]]) 
+word_counts <- table(all_words)
+# Filter words that appear in at least 50%
+consensus_50 <- names(word_counts[word_counts >= threshold])
+print(paste("50% consensus BTG:",length(consensus_50)))
+BTG_consensus_50[[cohort]] <- consensus_50
+
+#overlap between both BTG sets
+table(BTG_consensus_50[["prostatecancer_nonmatched"]] %in% BTG_consensus_50[["prostatecancer"]])
+
+
+#Apply this set to age-matched set
+## count nr tail genes belonging to consensus BTG set for each sample
+BTG_consensus_50_persample_nonmatchedref <- data.frame()
+my_comparisons <- list(c("CONTROL","PRAD"))
+for (cancer in c("PRAD")) {
+  BTG_consensus_50_persample_nonmatchedref <- rbind(BTG_consensus_50_persample_nonmatchedref, 
+                                      tail_genes %>% 
+    filter(gene_id %in% BTG_consensus_50[["prostatecancer"]]) %>%
+    filter(Abbreviation %in% c("CONTROL",cancer)) %>%
+    group_by(sample) %>% dplyr::summarise(n_dev=n()) %>%
+    #make sure all matched samples are present
+    full_join(sample_annotation_matched %>% filter(Abbreviation %in% c("CONTROL",cancer)) %>% dplyr::select(c("sample"=UniqueID, "disease"=Abbreviation)), by=c("sample")) %>% mutate(n_dev=ifelse(is.na(n_dev),0,n_dev)) %>%
+    mutate(comparison=paste0(cancer,"vsCtrl"),disease=factor(disease, levels=c("CONTROL","PRAD")), 
+           cancer=ifelse(disease=="CONTROL", F, T)) %>% 
+      mutate(disease=factor(disease)) %>%
+      mutate(disease=relevel(disease,ref="CONTROL")))
+}
+
+
+ggplot(BTG_consensus_50_persample_nonmatchedref, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_log10(limits=c(1,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  geom_hline(yintercept = best_youden$threshold, color="grey",linetype="dashed") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none", axis.text.x=element_text(angle=90, hjust=1,vjust=0.5)) +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2)#+
+  #facet_wrap(~comparison, scales="free_x", nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTGold_recalculatedzmatched_basedonnonmatched_boxplot_logscale.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+ggplot(BTG_consensus_50_persample_nonmatchedref, aes(x=disease,y=n_dev, fill=disease)) +
+  geom_boxplot(outlier.size = 0.6) + scale_y_continuous(limits=c(0,NA)) +
+  geom_jitter(size=0.6, height=0,width=0.1,color="grey") +
+  geom_hline(yintercept = best_youden$threshold, color="grey",linetype="dashed") +
+  mytheme + labs(y="number of biomarker tail genes",x="") +
+  theme(legend.position = "none") +
+  scale_fill_manual(values=c("CONTROL"="#DDAA33","PRAD"="#004488")) +
+  #ggpubr::stat_compare_means(method="kruskal",label.y=500, size = 2) +  # Add global p-value
+  ggpubr::stat_compare_means(comparisons=my_comparisons, method = "wilcox.test", size = 2) #+ # Pairwise comparison against reference
+  #facet_wrap(~comparison, scales="free_x",nrow=1)
+
+ggsave(filename="../figures/prostatecancer_BTGold_recalculatedzmatched_basedonnonmatched_boxplot.pdf", plot=last_plot(), width=5.8, height=6.1, units="cm")
+
+##calculate sens/sp on validation (age-matched) cohort using best threshold in train-test
+PRAD_validation <- BTG_consensus_50_persample_nonmatchedref
+
+threshold <- as.numeric(paste(best_youden$threshold))
+
+# Apply threshold to make predictions
+PRAD_validation$predicted <- ifelse(PRAD_validation$n_dev >= threshold, 1, 0)
+
+# Calculate confusion matrix components
+TP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 1)
+FP <- sum(PRAD_validation$predicted == 1 & PRAD_validation$cancer == 0)
+TN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 0)
+FN <- sum(PRAD_validation$predicted == 0 & PRAD_validation$cancer == 1)
+
+# Calculate sensitivity and specificity
+sensitivity <- TP / (TP + FN)
+specificity <- TN / (TN + FP)
+
+# Output results
+cat("Threshold:", threshold, "\n")
+cat("TP:", TP, "FP:", FP, "TN:", TN, "FN:", FN, "\n")
+cat("Sensitivity:", sensitivity, "Specificity:", specificity, "\n")
+
+
+
+```
