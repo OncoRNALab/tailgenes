@@ -776,7 +776,7 @@ for (cancer in c("DLBCL","PMBCL")) {
   for (repeat_x in 1:num_repeats) {
     # Create stratified folds
     sample_annotation_selected$foldID <- seq(1:nrow(sample_annotation_selected))
-    sample_annotation_selected$cancer_binary <- ifelse(sample_annotation_selected$Cancer=="no",0,1)
+    sample_annotation_selected$cancer_binary <- ifelse(sample_annotation_selected$Disease=="no",0,1)
     # make stratified folds of cancer vs control and get the 5 test sets
     folds <- caret::createFolds(factor(sample_annotation_selected$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
     
