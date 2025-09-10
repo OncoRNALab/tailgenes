@@ -653,7 +653,7 @@ num_folds <- 5
 for (repeat_x in 1:num_repeats) {
   # Create stratified folds
   sample_annotation$foldID <- seq(1:nrow(sample_annotation))
-  sample_annotation$cancer_binary <- ifelse(sample_annotation$Cancer=="no",0,1)
+  sample_annotation$cancer_binary <- ifelse(sample_annotation$Disease=="no",0,1)
   # make stratified folds of cancer vs control and get the 5 test sets
   folds <- caret::createFolds(factor(sample_annotation$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
   
@@ -1190,7 +1190,7 @@ for (swap_x in 1:10){
   for (repeat_x in 1:num_repeats) {
     # Create stratified folds
     sample_annotation$foldID <- seq(1:nrow(sample_annotation))
-    sample_annotation$cancer_binary <- ifelse(sample_annotation$Cancer=="no",0,1)
+    sample_annotation$cancer_binary <- ifelse(sample_annotation$Disease=="no",0,1)
     # make stratified folds of cancer vs control and get the 5 test sets
     folds <- caret::createFolds(factor(sample_annotation$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
     
@@ -1401,7 +1401,7 @@ for (cancer in c("OV","PRAD","UCEC")) {
     for (repeat_x in 1:num_repeats) {
       # Create stratified folds
       sample_annotation$foldID <- seq(1:nrow(sample_annotation))
-      sample_annotation$cancer_binary <- ifelse(sample_annotation$Cancer=="no",0,1)
+      sample_annotation$cancer_binary <- ifelse(sample_annotation$Disease=="no",0,1)
       # make stratified folds of cancer vs control and get the 5 test sets
       folds <- caret::createFolds(factor(sample_annotation$cancer_binary), k = num_folds, list = TRUE, returnTrain = FALSE)
       
