@@ -190,7 +190,7 @@ rm(tail_genes,z_scores_LOO_sample, samp)
 
 Number of tail genes (ncounts≥40, |z|>3) and heatmap
 ```{r}
-#z_scores_LOO <- data.table::fread("../data/tail_genes/bladdercancer_zscores_tail.txt",data.table = F)
+#z_scores_LOO <- data.table::fread("../data/bladdercancer_zscores_tail.txt",data.table = F)
 tail_genes <- data.table::fread("../data/bladdercancer_tailgenes.txt",data.table=F)
 length(unique(tail_genes$gene_id)) 
 
