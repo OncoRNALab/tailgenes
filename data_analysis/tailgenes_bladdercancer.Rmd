@@ -310,7 +310,7 @@ rm(tmp2,tmp3,tmp4,nr_samples_total,tail_genes)
 
 test whether there are significantly less tail genes in certain groups
 ```{r}
-tail_genes <- data.table::fread("../data/tail_genes/bladdercancer_tailgenes.txt",data.table=F) %>%
+tail_genes <- data.table::fread("../data/bladdercancer_tailgenes.txt",data.table=F) %>%
    mutate(disease=gsub("_.*","",sample)) #deviating genes (Tail) 
 
 tmp2 <- tail_genes %>% group_by(sample) %>% dplyr::summarise(n_dev = n()) %>% mutate(disease=gsub("_.*","",sample))
