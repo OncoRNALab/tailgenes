@@ -1119,7 +1119,7 @@ ggplot(BTG_all, aes(x=disease,y=n_dev)) +
   scale_y_log10() +
   facet_wrap(~comp, scales = "free_x") +
   geom_jitter(height=0,width= 0.1, size=0.5, color= "grey") +
-  geom_hline(yintercept = 7.5, linewidth=0.1, linetype="dashed") +
+  geom_hline(yintercept = best_youden$threshold, linewidth=0.1, linetype="dashed") +
   mytheme + theme(legend.position="none") +
   scale_fill_manual(values=c("CONTROL"="#DDAA33","NONMALIG"="#754F44", "PRAD"="#004488")) +
   labs(x=NULL,y="number of biomarker tail genes") 
