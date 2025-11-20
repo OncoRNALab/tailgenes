@@ -1,11 +1,4 @@
 # Input files
-data/SupplTable1_sample_annotation.txt
-data/bladdercancer_sample_annotation.txt
-data/bladdercancer_counts.txt
-data/lymphoma_counts.txt
-data/threecancer_counts.txt
-data/pancancer_counts.txt
-
 .DS_Store
 */.DS_Store
 
