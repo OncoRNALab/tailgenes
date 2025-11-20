@@ -43,6 +43,13 @@ If most packages are already installed: <2 minutes
 The `data_analysis` folder contains scripts to run differential abundance and tail gene analyses.  
 The scripts can be run in R (≥4.2.1) and RStudio, on any operating system and - depending on the input data - require several minutes to a few hours. 
 
+### Running the .Rmd files in RStudio (recommended)
+1. Open the .Rmd file in RStudio
+2. Click Knit (or run all code chunks manually)
+
+RStudio includes its own Pandoc, so no extra installation is required.
+
+### Repository Structure and Contents
 ```
 tailgenes/
 │
