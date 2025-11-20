@@ -24,7 +24,7 @@ Recommended: 8 GB RAM (16 GB+ for large custom datasets)
   git clone https://github.com/OncoRNALab/tailgenes.git
   cd tailgenes
   ```
-Typical time: ~3–5 seconds on a standard desktop machine.
+Typical time: ~10-20 seconds on a standard desktop machine.
 
 ### Install the required R packages
   ```r
