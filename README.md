@@ -26,7 +26,7 @@ Recommended: 8 GB RAM (16 GB+ for large custom datasets)
   ```
 Typical time: ~3–5 seconds on a standard desktop machine.
 
-### Install the required packages
+### Install the required R packages
   ```r
   if (!require("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
