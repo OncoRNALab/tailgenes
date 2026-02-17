@@ -1,0 +1,645 @@
+Cohort	DonorID	RNAID	Disease	Abbreviation	ReplicateNr	CollectionTube	Biofluid	Sex	Age	Ethnicity	TumorLocation	HistologicalDiagnosis	Grade	TNM	Stage	Treatment	Excluded
+pancancer	AML314P	RNA006387	acute myeloid leukemia	AML	1	EDTA	plasma	F	40-44	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML315P	RNA006388	acute myeloid leukemia	AML	2	EDTA	plasma	M	50-54	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML324P	RNA006389	acute myeloid leukemia	AML	3	EDTA	plasma	M	65-69	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML326P	RNA006390	acute myeloid leukemia	AML	4	EDTA	plasma	F	65-69	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML329P	RNA006391	acute myeloid leukemia	AML	5	EDTA	plasma	F	45-49	Caucasian	bone marrow	AML	N/A	N/A	M3	no	
+pancancer	AML333P	RNA006392	acute myeloid leukemia	AML	6	EDTA	plasma	M	60-64	Caucasian	bone marrow	AML	N/A	N/A	N/A	no	
+pancancer	AML334P	RNA006393	acute myeloid leukemia	AML	7	EDTA	plasma	F	60-64	Caucasian	bone marrow	AML	N/A	N/A	M5a	no	
+pancancer	AML342P	RNA006394	acute myeloid leukemia	AML	8	EDTA	plasma	F	55-59	Caucasian	bone marrow	AML	N/A	N/A	M3	no	
+pancancer	101242P	RNA006395	bladder carcinoma	BLCA	1	EDTA	plasma	M	55-59	Caucasian	bladder	transitional cell carcinoma	G3	T4aN2M0	IV	no	
+pancancer	101243P	RNA006396	bladder carcinoma	BLCA	2	EDTA	plasma	M	60-64	Caucasian	bladder	transitional cell carcinoma	G3	T4bN0M0	IV	no	
+pancancer	101248P	RNA006397	bladder carcinoma	BLCA	3	EDTA	plasma	M	80-84	Caucasian	"bladder, bones and lung mets"	transitional cell carcinoma	G3	T4bNxM1	IV	no	
+pancancer	101269P	RNA006398	bladder carcinoma	BLCA	4	EDTA	plasma	M	35-39	Caucasian	bladder	transitional cell carcinoma	G3	T3bN2M0	IV	no	x
+pancancer	101281P	RNA006399	bladder carcinoma	BLCA	5	EDTA	plasma	M	65-69	Caucasian	"bladder, lung mets"	transitional cell carcinoma	N/A	recurrence	N/A	no	
+pancancer	101295P	RNA006400	bladder carcinoma	BLCA	6	EDTA	plasma	M	80-84	Caucasian	bladder	transitional cell carcinoma	G3	T4aN2M0	IV	no	
+pancancer	101362P	RNA006401	bladder carcinoma	BLCA	7	EDTA	plasma	M	70-74	Caucasian	"bladder, lymph nodes mets"	squamous cell carcinoma	N/A	recurrence	N/A	no	
+pancancer	101394P	RNA006402	bladder carcinoma	BLCA	8	EDTA	plasma	M	65-69	Caucasian	bladder	transitional cell carcinoma	G3	recurrence	N/A	no	
+pancancer	018911P	RNA006403	breast carcinoma	BRCA	1	EDTA	plasma	F	65-69	Caucasian	"breast, brain and bones mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018943P	RNA006404	breast carcinoma	BRCA	2	EDTA	plasma	F	45-49	Caucasian	"breast, brain mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018974P	RNA006405	breast carcinoma	BRCA	3	EDTA	plasma	F	50-54	Caucasian	"breast, brain mets"	Paget carcinoma	N/A	recurrent	N/A	no	
+pancancer	018990P	RNA006406	breast carcinoma	BRCA	4	EDTA	plasma	F	35-39	Caucasian	"breast, ovarian mets"	infiltrating ductal carcinoma	N/A	recurrent	N/A	no	
+pancancer	018993P	RNA006407	breast carcinoma	BRCA	5	EDTA	plasma	F	65-69	Caucasian	left breast	infiltrating ductal carcinoma	G3	T4bN0M0	IIIB	no	
+pancancer	019060P	RNA006408	breast carcinoma	BRCA	6	EDTA	plasma	F	25-29	Caucasian	left breast	infiltrating ductal carcinoma	G2	T2N2aM0	IIIA	no	
+pancancer	019142P	RNA006409	breast carcinoma	BRCA	7	EDTA	plasma	F	45-49	Caucasian	right breast	infiltrating ductal carcinoma	G2	T2N3aM0	IIIC	no	
+pancancer	019146P	RNA006410	breast carcinoma	BRCA	8	EDTA	plasma	F	65-69	Caucasian	right breast	infiltrating ductal carcinoma	N/A	T1bN2aM0	IIIA	no	
+pancancer	15530P	RNA006411	cervical squamous cell carcinoma	CESC	1	EDTA	plasma	F	35-39	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	N/A	N/A	no	
+pancancer	15584P	RNA006412	cervical squamous cell carcinoma	CESC	2	EDTA	plasma	F	40-44	Caucasian	cervix	squamous cell carcinoma	G3	T1_1N1M0	IIIB	no	
+pancancer	15603P	RNA006413	cervical squamous cell carcinoma	CESC	3	EDTA	plasma	F	25-29	Caucasian	cervix	squamous cell carcinoma	G2-3	T1b1N1M0	IIIB	no	
+pancancer	15885P	RNA006414	cervical squamous cell carcinoma	CESC	4	EDTA	plasma	F	45-49	Caucasian	cervix	squamous cell carcinoma	G2	T1b1N0M1	IVB	no	
+pancancer	15900P	RNA006415	cervical squamous cell carcinoma	CESC	5	EDTA	plasma	F	50-54	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	151078P	RNA006416	cervical squamous cell carcinoma	CESC	6	EDTA	plasma	F	50-54	Caucasian	"cervix, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	151146P	RNA006417	cervical squamous cell carcinoma	CESC	7	EDTA	plasma	F	40-44	Caucasian	"cervix, lung mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	15926P	RNA006816	cervical squamous cell carcinoma	CESC	8	EDTA	plasma	F	35-39	Caucasian	cervix	squamous cell carcinoma	G3	T1b1N0M0	IB1	no	
+pancancer	09912P	RNA006418	cholangiocarcinoma	CHOL	1	EDTA	plasma	M	40-44	Caucasian	liver	cholangiocarcinoma	G3	T3N1M0	IIIC	no	
+pancancer	091049P	RNA006419	cholangiocarcinoma	CHOL	2	EDTA	plasma	M	55-59	Caucasian	liver	cholangiocarcinoma	G2	T3N1M0	IIIC	no	
+pancancer	091184P	RNA006420	cholangiocarcinoma	CHOL	3	EDTA	plasma	F	70-74	Caucasian	liver	cholangiocarcinoma	G2-3	T3N1M0	IIIC	no	
+pancancer	091287P	RNA006421	cholangiocarcinoma	CHOL	4	EDTA	plasma	M	70-74	Caucasian	liver	cholangiocarcinoma	G2	T3N1M0	IIIC	no	
+pancancer	091318P	RNA006422	cholangiocarcinoma	CHOL	5	EDTA	plasma	M	40-44	Caucasian	liver	cholangiocarcinoma	G2-3	T3N1M0	IIIC	no	
+pancancer	091335P	RNA006423	cholangiocarcinoma	CHOL	6	EDTA	plasma	F	65-69	Caucasian	liver	cholangiocarcinoma	G3	T3N1M0	IIIC	no	
+pancancer	091336P	RNA006424	cholangiocarcinoma	CHOL	7	EDTA	plasma	M	50-54	Caucasian	liver	cholangiocarcinoma	G3	T3N0M0	IIIA	no	
+pancancer	091344P	RNA006425	cholangiocarcinoma	CHOL	8	EDTA	plasma	F	75-79	Caucasian	liver	cholangiocarcinoma	G2	T3N0M0	IIIA	no	
+pancancer	025534P	RNA006426	colon adenocarcinoma	COAD	1	EDTA	plasma	F	55-59	Caucasian	"sigmoid, liver mets"	adenocarcinoma	G2	T3N1aM1a	IVA	no	
+pancancer	025545P	RNA006427	colon adenocarcinoma	COAD	2	EDTA	plasma	M	65-69	Caucasian	"ascending colon, liver and omental mets"	mucinous adenocarcinoma	G2	T3N1bM1b	IVB	no	
+pancancer	025570P	RNA006428	colon adenocarcinoma	COAD	3	EDTA	plasma	F	65-69	Caucasian	"sigmoid, liver mets"	adenocarcinoma	N/A	T3NxM1a	IVA	no	
+pancancer	025573P	RNA006429	colon adenocarcinoma	COAD	4	EDTA	plasma	F	65-69	Caucasian	"sigmoid, liver mets"	adenocarcinoma	N/A	T4bN0M1a	IVA	no	
+pancancer	025577P	RNA006430	colon adenocarcinoma	COAD	5	EDTA	plasma	F	35-39	Caucasian	"cecum, liver mets"	adenocarcinoma	N/A	T3N1bM1a	IVA	no	
+pancancer	025586P	RNA006431	colon adenocarcinoma	COAD	6	EDTA	plasma	F	60-64	Caucasian	"appendix; omental, ovarian mets"	mucinous adenocarcinoma	G1	T3N0M1b	IVB	no	
+pancancer	025588P	RNA006432	colon adenocarcinoma	COAD	7	EDTA	plasma	F	55-59	Caucasian	"descending colon, liver mets"	adenocarcinoma	G2	T3N1bM1a	IVA	no	
+pancancer	025614P	RNA006433	colon adenocarcinoma	COAD	8	EDTA	plasma	M	55-59	Caucasian	"transverse colon, liver mets"	adenocarcinoma	G2	T4bN0M1a	IVA	no	
+pancancer	D8946P	RNA006585	no	CONTROL	1	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9241P	RNA006586	no	CONTROL	2	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8742P	RNA006587	no	CONTROL	3	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8806P	RNA006588	no	CONTROL	4	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9289P	RNA006589	no	CONTROL	5	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9326P	RNA006818	no	CONTROL	6	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D9327P	RNA006819	no	CONTROL	7	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	D8675P	RNA006820	no	CONTROL	8	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+pancancer	NHLym411P	RNA006434	diffuse large B-cell lymphoma	DLBCL	1	EDTA	plasma	F	65-69	Caucasian	bone marrow; pelvis; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym419P	RNA006435	diffuse large B-cell lymphoma	DLBCL	2	EDTA	plasma	F	60-64	Caucasian	soft tissues; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym417P	RNA006436	diffuse large B-cell lymphoma	DLBCL	3	EDTA	plasma	M	40-44	Caucasian	brain	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym422P	RNA006437	diffuse large B-cell lymphoma	DLBCL	4	EDTA	plasma	M	65-69	Caucasian	brain	DLBCL	N/A	N/A	N/A	no	x
+pancancer	NHLym423P	RNA006438	diffuse large B-cell lymphoma	DLBCL	5	EDTA	plasma	M	80-84	Caucasian	lymph nodes; nasal cavity; soft tissue of the H&N	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym427P	RNA006439	diffuse large B-cell lymphoma	DLBCL	6	EDTA	plasma	F	60-64	Caucasian	nasopharynx; tonsils; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym431P	RNA006440	diffuse large B-cell lymphoma	DLBCL	7	EDTA	plasma	M	80-84	Caucasian	testis; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	NHLym432P	RNA006441	diffuse large B-cell lymphoma	DLBCL	8	EDTA	plasma	M	65-69	Caucasian	tonsil; lymph nodes	DLBCL	N/A	N/A	N/A	no	
+pancancer	21681P	RNA006450	esophageal carcinoma	ESCA	1	EDTA	plasma	M	55-59	Caucasian	esophagus	squamous cell carcinoma	G2	T3N3M0	IIIC	no	
+pancancer	21683P	RNA006451	esophageal carcinoma	ESCA	2	EDTA	plasma	F	45-49	Caucasian	esophagus	squamous cell carcinoma	N/A	T3N3M0	IIIC	no	
+pancancer	21708P	RNA006452	esophageal carcinoma	ESCA	3	EDTA	plasma	F	70-74	Caucasian	esophagus	adenocarcinoma	G2	T3N3M0	IIIC	no	
+pancancer	21813P	RNA006453	esophageal carcinoma	ESCA	4	EDTA	plasma	F	55-59	Caucasian	esophagus	adenocarcinoma	G2-3	T3N3M0	IVA	no	
+pancancer	21818P	RNA006454	esophageal carcinoma	ESCA	5	EDTA	plasma	F	35-39	Caucasian	esophagus	squamous cell carcinoma	G3	T4bN2M0	IIIB	no	
+pancancer	21823P	RNA006455	esophageal carcinoma	ESCA	6	EDTA	plasma	M	50-54	Caucasian	esophagus	squamous cell carcinoma	G3	T3N3M0	IVA	no	
+pancancer	21824P	RNA006456	esophageal carcinoma	ESCA	7	EDTA	plasma	F	60-64	Caucasian	esophagus	squamous cell carcinoma	N/A	T3N2M0	IIIB	no	
+pancancer	21826P	RNA006457	esophageal carcinoma	ESCA	8	EDTA	plasma	M	60-64	Caucasian	"esophagus, liver mets"	squamous cell carcinoma	G3	T3N1M1	IVB	no	
+pancancer	531362(II)P	RNA006466	glioblastoma multiforme	GBM	1	EDTA	plasma	F	60-64	Caucasian	left frontal lobe	glioblastoma	G5	N/A	N/A	temodal	
+pancancer	531377(ll)P	RNA006467	glioblastoma multiforme	GBM	2	EDTA	plasma	F	70-74	Caucasian	right frontal lobe	glioblastoma	G4	N/A	N/A	"Radiation Therapy, temozolomide"	
+pancancer	531781P	RNA006468	glioblastoma multiforme	GBM	3	EDTA	plasma	F	70-74	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531788P	RNA006469	glioblastoma multiforme	GBM	4	EDTA	plasma	F	50-54	Caucasian	left fronto-parietal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531789P	RNA006470	glioblastoma multiforme	GBM	5	EDTA	plasma	F	60-64	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	531796P	RNA006471	glioblastoma multiforme	GBM	6	EDTA	plasma	F	30-34	Caucasian	left temporal lobe	glioblastoma	G4	N/A	N/A	"avastin, irinotecan, radiation therapy"	
+pancancer	531195(ll)P	RNA006472	glioblastoma multiforme	GBM	7	EDTA	plasma	M	45-49	Caucasian	left parietal lobe	glioblastoma	G4	N/A	N/A	temodal	
+pancancer	531822P	RNA006473	glioblastoma multiforme	GBM	8	EDTA	plasma	M	55-59	Caucasian	right temporal lobe	glioblastoma	G4	N/A	N/A	no	
+pancancer	651014P	RNA006474	head and neck carcinoma	HNC	1	EDTA	plasma	M	45-49	Caucasian	cheek	squamous cell carcinoma	G2	T4aN1M0	IVA	no	
+pancancer	651125P	RNA006475	head and neck carcinoma	HNC	2	EDTA	plasma	F	70-74	Caucasian	mandibular alveolar process	squamous cell carcinoma	G1	T4aN0M0	IVA	no	x
+pancancer	651128P	RNA006476	head and neck carcinoma	HNC	3	EDTA	plasma	F	40-44	Caucasian	hard palate	adenoid cystic carcinoma	G2	T4aN0M0	IVA	no	
+pancancer	651188P	RNA006477	head and neck carcinoma	HNC	4	EDTA	plasma	M	80-84	Caucasian	hard palate	squamous cell carcinoma	G1	T4aN0M0	IVA	no	
+pancancer	651224P	RNA006478	head and neck carcinoma	HNC	5	EDTA	plasma	M	60-64	Caucasian	mandibular alveolar process	squamous cell carcinoma	G3	T4aN0M0	IVA	no	
+pancancer	651240P	RNA006479	head and neck carcinoma	HNC	6	EDTA	plasma	F	35-39	Caucasian	floor of the mouth	adenoid cystic carcinoma	N/A	T4aN0M0	IVA	no	
+pancancer	651311P	RNA006480	head and neck carcinoma	HNC	7	EDTA	plasma	M	45-49	Caucasian	laryngopharynx	squamous cell carcinoma	G3	T2N2bM0	IVA	no	
+pancancer	651325P	RNA006481	head and neck carcinoma	HNC	8	EDTA	plasma	M	60-64	Caucasian	laryngopharynx	squamous cell carcinoma	G3	T4aN2cM0	IVA	no	
+pancancer	052187P	RNA006490	clear cell carcinoma of kidney	KIRC	1	EDTA	plasma	M	60-64	Caucasian	"right kidney, lung and brain mets"	"renal cell carcinoma, clear cell type"	G2	T1aN0M1	IV	no	
+pancancer	052222P	RNA006491	clear cell carcinoma of kidney	KIRC	2	EDTA	plasma	F	75-79	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G4	T3aN0M1	IV	no	
+pancancer	052290P	RNA006492	clear cell carcinoma of kidney	KIRC	3	EDTA	plasma	F	65-69	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G3	T3aN0M1	IV	no	
+pancancer	052319P	RNA006493	clear cell carcinoma of kidney	KIRC	4	EDTA	plasma	M	40-44	Caucasian	"left kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G4	T3bN1M1	IV	no	
+pancancer	052341P	RNA006494	clear cell carcinoma of kidney	KIRC	5	EDTA	plasma	M	65-69	Caucasian	"right kidney, lung mets"	"renal cell carcinoma, clear cell type"	N/A	T3NxM1	IV	no	
+pancancer	052370P	RNA006495	clear cell carcinoma of kidney	KIRC	6	EDTA	plasma	M	45-49	Caucasian	"right kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G3	T2aN0M1	IV	no	
+pancancer	052394P	RNA006496	clear cell carcinoma of kidney	KIRC	7	EDTA	plasma	M	60-64	Caucasian	"right kidney, adrenal gland mets"	"renal cell carcinoma, clear cell type"	G2	T2bN0M1	IV	no	
+pancancer	052482P	RNA006497	clear cell carcinoma of kidney	KIRC	8	EDTA	plasma	M	45-49	Caucasian	"right kidney, lung mets"	"renal cell carcinoma, clear cell type"	G4	T3aN0M1	IV	no	
+pancancer	531624P	RNA006498	anaplastic astrocytoma - glioma	ANA	1	EDTA	plasma	M	45-49	Caucasian	N/A	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531639P	RNA006499	anaplastic astrocytoma - glioma	ANA	2	EDTA	plasma	F	50-54	Caucasian	left parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531650P	RNA006500	anaplastic astrocytoma - glioma	ANA	3	EDTA	plasma	F	30-34	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531674P	RNA006501	anaplastic astrocytoma - glioma	ANA	4	EDTA	plasma	M	30-34	Caucasian	right frontal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531725P	RNA006502	anaplastic astrocytoma - glioma	ANA	5	EDTA	plasma	F	60-64	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531736P	RNA006503	anaplastic astrocytoma - glioma	ANA	6	EDTA	plasma	F	30-34	Caucasian	left parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531755P	RNA006504	anaplastic astrocytoma - glioma	ANA	7	EDTA	plasma	F	35-39	Caucasian	left temporal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	531795P	RNA006505	anaplastic astrocytoma - glioma	ANA	8	EDTA	plasma	F	65-69	Caucasian	parietal lobe	anaplastic astrocytoma	G3	N/A	N/A	no	
+pancancer	09957P	RNA006482	liver hepatocellular carcinoma	LIHC	1	EDTA	plasma	F	75-79	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091015P	RNA006483	liver hepatocellular carcinoma	LIHC	2	EDTA	plasma	M	35-39	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091050P	RNA006484	liver hepatocellular carcinoma	LIHC	3	EDTA	plasma	F	50-54	Caucasian	liver	hepatocellular carcinoma	G3	T3aN0M0	IIIA	no	
+pancancer	091059P	RNA006485	liver hepatocellular carcinoma	LIHC	4	EDTA	plasma	F	50-54	Caucasian	liver	hepatocellular carcinoma	N/A	T3aN0M0	IIIA	no	
+pancancer	091137P	RNA006486	liver hepatocellular carcinoma	LIHC	5	EDTA	plasma	F	50-54	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091294P	RNA006487	liver hepatocellular carcinoma	LIHC	6	EDTA	plasma	M	60-64	Caucasian	liver	hepatocellular carcinoma	G2	T3aN0M0	IIIA	no	
+pancancer	091393P	RNA006488	liver hepatocellular carcinoma	LIHC	7	EDTA	plasma	F	15-19	Caucasian	liver	hepatocellular carcinoma	N/A	T4N0M0	IIIB	no	
+pancancer	091430P	RNA006489	liver hepatocellular carcinoma	LIHC	8	EDTA	plasma	M	60-64	Caucasian	liver	hepatocellular carcinoma	G2	T3N0M0	IIIA	no	
+pancancer	043642(II)P	RNA006514	lung adenocarcinoma	LUAD	1	EDTA	plasma	M	55-59	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	044387P	RNA006515	lung adenocarcinoma	LUAD	2	EDTA	plasma	F	60-64	Caucasian	"upper lobe of the left lung, pleural mets"	adenocarcinoma	G1	T3N2M1a	IV	no	
+pancancer	044425P	RNA006516	lung adenocarcinoma	LUAD	3	EDTA	plasma	F	80-84	Caucasian	"upper lobe of the right lung, pleural mets"	adenocarcinoma	N/A	T2aN1M1a	IV	no	
+pancancer	044245(II)P	RNA006517	lung adenocarcinoma	LUAD	4	EDTA	plasma	M	60-64	Caucasian	"lung, adrenal gland mets"	adenocarcinoma	G3	recurrent	N/A	no	
+pancancer	044744P	RNA006518	lung adenocarcinoma	LUAD	5	EDTA	plasma	F	75-79	Caucasian	"upper lobe of the right lung, left lung mets"	adenocarcinoma	N/A	T4N0M1a	IV	no	
+pancancer	045328P	RNA006519	lung adenocarcinoma	LUAD	6	EDTA	plasma	M	55-59	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	045337P	RNA006520	lung adenocarcinoma	LUAD	7	EDTA	plasma	M	65-69	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	045349P	RNA006521	lung adenocarcinoma	LUAD	8	EDTA	plasma	M	55-59	Caucasian	"lung, brain mets"	adenocarcinoma	N/A	T3NxM1b	IVA	no	
+pancancer	042342P	RNA006522	lung squamous cell carcinoma	LUSC	1	EDTA	plasma	M	55-59	Caucasian	lung mts	squamous cell carcinoma	N/A	recurrent	N/A	no	x
+pancancer	044207P	RNA006523	lung squamous cell carcinoma	LUSC	2	EDTA	plasma	F	65-69	Caucasian	upper lobe of the right lung	squamous cell carcinoma	G3	T4N2M0	IIIB	no	
+pancancer	044339P	RNA006524	lung squamous cell carcinoma	LUSC	3	EDTA	plasma	F	65-69	Caucasian	upper lobe of the right lung	squamous cell carcinoma	N/A	T4N2M0	IIIB	no	
+pancancer	044388P	RNA006525	lung squamous cell carcinoma	LUSC	4	EDTA	plasma	M	65-69	Caucasian	upper lobe of the right lung	squamous cell carcinoma	G1	T4N2M0	IIIB	no	
+pancancer	044396P	RNA006526	lung squamous cell carcinoma	LUSC	5	EDTA	plasma	F	65-69	Caucasian	"lung, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	044480P	RNA006527	lung squamous cell carcinoma	LUSC	6	EDTA	plasma	M	65-69	Caucasian	"lung, brain mets"	squamous cell carcinoma	N/A	recurrent	N/A	no	
+pancancer	044558P	RNA006528	lung squamous cell carcinoma	LUSC	7	EDTA	plasma	M	70-74	Caucasian	upper lobe of the left lung	squamous cell carcinoma	N/A	T4N2M0	IIIB	no	
+pancancer	044282P	RNA006529	lung squamous cell carcinoma	LUSC	8	EDTA	plasma	M	75-79	Caucasian	upper lobe of the left lung	squamous cell carcinoma	G2	T1bN0M1a	IV	no	
+pancancer	033253P	RNA006530	ovarian serous adenocarcinoma	OV	1	EDTA	plasma	F	55-59	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN1M0	IIIC	no	
+pancancer	033803P	RNA006531	ovarian serous adenocarcinoma	OV	2	EDTA	plasma	F	55-59	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G3	T3cN1M0	IIIC	no	
+pancancer	032924P	RNA006532	ovarian serous adenocarcinoma	OV	3	EDTA	plasma	F	65-69	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G3	T3bN1M0	IIIC	no	
+pancancer	032958P	RNA006533	ovarian serous adenocarcinoma	OV	4	EDTA	plasma	F	65-69	Caucasian	"ovary, omental mets"	serous cystadenocarcinoma	G1	T3cN0M0	IIIC	no	
+pancancer	033079P	RNA006534	ovarian serous adenocarcinoma	OV	5	EDTA	plasma	F	40-44	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN0M0	IIIC	no	
+pancancer	033086P	RNA006535	ovarian serous adenocarcinoma	OV	6	EDTA	plasma	F	70-74	Caucasian	"ovary, omental mets"	serous papillary cystadenocarcinoma	G2	T3cN0M0	IIIC	no	
+pancancer	032921P	RNA006536	ovarian serous adenocarcinoma	OV	7	EDTA	plasma	F	45-49	Caucasian	"ovary, spleen mts"	serous papillary cystadenocarcinoma	G3	T3bN0M1	IV	no	
+pancancer	033850P	RNA006537	ovarian serous adenocarcinoma	OV	8	EDTA	plasma	F	45-49	Caucasian	"ovary, skin mts"	serous papillary cystadenocarcinoma	N/A	T3cN0M1	IVB	no	
+pancancer	12732P	RNA006538	pancreatic adenocarcinoma	PAAD	1	EDTA	plasma	M	75-79	Caucasian	pancreas	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	121039P	RNA006539	pancreatic adenocarcinoma	PAAD	2	EDTA	plasma	M	25-29	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	recurrent	N/A	no	
+pancancer	12838(II)P	RNA006540	pancreatic adenocarcinoma	PAAD	3	EDTA	plasma	M	45-49	Caucasian	"pancreas, liver mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	121350P	RNA006541	pancreatic adenocarcinoma	PAAD	4	EDTA	plasma	M	50-54	Caucasian	"pancreas, liver mets"	adenocarcinoma	G1	T3NxM1	IV	no	
+pancancer	121362P	RNA006542	pancreatic adenocarcinoma	PAAD	5	EDTA	plasma	F	65-69	Caucasian	"pancreas, peritoneum mets"	adenocarcinoma	N/A	T3NxM1	IV	no	
+pancancer	121373P	RNA006543	pancreatic adenocarcinoma	PAAD	6	EDTA	plasma	F	55-59	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	T3N0M1	IV	no	
+pancancer	121380P	RNA006544	pancreatic adenocarcinoma	PAAD	7	EDTA	plasma	F	55-59	Caucasian	"pancreas, liver mets"	adenocarcinoma	G3	T3NxM1	IV	no	
+pancancer	121436P	RNA006545	pancreatic adenocarcinoma	PAAD	8	EDTA	plasma	M	50-54	Caucasian	"pancreas, liver mets"	adenocarcinoma	G2	T3NxM1	IV	no	
+pancancer	162127P	RNA006546	prostate adenocarcinoma	PRAD	1	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162310P	RNA006547	prostate adenocarcinoma	PRAD	2	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162378P	RNA006548	prostate adenocarcinoma	PRAD	3	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162512P	RNA006549	prostate adenocarcinoma	PRAD	4	EDTA	plasma	M	65-69	Caucasian	"prostate, brain mets"	adenocarcinoma	N/A	recurrent	N/A	zoladex	
+pancancer	162680P	RNA006550	prostate adenocarcinoma	PRAD	5	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	162784P	RNA006551	prostate adenocarcinoma	PRAD	6	EDTA	plasma	M	60-64	Caucasian	"prostate, bones mets"	adenocarcinoma	N/A	T3bNxM1b	IV	no	
+pancancer	162957P	RNA006552	prostate adenocarcinoma	PRAD	7	EDTA	plasma	M	60-64	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	163282P	RNA006817	prostate adenocarcinoma	PRAD	8	EDTA	plasma	M	65-69	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	T3aN1M0	III	no	
+pancancer	024374P	RNA006553	rectum adenocarcinoma	READ	1	EDTA	plasma	F	55-59	Caucasian	"rectum, liver and omental mets"	mucinous adenocarcinoma	G2	T4bN2bM1b	IVB	no	
+pancancer	025527P	RNA006554	rectum adenocarcinoma	READ	2	EDTA	plasma	M	45-49	Caucasian	"rectum, sigmoid, liver mets"	adenocarcinoma	G1	T3N0M1a	IVA	no	
+pancancer	025617P	RNA006555	rectum adenocarcinoma	READ	3	EDTA	plasma	F	55-59	Caucasian	rectum liver mets	adenocarcinoma	N/A	T3N2aM1a	IVA	no	
+pancancer	025563P	RNA006556	rectum adenocarcinoma	READ	4	EDTA	plasma	M	70-74	Caucasian	"rectum, liver, lung mets"	adenocarcinoma	N/A	T3N1aM1b	IVB	no	
+pancancer	025589P	RNA006557	rectum adenocarcinoma	READ	5	EDTA	plasma	M	35-39	Caucasian	"rectum,  liver mets"	adenocarcinoma	G2	T3N0M1a	IVA	no	
+pancancer	025615P	RNA006558	rectum adenocarcinoma	READ	6	EDTA	plasma	M	65-69	Caucasian	"rectum, liver mets"	adenocarcinoma	N/A	T3N0M1a	IVA	no	
+pancancer	025635P	RNA006559	rectum adenocarcinoma	READ	7	EDTA	plasma	M	70-74	Caucasian	"rectum, liver mets"	adenocarcinoma	G2	T3N1bM1a	IVA	no	
+pancancer	025662P	RNA006560	rectum adenocarcinoma	READ	8	EDTA	plasma	F	55-59	Caucasian	"rectum, liver mets "	adenocarcinoma	N/A	T4bN1bM1a	IVA	no	
+pancancer	55693P	RNA006561	sarcoma	SARC	1	EDTA	plasma	M	50-54	Caucasian	soft tissue of the thigh	synovial sarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55703P	RNA006562	sarcoma	SARC	2	EDTA	plasma	M	65-69	Caucasian	soft tissue of the thigh	liposarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55716P	RNA006563	sarcoma	SARC	3	EDTA	plasma	M	75-79	Caucasian	"soft tissue of the thigh, local recurrence"	liposarcoma	G1	recurrent	N/A	no	
+pancancer	55720P	RNA006564	sarcoma	SARC	4	EDTA	plasma	F	60-64	Caucasian	soft tissue around knee	myxofibrosarcoma	G3	T2N0M0	IIIA	no	
+pancancer	55735P	RNA006565	sarcoma	SARC	5	EDTA	plasma	M	50-54	Caucasian	soft tissue of the thigh	undifferentiated pleomorphic sarcoma	G3	T4N0M0	IIIB	no	
+pancancer	55739P	RNA006566	sarcoma	SARC	6	EDTA	plasma	M	65-69	Caucasian	soft tissue under mandibular area	myxofibrosarcoma	G3	T3N0M0	N/A	no	
+pancancer	55740P	RNA006567	sarcoma	SARC	7	EDTA	plasma	M	50-54	Caucasian	soft tissue of anterior abdominal wall	undifferentiated pleomorphic sarcoma	G3	T2N0M0	IIIA	no	
+pancancer	55743P	RNA006568	sarcoma	SARC	8	EDTA	plasma	F	45-49	Caucasian	soft tissue in axillary region	mixoid liposarcoma	G3	T2N0M0	IIIA	no	
+pancancer	132368P	RNA006506	skin melanoma	SKCM	1	EDTA	plasma	M	65-69	Caucasian	skin of the back	pigmented nodular melanoma	N/A	T1bN1bM0	IIIC	no	
+pancancer	132386P	RNA006507	skin melanoma	SKCM	2	EDTA	plasma	M	70-74	Caucasian	"skin, brain mets"	"non-pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132388P	RNA006508	skin melanoma	SKCM	3	EDTA	plasma	M	45-49	Caucasian	"skin, esophagus"	"melanoma, epithelioid cell type"	N/A	T4bN3M0	IIIC	no	
+pancancer	132399P	RNA006509	skin melanoma	SKCM	4	EDTA	plasma	F	45-49	Caucasian	skin and lymph nodes mets	"non-pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132410P	RNA006510	skin melanoma	SKCM	5	EDTA	plasma	F	50-54	Caucasian	skin of the left foot	"non-pigmented melanoma, epithelioid cell type"	N/A	T3N3M0	IIIC	no	
+pancancer	132419P	RNA006511	skin melanoma	SKCM	6	EDTA	plasma	M	75-79	Caucasian	skin of the abdomen	"pigmented nodular melanoma, epithelioid cell type"	N/A	T3bN2cM0	IIIB	no	
+pancancer	132424P	RNA006512	skin melanoma	SKCM	7	EDTA	plasma	F	45-49	Caucasian	"skin, brain mets"	"pigmented melanoma, epithelioid cell type"	N/A	recurrent	N/A	no	
+pancancer	132429P	RNA006513	skin melanoma	SKCM	8	EDTA	plasma	F	65-69	Caucasian	"skin, brain mets"	"pigmented melanoma, epithelioid and spindle cell type"	N/A	recurrent	N/A	Reaferon	
+pancancer	082544P	RNA006458	stomach adenocarcinoma	STAD	1	EDTA	plasma	F	60-64	Caucasian	"stomach, peritoneum mets "	adenocarcinoma	N/A	T3NxM1	IV	no	
+pancancer	081985(II)P	RNA006459	stomach adenocarcinoma	STAD	2	EDTA	plasma	F	65-69	Caucasian	"stomach, ovarian mets"	adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	082564 P	RNA006460	stomach adenocarcinoma	STAD	3	EDTA	plasma	F	70-74	Caucasian	stomach	adenocarcinoma	G3	T4bN0M0	IIIA	no	
+pancancer	082583 P	RNA006461	stomach adenocarcinoma	STAD	4	EDTA	plasma	F	50-54	Caucasian	"stomach, ovarian mets"	adenocarcinoma	G3	T3NxM1	IV	no	
+pancancer	082591P	RNA006462	stomach adenocarcinoma	STAD	5	EDTA	plasma	M	55-59	Caucasian	stomach	adenocarcinoma	G3	T3N2M0	IIIA	no	
+pancancer	082598P	RNA006463	stomach adenocarcinoma	STAD	6	EDTA	plasma	F	65-69	Caucasian	stomach	adenocarcinoma	G3	T3N3aM0	IIIB	no	
+pancancer	082627P	RNA006464	stomach adenocarcinoma	STAD	7	EDTA	plasma	M	40-44	Caucasian	stomach	adenocarcinoma	G3	T4bN1M0	IIIB	no	
+pancancer	082628P	RNA006465	stomach adenocarcinoma	STAD	8	EDTA	plasma	M	45-49	Caucasian	stomach	adenocarcinoma	G3	T3N2M0	IIIA	no	
+pancancer	07472P	RNA006569	testicular germ cell tumor - seminoma	TGCT	1	EDTA	plasma	M	25-29	Caucasian	"testis, lymph nodes mets"	seminoma	N/A	recurrent	N/A	no	
+pancancer	07626P	RNA006570	testicular germ cell tumor - seminoma	TGCT	2	EDTA	plasma	M	45-49	Caucasian	"testis, lymph nodes mets"	seminoma	N/A	recurrent	N/A	no	
+pancancer	07690P	RNA006571	testicular germ cell tumor - seminoma	TGCT	3	EDTA	plasma	M	30-34	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07695P	RNA006572	testicular germ cell tumor - seminoma	TGCT	4	EDTA	plasma	M	30-34	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07699P	RNA006573	testicular germ cell tumor - seminoma	TGCT	5	EDTA	plasma	M	25-29	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07700P	RNA006574	testicular germ cell tumor - seminoma	TGCT	6	EDTA	plasma	M	40-44	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07703P	RNA006575	testicular germ cell tumor - seminoma	TGCT	7	EDTA	plasma	M	30-34	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	07717P	RNA006576	testicular germ cell tumor - seminoma	TGCT	8	EDTA	plasma	M	25-29	Caucasian	testis	seminoma	N/A	T2N0M0	I	no	
+pancancer	111294P	RNA006577	thyroid carcinoma	THCA	1	EDTA	plasma	M	65-69	Caucasian	thyroid	papillary carcinoma	N/A	T3N1aM0	IVA	no	
+pancancer	111297P	RNA006578	thyroid carcinoma	THCA	2	EDTA	plasma	F	45-49	Caucasian	"thyroid, bone mets"	medullary carcinoma	N/A	T3N1bM1	IVC	no	
+pancancer	111404P	RNA006579	thyroid carcinoma	THCA	3	EDTA	plasma	M	50-54	Caucasian	thyroid	papillary carcinoma	N/A	T3N1bM0	IVA	no	
+pancancer	111492P	RNA006580	thyroid carcinoma	THCA	4	EDTA	plasma	F	45-49	Asian	thyroid	papillary carcinoma	N/A	T3N1bM0	IVA	no	
+pancancer	111534P	RNA006581	thyroid carcinoma	THCA	5	EDTA	plasma	F	55-59	Caucasian	thyroid	medullary carcinoma	N/A	T2N1bM0	IVA	no	
+pancancer	111570P	RNA006582	thyroid carcinoma	THCA	6	EDTA	plasma	F	40-44	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	111580P	RNA006583	thyroid carcinoma	THCA	7	EDTA	plasma	F	55-59	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	111586P	RNA006584	thyroid carcinoma	THCA	8	EDTA	plasma	F	35-39	Caucasian	thyroid	medullary carcinoma	N/A	T1N1bM0	IVA	no	
+pancancer	061485P	RNA006442	uterine corpus endometrial carcinoma	UCEC	1	EDTA	plasma	F	45-49	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061490P	RNA006443	uterine corpus endometrial carcinoma	UCEC	2	EDTA	plasma	F	55-59	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061641P	RNA006444	uterine corpus endometrial carcinoma	UCEC	3	EDTA	plasma	F	60-64	Caucasian	uterus	endometrial adenocarcinoma	G3	T3aN1M0	IIIC1	no	
+pancancer	061665P	RNA006445	uterine corpus endometrial carcinoma	UCEC	4	EDTA	plasma	F	55-59	Caucasian	"uterus, brain"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061674P	RNA006446	uterine corpus endometrial carcinoma	UCEC	5	EDTA	plasma	F	50-54	Caucasian	"uterus, brain"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061689P	RNA006447	uterine corpus endometrial carcinoma	UCEC	6	EDTA	plasma	F	60-64	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061694P	RNA006448	uterine corpus endometrial carcinoma	UCEC	7	EDTA	plasma	F	65-69	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+pancancer	061717P	RNA006449	uterine corpus endometrial carcinoma	UCEC	8	EDTA	plasma	F	75-79	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	N/A	recurrent	N/A	no	
+threecancer	D8946P	RNA019775	no	CONTROL	1	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9241P	RNA019776	no	CONTROL	2	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8742P	RNA019777	no	CONTROL	3	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D8806P	RNA019778	no	CONTROL	4	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9289P	RNA019779	no	CONTROL	5	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9326P	RNA019780	no	CONTROL	6	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9327P	RNA019781	no	CONTROL	7	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8675P	RNA019782	no	CONTROL	8	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8988P	RNA019677	no	CONTROL	9	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9277P	RNA019678	no	CONTROL	10	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D8993P	RNA019679	no	CONTROL	11	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8994P	RNA019680	no	CONTROL	12	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D8995P	RNA019681	no	CONTROL	13	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9361P	RNA019682	no	CONTROL	14	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9398P	RNA019683	no	CONTROL	15	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9473P	RNA019684	no	CONTROL	16	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9017P	RNA019685	no	CONTROL	17	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9018P	RNA019686	no	CONTROL	18	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9194P	RNA019687	no	CONTROL	19	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9225P	RNA019688	no	CONTROL	20	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9243P	RNA019689	no	CONTROL	21	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9253P	RNA019690	no	CONTROL	22	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9322P	RNA019691	no	CONTROL	23	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9341P	RNA019692	no	CONTROL	24	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9365P	RNA019693	no	CONTROL	25	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9367P	RNA019694	no	CONTROL	26	EDTA	plasma	F	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9371P	RNA019695	no	CONTROL	27	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9380P	RNA019696	no	CONTROL	28	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	x
+threecancer	D9427P	RNA019697	no	CONTROL	29	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	D9694P	RNA019698	no	CONTROL	30	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+threecancer	034344P	RNA019699	ovarian serous adenocarcinoma	OV	9	EDTA	plasma	F	45-49	Caucasian	"ovary, lymph nodes mets"	serous adenocarcinoma	G3	recurrent	IIIC	no	
+threecancer	034465P	RNA019700	ovarian serous adenocarcinoma	OV	10	EDTA	plasma	F	60-64	Caucasian	ovary	serous papillary adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034475P	RNA019701	ovarian serous adenocarcinoma	OV	11	EDTA	plasma	F	55-59	Caucasian	ovary	serous papillary adenocarcinoma	G3	T3cN0M0	IIIC	no	x
+threecancer	034477P	RNA019702	ovarian serous adenocarcinoma	OV	12	EDTA	plasma	F	35-39	Caucasian	ovary	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034485P	RNA019703	ovarian serous adenocarcinoma	OV	13	EDTA	plasma	F	35-39	Caucasian	ovary	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034503P	RNA019704	ovarian serous adenocarcinoma	OV	14	EDTA	plasma	F	35-39	Caucasian	"ovary, liver mets"	serous papillary adenocarcinoma	G1	T3bN1M1	IVB	no	
+threecancer	034510P	RNA019705	ovarian serous adenocarcinoma	OV	15	EDTA	plasma	F	55-59	Caucasian	ovary	serous adenocarcinoma	G3	T3bN0M0	IIIB	no	
+threecancer	034518P	RNA019706	ovarian serous adenocarcinoma	OV	16	EDTA	plasma	F	60-64	Caucasian	"ovary, umbilical ring mets"	serous adenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034524P	RNA019707	ovarian serous adenocarcinoma	OV	17	EDTA	plasma	F	60-64	Caucasian	"ovary, liver mets"	serous adenocarcinoma	G3	T3bN0M1	IVB	no	
+threecancer	034531P	RNA019708	ovarian serous adenocarcinoma	OV	18	EDTA	plasma	F	55-59	Caucasian	"ovary, diaphragmal mets"	serous adenocarcinoma	G3	T3cN1M1	IVB	no	
+threecancer	034534P	RNA019709	ovarian serous adenocarcinoma	OV	19	EDTA	plasma	F	40-44	Caucasian	ovary	serous papillary cystadenocarcinoma	G3	T3cN0M0	IIIC	no	
+threecancer	034539P	RNA019710	ovarian serous adenocarcinoma	OV	20	EDTA	plasma	F	55-59	Caucasian	"ovary, anterior abdominal wall mets"	serous adenocarcinoma	G3	T3aN0M1	IVB	no	
+threecancer	061194P	RNA019711	uterine corpus endometrial carcinoma	UCEC	9	EDTA	plasma	F	60-64	Caucasian	uterus	endometrial adenocarcinoma	G3	T3aN0M0	IIIA	no	
+threecancer	061226P	RNA019712	uterine corpus endometrial carcinoma	UCEC	10	EDTA	plasma	F	70-74	Caucasian	uterus	endometrial adenocarcinoma	G1	T3aN0M0	IIIA	no	
+threecancer	061738P	RNA019713	uterine corpus endometrial carcinoma	UCEC	11	EDTA	plasma	F	60-64	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	061742P	RNA019714	uterine corpus endometrial carcinoma	UCEC	12	EDTA	plasma	F	55-59	Caucasian	"uterus, ovarian mets"	endometrial stromal sarcoma	N/A	recurrent	IV	no	
+threecancer	061747P	RNA019715	uterine corpus endometrial carcinoma	UCEC	13	EDTA	plasma	F	65-69	Caucasian	uterus	endometrial adenocarcinoma	G2	T1bN1M0	IIIC1	no	
+threecancer	061759P	RNA019716	uterine corpus endometrial carcinoma	UCEC	14	EDTA	plasma	F	45-49	Caucasian	"uterus, brain mets"	endometrial adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	061766P	RNA019717	uterine corpus endometrial carcinoma	UCEC	15	EDTA	plasma	F	35-39	Caucasian	"uterus, omentum and anterior abdominal wall mets"	endometrial adenocarcinoma	G3	T2N0M1	IVB	no	
+threecancer	061939P	RNA019718	uterine corpus endometrial carcinoma	UCEC	16	EDTA	plasma	F	40-44	Caucasian	uterus	endometrial adenocarcinoma	G1	T3bN0M0	IIIB	no	
+threecancer	061947P	RNA019719	uterine corpus endometrial carcinoma	UCEC	17	EDTA	plasma	F	60-64	Caucasian	"uterus, lung mets"	endometrial adenocarcinoma	G3	recurrent	IV	no	
+threecancer	061952P	RNA019720	uterine corpus endometrial carcinoma	UCEC	18	EDTA	plasma	F	60-64	Caucasian	"uterus, omentum mets"	endometrial adenocarcinoma	G3	T3bN0M1	IVB	no	
+threecancer	061958P	RNA019721	uterine corpus endometrial carcinoma	UCEC	19	EDTA	plasma	F	70-74	Caucasian	uterus	endometrial adenocarcinoma	N/A	T4N0M0	IVA	no	
+threecancer	061959P	RNA019722	uterine corpus endometrial carcinoma	UCEC	20	EDTA	plasma	F	55-59	Caucasian	uterus	endometrial adenocarcinoma	G2	T3bN0M0	IIIB	no	
+threecancer	163227P	RNA019723	prostate adenocarcinoma	PRAD	9	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	8(3+5)	T3bN1M0	IV	no	
+threecancer	163242P	RNA019724	prostate adenocarcinoma	PRAD	10	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	7(3+4)	T3bN1M0	IV	no	
+threecancer	163265P	RNA019725	prostate adenocarcinoma	PRAD	11	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163466P	RNA019726	prostate adenocarcinoma	PRAD	12	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163531P	RNA019727	prostate adenocarcinoma	PRAD	13	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	8(4+4)	T3bN1M0	IV	no	
+threecancer	163537P	RNA019728	prostate adenocarcinoma	PRAD	14	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	8(4+4)	T3aN1M0	IV	no	
+threecancer	163629P	RNA019729	prostate adenocarcinoma	PRAD	15	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	7(3+4)	T3bN1M0	IV	no	
+threecancer	163639P	RNA019730	prostate adenocarcinoma	PRAD	16	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	8(4+4)	T3aN1M0	IV	no	
+threecancer	163695P	RNA019731	prostate adenocarcinoma	PRAD	17	EDTA	plasma	M	65-69	Caucasian	"prostate, lymph nodes mets"	adenocarcinoma	N/A	recurrent	IV	no	
+threecancer	163710P	RNA019732	prostate adenocarcinoma	PRAD	18	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	7(4+3)	T3aN1M0	IV	no	
+threecancer	163722P	RNA019733	prostate adenocarcinoma	PRAD	19	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	6(3+3)	T3bN1M0	IV	no	
+threecancer	163771P	RNA019734	prostate adenocarcinoma	PRAD	20	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	9(5+4)	T3bN1M0	IV	no	
+lymphoma	K4N-I8CX	RNA019987	diffuse large B-cell lymphoma	DLBCL	1	PAXgene	plasma	F	80-84	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-ZK85	RNA019970	diffuse large B-cell lymphoma	DLBCL	2	PAXgene	plasma	F	45-49	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	000-HQ6Y	RNA019985	diffuse large B-cell lymphoma	DLBCL	3	PAXgene	plasma	M	40-44	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-XIBW	RNA019973	diffuse large B-cell lymphoma	DLBCL	4	PAXgene	plasma	F	80-84	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-FAMJ	RNA019986	diffuse large B-cell lymphoma	DLBCL	5	PAXgene	plasma	F	65-69	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-232A	RNA020043	diffuse large B-cell lymphoma	DLBCL	6	PAXgene	plasma	F	40-44	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-D4C8	RNA019976	diffuse large B-cell lymphoma	DLBCL	7	PAXgene	plasma	M	50-54	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-KPTB	RNA019981	diffuse large B-cell lymphoma	DLBCL	8	PAXgene	plasma	F	60-64	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-5AK9	RNA019991	diffuse large B-cell lymphoma	DLBCL	9	PAXgene	plasma	M	60-64	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-LWHH	RNA019988	diffuse large B-cell lymphoma	DLBCL	10	PAXgene	plasma	F	55-59	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-K7DU	RNA019982	diffuse large B-cell lymphoma	DLBCL	11	PAXgene	plasma	F	55-59	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-K8Z5	RNA020042	diffuse large B-cell lymphoma	DLBCL	12	PAXgene	plasma	F	55-59	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-GDBW	RNA020028	diffuse large B-cell lymphoma	DLBCL	13	PAXgene	plasma	M	50-54	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	K4N-RIYD	RNA020016	diffuse large B-cell lymphoma	DLBCL	14	PAXgene	plasma	F	80-84	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-9FL7	RNA020020	diffuse large B-cell lymphoma	DLBCL	15	PAXgene	plasma	M	55-59	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-S5BK	RNA020021	diffuse large B-cell lymphoma	DLBCL	16	PAXgene	plasma	M	70-74	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-UY4V	RNA020145	diffuse large B-cell lymphoma	DLBCL	17	PAXgene	plasma	M	75-79	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-NFDN	RNA020133	diffuse large B-cell lymphoma	DLBCL	18	PAXgene	plasma	M	80-84	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-8EGH	RNA020112	diffuse large B-cell lymphoma	DLBCL	19	PAXgene	plasma	M	30-34	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-FQLK	RNA020164	diffuse large B-cell lymphoma	DLBCL	20	PAXgene	plasma	M	70-74	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	000-KWJT	RNA020121	diffuse large B-cell lymphoma	DLBCL	21	PAXgene	plasma	F	25-29	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-I736	RNA020166	diffuse large B-cell lymphoma	DLBCL	22	PAXgene	plasma	F	85-89	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-G697	RNA020139	diffuse large B-cell lymphoma	DLBCL	23	PAXgene	plasma	M	65-69	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-8ZTJ	RNA020137	diffuse large B-cell lymphoma	DLBCL	24	PAXgene	plasma	F	60-64	Caucasian	lymph nodes	DLBCL	N/A	N/A	IV	no	
+lymphoma	K4N-UJB1	RNA020143	diffuse large B-cell lymphoma	DLBCL	25	PAXgene	plasma	F	70-74	Caucasian	lymph nodes	DLBCL	N/A	N/A	III	no	
+lymphoma	K4N-3EDF	RNA020183	diffuse large B-cell lymphoma	DLBCL	26	PAXgene	plasma	F	75-79	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-IXBU	RNA020184	diffuse large B-cell lymphoma	DLBCL	27	PAXgene	plasma	M	75-79	Caucasian	lymph nodes	DLBCL	N/A	N/A	II	no	
+lymphoma	K4N-UQRR	RNA020111	diffuse large B-cell lymphoma	DLBCL	28	PAXgene	plasma	F	90-94	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	000-5WXV	RNA020038	diffuse large B-cell lymphoma	DLBCL	29	PAXgene	plasma	F	65-69	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-6IDP	RNA020125	diffuse large B-cell lymphoma	DLBCL	30	PAXgene	plasma	M	75-79	Caucasian	lymph nodes	DLBCL	N/A	N/A	I	no	
+lymphoma	K4N-GGXW	RNA020089	primary mediastinal large B-cell lymphoma	PMBCL	1	PAXgene	plasma	M	35-39	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-TZ4F	RNA020118	primary mediastinal large B-cell lymphoma	PMBCL	2	PAXgene	plasma	F	35-39	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	000-IHWE	RNA020110	primary mediastinal large B-cell lymphoma	PMBCL	3	PAXgene	plasma	F	45-49	Caucasian	lymph nodes	PMBCL	N/A	N/A	I	no	
+lymphoma	K4N-D5VF	RNA020065	primary mediastinal large B-cell lymphoma	PMBCL	4	PAXgene	plasma	F	30-34	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-979S	RNA020066	primary mediastinal large B-cell lymphoma	PMBCL	5	PAXgene	plasma	M	15-19	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-JHF8	RNA020069	primary mediastinal large B-cell lymphoma	PMBCL	6	PAXgene	plasma	M	70-74	Caucasian	lymph nodes	PMBCL	N/A	N/A	III	no	
+lymphoma	K4N-MDFS	RNA020083	primary mediastinal large B-cell lymphoma	PMBCL	7	PAXgene	plasma	F	35-39	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-9R43	RNA020093	primary mediastinal large B-cell lymphoma	PMBCL	8	PAXgene	plasma	F	20-24	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	000-3BWL	RNA020109	primary mediastinal large B-cell lymphoma	PMBCL	9	PAXgene	plasma	M	35-39	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-I9UZ	RNA020084	primary mediastinal large B-cell lymphoma	PMBCL	10	PAXgene	plasma	F	35-39	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-WXJ2	RNA020097	primary mediastinal large B-cell lymphoma	PMBCL	11	PAXgene	plasma	M	20-24	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-WFZH	RNA020101	primary mediastinal large B-cell lymphoma	PMBCL	12	PAXgene	plasma	M	45-49	Caucasian	lymph nodes	PMBCL	N/A	N/A	II	no	
+lymphoma	K4N-97WS	RNA020076	primary mediastinal large B-cell lymphoma	PMBCL	13	PAXgene	plasma	M	30-34	Caucasian	lymph nodes	PMBCL	N/A	N/A	IV	no	
+lymphoma	K4N-E7YE	RNA019992	no	CONTROL	1	PAXgene	plasma	F	80-84	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-3BRX	RNA019993	no	CONTROL	2	PAXgene	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-GCWW	RNA019994	no	CONTROL	3	PAXgene	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UD65	RNA019996	no	CONTROL	4	PAXgene	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-8QE1	RNA019997	no	CONTROL	5	PAXgene	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UVWY	RNA019998	no	CONTROL	6	PAXgene	plasma	F	85-89	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-6KGN	RNA019999	no	CONTROL	7	PAXgene	plasma	M	90-94	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-UVK3	RNA020000	no	CONTROL	8	PAXgene	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-PSJB	RNA020001	no	CONTROL	9	PAXgene	plasma	M	85-89	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-JH3H	RNA020002	no	CONTROL	10	PAXgene	plasma	M	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-TYTH	RNA020005	no	CONTROL	11	PAXgene	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-PNKS	RNA020006	no	CONTROL	12	PAXgene	plasma	M	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	K4N-C8TF	RNA020007	no	CONTROL	13	PAXgene	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-IXQW	RNA020008	no	CONTROL	14	PAXgene	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-6XMM	RNA020009	no	CONTROL	15	PAXgene	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-RGJ5	RNA020011	no	CONTROL	16	PAXgene	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-BMQE	RNA020029	no	CONTROL	17	PAXgene	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-5VGB	RNA020030	no	CONTROL	18	PAXgene	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-QGNW	RNA020032	no	CONTROL	19	PAXgene	plasma	M	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-SG5F	RNA020033	no	CONTROL	20	PAXgene	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-8EQF	RNA020035	no	CONTROL	21	PAXgene	plasma	F	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+lymphoma	PNL-BV8E	RNA020036	no	CONTROL	22	PAXgene	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	1867	RNA032014	prostate adenocarcinoma	PRAD	1	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN1M0	IVA	no	
+prostatecancer	1837	RNA032193	prostate adenocarcinoma	PRAD	10	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1518	RNA032139	prostate adenocarcinoma	PRAD	100	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1517	RNA032050	prostate adenocarcinoma	PRAD	101	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1516	RNA032176	prostate adenocarcinoma	PRAD	102	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2N0MX	IIB	no	
+prostatecancer	1515	RNA032080	prostate adenocarcinoma	PRAD	103	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1513	RNA032083	prostate adenocarcinoma	PRAD	104	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1494	RNA032029	prostate adenocarcinoma	PRAD	105	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1493	RNA032128	prostate adenocarcinoma	PRAD	106	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1488	RNA032122	prostate adenocarcinoma	PRAD	108	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1482	RNA032095	prostate adenocarcinoma	PRAD	109	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1834	RNA032225	prostate adenocarcinoma	PRAD	11	EDTA	plasma	M	80-84	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1473	RNA032191	prostate adenocarcinoma	PRAD	111	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1468	RNA032092	prostate adenocarcinoma	PRAD	112	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1466	RNA032136	prostate adenocarcinoma	PRAD	113	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1456	RNA032170	prostate adenocarcinoma	PRAD	114	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIIA	no	
+prostatecancer	1451	RNA032208	prostate adenocarcinoma	PRAD	115	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1423	RNA032138	prostate adenocarcinoma	PRAD	118	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIC	no	
+prostatecancer	1416	RNA032124	prostate adenocarcinoma	PRAD	119	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1830	RNA032018	prostate adenocarcinoma	PRAD	12	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T3bN1M0	IVA	no	
+prostatecancer	1404	RNA032131	prostate adenocarcinoma	PRAD	120	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1403	RNA032197	prostate adenocarcinoma	PRAD	121	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T3bNXMX	IIIB	no	
+prostatecancer	1400	RNA032119	prostate adenocarcinoma	PRAD	122	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1380	RNA032194	prostate adenocarcinoma	PRAD	123	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIC	no	
+prostatecancer	1366	RNA032069	prostate adenocarcinoma	PRAD	124	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1365	RNA032212	prostate adenocarcinoma	PRAD	125	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1360	RNA032019	prostate adenocarcinoma	PRAD	126	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1359	RNA032061	prostate adenocarcinoma	PRAD	127	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1347	RNA032062	prostate adenocarcinoma	PRAD	128	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2N1M0	IVA	no	
+prostatecancer	1334	RNA032133	prostate adenocarcinoma	PRAD	129	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0MX	IIB	no	
+prostatecancer	1828	RNA032027	prostate adenocarcinoma	PRAD	13	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1332	RNA032093	prostate adenocarcinoma	PRAD	130	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1314	RNA032205	prostate adenocarcinoma	PRAD	131	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIB	no	
+prostatecancer	1297	RNA032075	prostate adenocarcinoma	PRAD	132	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aN1M0	IVA	no	
+prostatecancer	1292	RNA032044	prostate adenocarcinoma	PRAD	133	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1280	RNA032064	prostate adenocarcinoma	PRAD	135	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0MX	IIC	no	
+prostatecancer	1265	RNA032072	prostate adenocarcinoma	PRAD	136	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1261	RNA032142	prostate adenocarcinoma	PRAD	137	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1256	RNA032036	prostate adenocarcinoma	PRAD	138	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	814	RNA032012	prostate adenocarcinoma	PRAD	139	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3bN0MX	IIIB	no	
+prostatecancer	1827	RNA032049	prostate adenocarcinoma	PRAD	14	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	I	no	
+prostatecancer	361	RNA032056	prostate adenocarcinoma	PRAD	140	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1042	RNA032184	prostate adenocarcinoma	PRAD	141	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0MX	IIB	no	
+prostatecancer	66	RNA032081	prostate adenocarcinoma	PRAD	142	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIIA	no	
+prostatecancer	1826	RNA032073	prostate adenocarcinoma	PRAD	15	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIIA	no	
+prostatecancer	1825	RNA032042	prostate adenocarcinoma	PRAD	16	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIC	no	
+prostatecancer	1822	RNA032183	prostate adenocarcinoma	PRAD	17	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1821	RNA032226	prostate adenocarcinoma	PRAD	18	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1820	RNA032054	prostate adenocarcinoma	PRAD	19	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIIC	no	
+prostatecancer	1870	RNA032164	prostate adenocarcinoma	PRAD	2	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1816	RNA032059	prostate adenocarcinoma	PRAD	20	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1815	RNA032167	prostate adenocarcinoma	PRAD	21	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1808	RNA032198	prostate adenocarcinoma	PRAD	23	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1805	RNA032186	prostate adenocarcinoma	PRAD	25	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1801	RNA032126	prostate adenocarcinoma	PRAD	26	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1782	RNA032196	prostate adenocarcinoma	PRAD	27	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1797	RNA032143	prostate adenocarcinoma	PRAD	28	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1796	RNA032129	prostate adenocarcinoma	PRAD	29	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1869	RNA032224	prostate adenocarcinoma	PRAD	3	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1794	RNA032163	prostate adenocarcinoma	PRAD	30	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1789	RNA032121	prostate adenocarcinoma	PRAD	31	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1788	RNA032215	prostate adenocarcinoma	PRAD	32	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1780	RNA032175	prostate adenocarcinoma	PRAD	33	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIC	no	
+prostatecancer	1779	RNA032052	prostate adenocarcinoma	PRAD	34	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1776	RNA032108	prostate adenocarcinoma	PRAD	35	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIC	no	
+prostatecancer	1773	RNA032181	prostate adenocarcinoma	PRAD	36	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3bNXM0	IIIB	no	
+prostatecancer	1772	RNA032152	prostate adenocarcinoma	PRAD	37	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1770	RNA032166	prostate adenocarcinoma	PRAD	38	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1769	RNA032188	prostate adenocarcinoma	PRAD	39	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1862	RNA032221	prostate adenocarcinoma	PRAD	4	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1766	RNA032079	prostate adenocarcinoma	PRAD	40	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1764	RNA032107	prostate adenocarcinoma	PRAD	41	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1763	RNA032070	prostate adenocarcinoma	PRAD	42	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIC	no	
+prostatecancer	1760	RNA032111	prostate adenocarcinoma	PRAD	43	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIIA	no	
+prostatecancer	1759	RNA032168	prostate adenocarcinoma	PRAD	44	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1757	RNA032158	prostate adenocarcinoma	PRAD	45	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1754	RNA032132	prostate adenocarcinoma	PRAD	46	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1749	RNA032206	prostate adenocarcinoma	PRAD	47	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1745	RNA032041	prostate adenocarcinoma	PRAD	49	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIC	no	
+prostatecancer	1861	RNA032035	prostate adenocarcinoma	PRAD	5	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIB	no	
+prostatecancer	1681	RNA032015	prostate adenocarcinoma	PRAD	50	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	I	no	
+prostatecancer	1680	RNA032218	prostate adenocarcinoma	PRAD	51	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1665	RNA032109	prostate adenocarcinoma	PRAD	52	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIC	no	
+prostatecancer	1661	RNA032022	prostate adenocarcinoma	PRAD	53	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1653	RNA032185	prostate adenocarcinoma	PRAD	54	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIC	no	
+prostatecancer	1647	RNA032207	prostate adenocarcinoma	PRAD	55	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1646	RNA032162	prostate adenocarcinoma	PRAD	56	EDTA	plasma	M	50-54	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1643	RNA032187	prostate adenocarcinoma	PRAD	57	EDTA	plasma	M	45-49	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1642	RNA032104	prostate adenocarcinoma	PRAD	58	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3bN1M1b	IVB	no	
+prostatecancer	1641	RNA032141	prostate adenocarcinoma	PRAD	59	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIC	no	
+prostatecancer	1858	RNA032130	prostate adenocarcinoma	PRAD	6	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1629	RNA032117	prostate adenocarcinoma	PRAD	60	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIC	no	
+prostatecancer	1628	RNA032046	prostate adenocarcinoma	PRAD	61	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1621	RNA032150	prostate adenocarcinoma	PRAD	62	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN1M1a	IVB	no	
+prostatecancer	1616	RNA032098	prostate adenocarcinoma	PRAD	63	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIC	no	
+prostatecancer	1610	RNA032127	prostate adenocarcinoma	PRAD	64	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1608	RNA032151	prostate adenocarcinoma	PRAD	66	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1602	RNA032203	prostate adenocarcinoma	PRAD	67	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1598	RNA032123	prostate adenocarcinoma	PRAD	68	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1853	RNA032032	prostate adenocarcinoma	PRAD	7	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1596	RNA032222	prostate adenocarcinoma	PRAD	70	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1595	RNA032110	prostate adenocarcinoma	PRAD	71	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIC	no	
+prostatecancer	1593	RNA032101	prostate adenocarcinoma	PRAD	72	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1592	RNA032096	prostate adenocarcinoma	PRAD	73	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1591	RNA032037	prostate adenocarcinoma	PRAD	74	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1590	RNA032065	prostate adenocarcinoma	PRAD	75	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1589	RNA032084	prostate adenocarcinoma	PRAD	76	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1588	RNA032180	prostate adenocarcinoma	PRAD	77	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIB	no	
+prostatecancer	1585	RNA032210	prostate adenocarcinoma	PRAD	78	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1582	RNA032048	prostate adenocarcinoma	PRAD	79	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1842	RNA032060	prostate adenocarcinoma	PRAD	8	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1581	RNA032169	prostate adenocarcinoma	PRAD	80	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1580	RNA032088	prostate adenocarcinoma	PRAD	81	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIB	no	
+prostatecancer	1577	RNA032039	prostate adenocarcinoma	PRAD	82	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1576	RNA032011	prostate adenocarcinoma	PRAD	83	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1575	RNA032173	prostate adenocarcinoma	PRAD	84	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1570	RNA032134	prostate adenocarcinoma	PRAD	85	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXM0	IIC	no	
+prostatecancer	1567	RNA032091	prostate adenocarcinoma	PRAD	86	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1566	RNA032211	prostate adenocarcinoma	PRAD	87	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aN0M0	IIIB	no	
+prostatecancer	1565	RNA032213	prostate adenocarcinoma	PRAD	88	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1564	RNA032112	prostate adenocarcinoma	PRAD	89	EDTA	plasma	M	60-64	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIB	no	
+prostatecancer	1845	RNA032219	prostate adenocarcinoma	PRAD	9	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T3bN0M0	IIIB	no	
+prostatecancer	1559	RNA032171	prostate adenocarcinoma	PRAD	90	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	I	no	
+prostatecancer	1553	RNA032135	prostate adenocarcinoma	PRAD	91	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1501	RNA032025	prostate adenocarcinoma	PRAD	92	EDTA	plasma	M	75-79	Caucasian	prostate	adenocarcinoma	N/A	T3aN1M1b	IVB	no	
+prostatecancer	1540	RNA032085	prostate adenocarcinoma	PRAD	93	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1539	RNA032063	prostate adenocarcinoma	PRAD	94	EDTA	plasma	M	55-59	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIC	no	
+prostatecancer	1537	RNA032179	prostate adenocarcinoma	PRAD	95	EDTA	plasma	M	80-84	Caucasian	prostate	adenocarcinoma	N/A	T3aNXM0	IIIB	no	
+prostatecancer	1532	RNA032189	prostate adenocarcinoma	PRAD	96	EDTA	plasma	M	70-74	Caucasian	prostate	adenocarcinoma	N/A	T2N0M0	IIB	no	
+prostatecancer	1529	RNA032078	prostate adenocarcinoma	PRAD	97	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	1526	RNA032140	prostate adenocarcinoma	PRAD	98	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T2NXMX	IIB	no	
+prostatecancer	1522	RNA032165	prostate adenocarcinoma	PRAD	99	EDTA	plasma	M	65-69	Caucasian	prostate	adenocarcinoma	N/A	T3aNXMX	IIIB	no	
+prostatecancer	PNL-PRHH	RNA032013	no	CONTROL	1	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-MUYP	RNA032055	no	CONTROL	10	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-WPF3	RNA032057	no	CONTROL	11	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-ZFQ5	RNA032058	no	CONTROL	12	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-ZH9J	RNA032066	no	CONTROL	13	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-WS2K	RNA032067	no	CONTROL	14	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-213D	RNA032074	no	CONTROL	15	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-963P	RNA032087	no	CONTROL	16	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-6P3E	RNA032089	no	CONTROL	17	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-TN78	RNA032090	no	CONTROL	18	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-T6JW	RNA032094	no	CONTROL	19	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-EGJD	RNA032024	no	CONTROL	2	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-4EMB	RNA032115	no	CONTROL	20	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-W96K	RNA032114	no	CONTROL	21	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-A871	RNA032113	no	CONTROL	22	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-I2IW	RNA032097	no	CONTROL	23	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-SG5F	RNA032100	no	CONTROL	24	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-9NUT	RNA032102	no	CONTROL	25	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-S7IB	RNA032103	no	CONTROL	26	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-IUGL	RNA032105	no	CONTROL	27	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-Y2DP	RNA032106	no	CONTROL	28	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-WKJT	RNA032137	no	CONTROL	29	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-P42B	RNA032028	no	CONTROL	3	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-7RBF	RNA032146	no	CONTROL	30	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-CDP8	RNA032148	no	CONTROL	31	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-ZTHZ	RNA032155	no	CONTROL	32	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-ZWKK	RNA032156	no	CONTROL	33	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-AI75	RNA032157	no	CONTROL	34	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-BJPQ	RNA032159	no	CONTROL	35	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-XXB9	RNA032160	no	CONTROL	36	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-LIAJ	RNA032161	no	CONTROL	37	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-SN7C	RNA032174	no	CONTROL	38	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-XEW1	RNA032177	no	CONTROL	39	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-KESD	RNA032030	no	CONTROL	4	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-5SJ9	RNA032178	no	CONTROL	40	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-JYDG	RNA032190	no	CONTROL	41	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-YHFH	RNA032195	no	CONTROL	42	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-5FV1	RNA032201	no	CONTROL	43	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-WHQR	RNA032202	no	CONTROL	44	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-Y1SM	RNA032209	no	CONTROL	45	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-UAKR	RNA032216	no	CONTROL	46	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-4EG8	RNA032217	no	CONTROL	47	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-KQ2Q	RNA032223	no	CONTROL	48	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-NCUB	RNA032033	no	CONTROL	5	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-E78L	RNA032038	no	CONTROL	6	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-TNEU	RNA032040	no	CONTROL	7	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-IAN4	RNA032045	no	CONTROL	8	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+prostatecancer	PNL-L7HG	RNA032051	no	CONTROL	9	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-L81M	RNA031033	chronic spongiotic dermatitis	NONMALIG	1	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-L9UN	RNA031053	cirrhosis	NONMALIG	10	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-2K84	RNA031375	left-sided pleural empyema	NONMALIG	101	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-1QK4	RNA030953	psoriasis vulgaris	NONMALIG	103	EDTA	plasma	F	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-N4WP	RNA030954	psoriasis vulgaris	NONMALIG	104	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-63R3	RNA030958	cirrhosis	NONMALIG	106	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-CVDP	RNA030959	cirrhosis	NONMALIG	107	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-SGRU	RNA030961	cirrhosis	NONMALIG	108	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-UGY4	RNA030962	chronic recurrent peritonitis e causa ignota	NONMALIG	109	EDTA	plasma	F	15-19	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-4BSX	RNA031055	systemic sclerosis	NONMALIG	11	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-YPAC	RNA030972	cluster headache	NONMALIG	112	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-9ZJI	RNA030977	cluster headache	NONMALIG	116	EDTA	plasma	M	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-ISSC	RNA030983	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	120	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-L3XA	RNA030986	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	121	EDTA	plasma	M	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Y7PC	RNA030987	monogenic disorder (Fabry disease)	NONMALIG	122	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-AS44	RNA030988	asthma	NONMALIG	123	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-SEAQ	RNA030990	asthma	NONMALIG	124	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-VT8P	RNA030995	systemic sclerosis	NONMALIG	126	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-DEXB	RNA030997	systemic sclerosis	NONMALIG	128	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-IUYN	RNA030999	benign prostatic hyperplasia	NONMALIG	129	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-V572	RNA031063	psoriasis vulgaris	NONMALIG	13	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Q9BA	RNA031001	benign prostatic hyperplasia	NONMALIG	130	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-TAKX	RNA031066	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	14	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-M949	RNA031075	COPD	NONMALIG	15	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-7B7U	RNA031079	asthma	NONMALIG	16	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-1AHD	RNA031080	cluster headache	NONMALIG	17	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-7N6U	RNA031035	systemic sclerosis	NONMALIG	2	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-CHGL	RNA031087	COPD	NONMALIG	20	EDTA	plasma	M	80-84	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-EGLU	RNA031089	systemic sclerosis	NONMALIG	22	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-YWKT	RNA031092	cirrhosis	NONMALIG	24	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-J434	RNA031096	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	25	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-13A2	RNA031100	monogenic disorder (Fabry disease)	NONMALIG	27	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-V2MP	RNA031105	cluster headache	NONMALIG	28	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-KWN6	RNA031037	COPD	NONMALIG	3	EDTA	plasma	M	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-GAXA	RNA031110	COPD	NONMALIG	31	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-7GGA	RNA031112	benign prostatic hyperplasia	NONMALIG	32	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-CAPW	RNA031117	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	34	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-E3HW	RNA031125	cluster headache	NONMALIG	36	EDTA	plasma	M	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-LSY7	RNA031127	cluster headache	NONMALIG	37	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-B57A	RNA031128	sarcoidosis	NONMALIG	38	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-U766	RNA031136	autoinflammatory syndrome e causa ignota	NONMALIG	39	EDTA	plasma	F	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-7NEI	RNA031150	asthma	NONMALIG	42	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-NY2S	RNA031151	cirrhosis	NONMALIG	43	EDTA	plasma	F	80-84	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-52LA	RNA031154	asthma	NONMALIG	44	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-9EKR	RNA031159	systemic sclerosis	NONMALIG	46	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-EZHR	RNA031163	cluster headache	NONMALIG	47	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Z168	RNA031164	systemic sclerosis	NONMALIG	48	EDTA	plasma	F	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Yl3B	RNA031041	cirrhosis	NONMALIG	5	EDTA	plasma	F	80-84	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-4JVF	RNA031168	systemic sclerosis	NONMALIG	50	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-HZIC	RNA031279	monogenic disorder (Fabry disease)	NONMALIG	53	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Y3KE	RNA031282	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	55	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-88Y4	RNA031283	monogenic disorder (Fabry disease)	NONMALIG	56	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-QLMX	RNA031284	autoinflammatory syndrome e causa ignota	NONMALIG	57	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-EEBW	RNA031286	cluster headache	NONMALIG	58	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-U7JT	RNA031289	monogenic disorder (Fabry disease)	NONMALIG	59	EDTA	plasma	M	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-YDHF	RNA031044	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	6	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-SIQ2	RNA031293	benign prostatic hyperplasia	NONMALIG	60	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-KN7I	RNA031294	COPD	NONMALIG	61	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-8PUM	RNA031296	asthma	NONMALIG	62	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-6UYC	RNA031299	cirrhosis	NONMALIG	64	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-QKKT	RNA031301	cirrhosis	NONMALIG	65	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-Wlll	RNA031302	COPD	NONMALIG	66	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-YHCJ	RNA031305	systemic sclerosis	NONMALIG	67	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-9R8P	RNA031310	cluster headache	NONMALIG	68	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-X8J3	RNA031312	vitiligo and hepatitis	NONMALIG	69	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-U9TP	RNA031314	COPD	NONMALIG	70	EDTA	plasma	M	80-84	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-KIF7	RNA031315	benign prostatic hyperplasia	NONMALIG	71	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-W3DQ	RNA031317	cluster headache	NONMALIG	72	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-QE53	RNA031318	systemic sclerosis	NONMALIG	73	EDTA	plasma	M	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-ESZ3	RNA031320	monogenic disorder (Fabry disease)	NONMALIG	74	EDTA	plasma	F	75-79	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-HHHT	RNA031330	cluster headache	NONMALIG	78	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-8PCM	RNA031331	asthma	NONMALIG	79	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-K79X	RNA031047	cluster headache	NONMALIG	8	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-W3K9	RNA031332	systemic sclerosis	NONMALIG	80	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-8ESQ	RNA031333	cirrhosis	NONMALIG	81	EDTA	plasma	M	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-U3A6	RNA031335	asthma	NONMALIG	82	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-D688	RNA031339	systemic sclerosis	NONMALIG	85	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-HXQM	RNA031341	systemic sclerosis	NONMALIG	86	EDTA	plasma	F	60-64	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-L54S	RNA031343	asthma	NONMALIG	88	EDTA	plasma	F	65-69	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-2832	RNA031349	autoinflammatory syndrome e causa ignota	NONMALIG	90	EDTA	plasma	M	20-24	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-SEYQ	RNA031350	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	91	EDTA	plasma	M	25-29	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-IJSC	RNA031354	asthma	NONMALIG	92	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-9UNK	RNA031355	Cryoglobulinemic vasculitis	NONMALIG	93	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-KE81	RNA031356	COPD	NONMALIG	94	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-LN9L	RNA031357	systemic sclerosis	NONMALIG	95	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-W6XT	RNA031363	autoinflammatory syndrome e causa ignota	NONMALIG	96	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-V31D	RNA031368	bilateral pneumonia	NONMALIG	98	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	V9K-JKW6	RNA031369	monogenic disorder (episodic ataxia type 2 (EA2))	NONMALIG	99	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-NCUB	RNA031036	no	CONTROL	1	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-ZTHZ	RNA031072	no	CONTROL	10	EDTA	plasma	M	40-44	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-P42B	RNA031094	no	CONTROL	15	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-ZH9J	RNA031097	no	CONTROL	16	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-963P	RNA031107	no	CONTROL	18	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-I2IW	RNA031039	no	CONTROL	2	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-ZWKK	RNA031135	no	CONTROL	24	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-YHFH	RNA031138	no	CONTROL	25	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-4EG8	RNA031143	no	CONTROL	27	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-PRHH	RNA031149	no	CONTROL	30	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-WHQR	RNA031162	no	CONTROL	33	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-T6JW	RNA031173	no	CONTROL	35	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-BJPQ	RNA031276	no	CONTROL	37	EDTA	plasma	F	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-W96K	RNA031278	no	CONTROL	38	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-7RBF	RNA031281	no	CONTROL	39	EDTA	plasma	M	50-54	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-ZFQ5	RNA031050	no	CONTROL	4	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-5SJ9	RNA031295	no	CONTROL	41	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-CDP8	RNA031297	no	CONTROL	42	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-UAKR	RNA031304	no	CONTROL	43	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-MUYP	RNA031311	no	CONTROL	45	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-S7IB	RNA031313	no	CONTROL	46	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-6P3E	RNA031328	no	CONTROL	50	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-XXB9	RNA031334	no	CONTROL	51	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-AI75	RNA031338	no	CONTROL	52	EDTA	plasma	M	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-WKJT	RNA031347	no	CONTROL	54	EDTA	plasma	M	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-IAN4	RNA031352	no	CONTROL	56	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-EGJD	RNA031367	no	CONTROL	57	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-E78L	RNA031377	no	CONTROL	59	EDTA	plasma	F	30-34	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-L7HG	RNA031378	no	CONTROL	60	EDTA	plasma	M	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-Y2DP	RNA030951	no	CONTROL	62	EDTA	plasma	F	35-39	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-TN78	RNA030964	no	CONTROL	63	EDTA	plasma	M	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-KQ2Q	RNA030971	no	CONTROL	64	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-WS2K	RNA030978	no	CONTROL	65	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-5FV1	RNA030984	no	CONTROL	66	EDTA	plasma	M	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-XEW1	RNA030989	no	CONTROL	67	EDTA	plasma	F	70-74	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-JYDG	RNA031003	no	CONTROL	71	EDTA	plasma	F	55-59	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
+nonmalignant	PNL-Y1SM	RNA031009	no	CONTROL	73	EDTA	plasma	F	45-49	Caucasian	N/A	N/A	N/A	N/A	N/A	no	
